@@ -19,10 +19,10 @@ services:
 
 
   rabbitmq-main:
-    image: rabbitmq:3.12.13-management
+    image: rabbitmq:3.12.13-management #later change to non management version
     ports:
       - "5672:5672"
-      - "15672:15672"
+      - "15672:15672"  # management opt
       
   rabbitmq-transaction:
     image: rabbitmq:3.12.13
@@ -44,7 +44,12 @@ services:
     #image:
   #   ports:
 
-  #catalog-service:
+  #catalog-read-service:
+    #build: 
+    #image:
+  #   ports:
+
+  #catalog-write-service:
     #build: 
     #image:
   #   ports:
