@@ -6,9 +6,6 @@ using System.Threading.Tasks;
 
 namespace TransportService.Configuration
 {
-    public record MessageQueueConfig(string adress, int port, string domain) {
-        //public int Port { get { return Int32.Parse(port); } }
-        //public string GetConnectionString() { return $"{adress}:{port}"; }
-    };
+    public record MessageQueueConfig(string adress, int port, string exchange, string queue,string routing);
 
 }

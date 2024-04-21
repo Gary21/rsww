@@ -1,47 +1,49 @@
 ﻿using Microsoft.Extensions.Configuration;
-using TransportService.Configuration;
 using Serilog;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using TransportService.TransportService;
 using RabbitMQ.Client;
-using System.Text;
-using RabbitMQ.Client.Events;
-using MessagePack;
-using TransportService.Entities;
+using TransportService.Configuration;
+using Microsoft.Extensions.Hosting;
+using TransportService;
+using Microsoft.AspNetCore.Hosting;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-var messageQueueConfig = config.GetSection("messageQueueConfig").Get<MessageQueueConfig>();
+MessageQueueConfig messageQueueConfig = config.GetSection("messageQueueConfig").Get<MessageQueueConfig>()!;
 
+var builder = WebApplication.CreateBuilder();
+builder.Services.Configure<IConfiguration>(config);
+builder.Services.AddSingleton(logger);
+builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
+    { HostName = messageQueueConfig.adress, Port = messageQueueConfig.port, UserName = "guest", Password = "guest" });
 
-var factory = new ConnectionFactory { HostName = messageQueueConfig.adress, Port = messageQueueConfig.port, UserName = "guest", Password = "guest" };
-using var connection = factory.CreateConnection();
-using var channel = connection.CreateModel();
-
-channel.QueueDeclare(queue: messageQueueConfig.domain, durable: false, exclusive: false, autoDelete: false, arguments: null);
-
-var consumer = new EventingBasicConsumer(channel);
-consumer.Received += (model, ea) =>
+if (Console.ReadLine() == "1")
 {
-    var body = ea.Body.ToArray();
-    var message = MessagePackSerializer.Deserialize<Transport>(body); //Encoding.UTF8.GetString(body);
-    logger.Information($" [x] Received {message}");
-};
-channel.BasicConsume(queue: messageQueueConfig.domain, autoAck: true, consumer: consumer);
-
-logger.Information($"Subscribed to queue {messageQueueConfig.domain}");
-Console.ReadLine();
-
-for (int i = 0; i < 10; i++)
+    builder.Services.AddHostedService<TransportMessageQueueHandler>();
+    builder.WebHost.UseUrls("http://*:7135");
+} else 
 {
-    Console.WriteLine($"Sending message");
-    Transport transport = new Transport() { Id = i.ToString(), Origin = "Polska", Destination="Niemcy", PricePerTicket = 3.21M, SeatsNumber = 10, SeatsTaken = 1, Type = "Plane", DepartureDate = DateTime.Now, ArrivalDate = DateTime.Now.AddDays(2) };
-
-    var body = MessagePackSerializer.Serialize(transport); //Encoding.UTF8.GetBytes(message);
-    channel.BasicPublish(exchange: string.Empty, routingKey: messageQueueConfig.domain, basicProperties: null, body: body);
-    logger.Information($" [x] Sent {transport.Id}");
-    Thread.Sleep(200+Random.Shared.Next()%300);
+    builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherTest>();
+    builder.Services.AddHostedService<ReplyService>();
+    builder.Services.AddHostedService<TestPublish>();
+    builder.WebHost.UseUrls("http://*:7136");
 }
+builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("*",
+            policy =>
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+    });
 
 
-Console.ReadLine();
 
+var app = builder.Build();
+
+app.UseCors("*");
+app.Run();
