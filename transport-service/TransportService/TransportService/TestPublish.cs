@@ -1,5 +1,6 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Hosting;
+using RabbitUtilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +18,6 @@ namespace TransportService.TransportService
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //for (int i = 0; i < 10; i++)
-            //{
-
-            //}
             int i = 0;
             while (!stoppingToken.IsCancellationRequested) {
                 await Task.Delay(1000);

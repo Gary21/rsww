@@ -15,23 +15,23 @@ string exchange = "resources/transport";
 
 channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
 
+while(Console.ReadLine() != "q")
+    for (int i = 0; i < 10; i++)
+    {
+        Console.WriteLine($"Sending message");
+        var transport = new Transporttt() { Id2 = i.ToString(), Origin = "Polska", Destination = "Niemcy", PricePerTicket = 3.21M, SeatsNumber = 10, SeatsTaken = 1, Type3 = "Plane", DepartureDate = DateTime.Now, ArrivalDate = DateTime.Now.AddDays(2) };
+        Dictionary<string, object> headers = new();
+        headers["Type"] = 1;
 
-for (int i = 0; i < 10; i++)
-{
-    Console.WriteLine($"Sending message");
-    var transport = new Transporttt() { Id2 = i.ToString(), Origin = "Polska", Destination = "Niemcy", PricePerTicket = 3.21M, SeatsNumber = 10, SeatsTaken = 1, Type3 = "Plane", DepartureDate = DateTime.Now, ArrivalDate = DateTime.Now.AddDays(2) };
-    Dictionary<string, object> headers = new();
-    headers["Type"] = 1;
+        IBasicProperties prop = channel.CreateBasicProperties();
+        prop.Headers = headers;
 
-    IBasicProperties prop = channel.CreateBasicProperties();
-    prop.Headers = headers;
+        var body = MessagePackSerializer.Serialize(transport); //Encoding.UTF8.GetBytes(message);
 
-    var body = MessagePackSerializer.Serialize(transport); //Encoding.UTF8.GetBytes(message);
-
-    channel.BasicPublish(exchange: exchange, routingKey: routing, basicProperties: prop, body: body);
-    //logger.Information($" [x] Sent {transport.Id}");
-    Thread.Sleep(200 + Random.Shared.Next() % 300);
-}
+        channel.BasicPublish(exchange: exchange, routingKey: routing, basicProperties: prop, body: body);
+        //logger.Information($" [x] Sent {transport.Id}");
+        //Thread.Sleep(200 + Random.Shared.Next() % 300);
+    }
 
 [MessagePackObject]
 public class Transporttt

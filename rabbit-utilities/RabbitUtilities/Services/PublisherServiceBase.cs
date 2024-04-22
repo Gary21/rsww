@@ -5,40 +5,34 @@ using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Serilog;
-using TransportService.Configuration;
-using TransportService.Misc;
+using RabbitUtilities.Configuration;
+using RabbitUtilities.Misc;
 
-namespace TransportService;
+namespace RabbitUtilities;
 
 public class PublisherServiceBase : IDisposable
 {
     protected readonly ILogger _logger;
     protected readonly IConnection _connection;
-    protected readonly IModel _replyChannel;
     protected readonly string _replyQueueName;
     public string ReplyQueueName { get => _replyQueueName; }
 
     protected ConcurrentDictionary<Guid,MessageReply> replies;
+    private int messagePollingDelay = 10;
 
 
-    public PublisherServiceBase(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory)
+    public PublisherServiceBase(ILogger logger, IConnectionFactory connectionFactory, ServiceConfig? config)
     {
-        MessageQueueConfig messageQueueConfig = config.GetSection("messageQueueConfig").Get<MessageQueueConfig>()!;
-
         _logger = logger;
         _connection = connectionFactory.CreateConnection();
 
-        _replyQueueName = messageQueueConfig.queue+".reply"+Guid.NewGuid().ToString();
-        _replyChannel = _connection.CreateModel();
-        ////reply queuename?
-        //_replyChannel.QueueDeclare(queue: _replyQueueName, durable: false, exclusive: true, autoDelete: true, arguments: null);
+        _replyQueueName = $"{config?.name ?? ""} reply"+Guid.NewGuid().ToString();
         replies = new();
     }
 
     public void Dispose()
     {
         _connection.Dispose();
-        _replyChannel.Dispose();
     }
 
     public void PublishRequestNoReply<T>(string exchangeName,string? routingKey, MessageType type, T payload){
@@ -46,9 +40,9 @@ public class PublisherServiceBase : IDisposable
         publish_channel.ExchangeDeclare(exchange: exchangeName, type: ExchangeType.Topic, durable: true);
 
         Dictionary<string, object> headers = new()
-            {
-                { "Type", type.ToString() }
-            };
+        {
+            { "Type", type.ToString() }
+        };
         
         IBasicProperties properties = publish_channel.CreateBasicProperties();
         properties.Headers = headers;
@@ -56,7 +50,7 @@ public class PublisherServiceBase : IDisposable
         var body = MessagePackSerializer.Serialize(payload);
         
         publish_channel.BasicPublish(exchange: exchangeName, routingKey: routingKey, basicProperties: properties, body: body);
-        _logger.Information($"Sending");
+        _logger.Information($"Sent {type} request to {exchangeName}.{routingKey} without reply.");
     }
 
     public Guid PublishRequestWithReply<T>(string exchangeName, string? routingKey, MessageType type, T payload)
@@ -79,7 +73,7 @@ public class PublisherServiceBase : IDisposable
 
         var body = MessagePackSerializer.Serialize<T>(payload);
         publish_channel.BasicPublish(exchange: exchangeName, routingKey: routingKey, basicProperties: properties, body: body);
-
+        _logger.Information($"Sent {type} request to {exchangeName}.{routingKey} with ID:{messageCorrelationID}.");
         return messageCorrelationID;
     }
 
@@ -94,10 +88,12 @@ public class PublisherServiceBase : IDisposable
         //Wait for reply
         while (!replies[messageCorrelationID].IsReady)
         {
-            await Task.Delay(10);
+            await Task.Delay(messagePollingDelay);
         }
-        replies[messageCorrelationID].TryGetReply(out var reply);
-        return reply;
+        replies.TryRemove(messageCorrelationID,out var message);
+        message.TryGetReply(out var payload);
+        
+        return payload;
     }
 
 }

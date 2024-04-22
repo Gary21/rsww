@@ -3,12 +3,10 @@ using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Serilog;
-using System.Threading.Channels;
-using TransportService.Configuration;
+using RabbitUtilities.Configuration;
 
-
-public abstract
-class ConsumerServiceBase : BackgroundService, IDisposable
+namespace RabbitUtilities;
+public abstract class ConsumerServiceBase : BackgroundService, IDisposable
 {
     protected readonly ILogger _logger;
     protected readonly IConnection _connection;
@@ -16,20 +14,23 @@ class ConsumerServiceBase : BackgroundService, IDisposable
 
     protected readonly string _exchangeName;
     protected readonly string _queueName;
-    public ConsumerServiceBase(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory)
+    protected readonly string _routingKey;
+
+    public ConsumerServiceBase(ILogger logger, IConnectionFactory connectionFactory, ConsumerConfig config)
     {
         _logger = logger;
-        
-        MessageQueueConfig messageQueueConfig = config.GetSection("messageQueueConfig").Get<MessageQueueConfig>()!;
-         _exchangeName = messageQueueConfig.exchange;
-        _queueName = messageQueueConfig.queue;
+        //var config = config.GetSection("messageQueueConfig").Get<ConsumerConfig>()!;
+         _exchangeName = config.exchange;
+        _queueName = config.queue;
+        _routingKey = config.routing;
 
         _connection = connectionFactory.CreateConnection();
         _consumeChannel = _connection.CreateModel();
         //Bind queue
         _consumeChannel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
         _consumeChannel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Topic, durable: true);
-        _consumeChannel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: messageQueueConfig.routing);
+        _consumeChannel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: _routingKey);
+
     }
 
     public new void Dispose()
@@ -48,13 +49,13 @@ class ConsumerServiceBase : BackgroundService, IDisposable
         };
         _consumeChannel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
 
-        _logger.Information($"Subscribed to queue {_queueName} in exchange {_exchangeName}");
+        _logger.Information($"Subscribed to queue {_queueName} in exchange {_exchangeName}.{_routingKey}");
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000);
         }
-        _logger.Information($"Closing");
-        return;//Task.CompletedTask;
+        _logger.Information($"Closing consumer of queue {_queueName}");
+        return;
     }
 
     protected abstract void ConsumeMessage(object model, BasicDeliverEventArgs ea);
@@ -66,10 +67,13 @@ class ConsumerServiceBase : BackgroundService, IDisposable
 
         replyProperties.CorrelationId = ea.BasicProperties.CorrelationId;
         replyProperties.Headers = ea.BasicProperties.Headers;
+
+        _logger.Information($"Sent reply to {replyTo} with ID:{replyProperties.CorrelationId}.");
         
         _consumeChannel.BasicPublish(exchange: string.Empty,
                          routingKey: replyTo,
                          basicProperties: replyProperties,
                          body: replyBody);
+        return;
     }
 }

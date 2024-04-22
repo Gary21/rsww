@@ -4,20 +4,19 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using TransportService.TransportService;
 using RabbitMQ.Client;
-using TransportService.Configuration;
-using Microsoft.Extensions.Hosting;
-using TransportService;
 using Microsoft.AspNetCore.Hosting;
+using RabbitUtilities.Configuration;
+using RabbitUtilities;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-MessageQueueConfig messageQueueConfig = config.GetSection("messageQueueConfig").Get<MessageQueueConfig>()!;
+var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddSingleton(logger);
 builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
-    { HostName = messageQueueConfig.adress, Port = messageQueueConfig.port, UserName = "guest", Password = "guest" });
+    { HostName = rabbitConfig.adress, Port = rabbitConfig.port, UserName = "guest", Password = "guest" });
 
 if (Console.ReadLine() == "1")
 {
@@ -40,8 +39,6 @@ builder.Services.AddCors(options =>
                     .AllowAnyMethod();
             });
     });
-
-
 
 var app = builder.Build();
 

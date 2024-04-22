@@ -1,5 +1,4 @@
-using MessagePack;
-
+namespace RabbitUtilities;
 public enum MessageType {
     GET = 0,
     ADD = 1,
@@ -7,5 +6,4 @@ public enum MessageType {
     DELETE = 3,
     RESERVE = 4,
     EVENT = 5
-
 }

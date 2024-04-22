@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitUtilities;
 using Serilog;
 using System.Text;
 using System.Threading.Channels;
@@ -11,7 +12,8 @@ namespace TransportService.TransportService
 {
     public class TransportMessageQueueHandler : ConsumerServiceBase
     {
-        public TransportMessageQueueHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory) : base(logger, config, connectionFactory)
+        public TransportMessageQueueHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory) 
+            : base(logger, connectionFactory, config.GetSection("transportConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
         {
 
         }
@@ -44,9 +46,10 @@ namespace TransportService.TransportService
                     Reserve(ea);
                     break;
                 default:
+                    _logger.Information($"Received message with unknown type.");
                     break;
             }
-            _logger.Information("Consumed");
+            _logger.Information("Consumed message");
         }
 
         private void Get(BasicDeliverEventArgs ea)
@@ -62,7 +65,7 @@ namespace TransportService.TransportService
             var message = MessagePackSerializer.Deserialize<Transport>(body);
             _logger.Information($"ADD {MessagePackSerializer.ConvertToJson(body)}");
             Reply(ea,body);
-            _logger.Information($"Reply {MessagePackSerializer.ConvertToJson(body)}");
+            //_logger.Information($"Reply {MessagePackSerializer.ConvertToJson(body)}");
             //Task.Delay(2000).Wait();
 
         }

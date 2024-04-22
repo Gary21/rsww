@@ -5,10 +5,10 @@ using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Serilog;
-using TransportService.Configuration;
-using TransportService.Misc;
+using RabbitUtilities.Configuration;
+using RabbitUtilities.Misc;
 
-namespace TransportService;
+namespace RabbitUtilities;
 
 public class ReplyService : BackgroundService, IDisposable
 {
@@ -21,9 +21,8 @@ public class ReplyService : BackgroundService, IDisposable
     PublisherServiceBase _publisherService;
 
 
-    public ReplyService(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisherService)
+    public ReplyService(ILogger logger, IConnectionFactory connectionFactory, PublisherServiceBase publisherService)
     {
-        MessageQueueConfig messageQueueConfig = config.GetSection("messageQueueConfig").Get<MessageQueueConfig>()!;
         _publisherService = publisherService;
         _replyQueueName = _publisherService.ReplyQueueName;
 
@@ -42,7 +41,7 @@ public class ReplyService : BackgroundService, IDisposable
         _replyChannel.BasicConsume(queue: _replyQueueName, autoAck: false, consumer: consumer);
     }
 
-    public void Dispose()
+    public new void Dispose()
     {
         _connection.Dispose();
         _replyChannel.Dispose();
@@ -54,9 +53,9 @@ public class ReplyService : BackgroundService, IDisposable
         _logger.Information($"Subscribed to queue {_replyQueueName}");
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(1000); //Nothing
+            await Task.Delay(1000);
         }
-        _logger.Information($"Finishing");
+        _logger.Information($"Closing reply service in queue {_replyQueueName}");
         return;
     }
 
@@ -64,9 +63,9 @@ public class ReplyService : BackgroundService, IDisposable
     {
         var body = ea.Body.ToArray();
         var messageCorrelationID = Guid.Parse(ea.BasicProperties.CorrelationId);
-        var headers = ea.BasicProperties.Headers;//???
+        //var headers = ea.BasicProperties.Headers;//???
 
         _publisherService.SetReply(messageCorrelationID, body);
-        _logger.Information($"Received reply to:{messageCorrelationID}");
+        _logger.Information($"Received reply to: {messageCorrelationID}");
     }
 }
