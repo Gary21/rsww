@@ -26,7 +26,7 @@ public class PublisherServiceBase : IDisposable
         _logger = logger;
         _connection = connectionFactory.CreateConnection();
 
-        _replyQueueName = $"{config?.name ?? ""} reply"+Guid.NewGuid().ToString();
+        _replyQueueName = $"{config?.name ?? ""}.reply.{Guid.NewGuid()}";
         replies = new();
     }
 
@@ -35,13 +35,15 @@ public class PublisherServiceBase : IDisposable
         _connection.Dispose();
     }
 
-    public void PublishRequestNoReply<T>(string exchangeName,string? routingKey, MessageType type, T payload){
+    public void PublishRequestNoReply<T>(string exchangeName,string? routingKey, MessageType type, T payload)
+    {
         using var publish_channel = _connection.CreateModel();
         publish_channel.ExchangeDeclare(exchange: exchangeName, type: ExchangeType.Topic, durable: true);
 
         Dictionary<string, object> headers = new()
         {
-            { "Type", type.ToString() }
+            { "Type", type.ToString() },
+            { "Date", DateTime.UtcNow.ToString() }
         };
         
         IBasicProperties properties = publish_channel.CreateBasicProperties();
@@ -63,9 +65,10 @@ public class PublisherServiceBase : IDisposable
         
         Dictionary<string, object> headers = new()
         {
-            { "Type", type.ToString() }
+            { "Type", type.ToString() },
+            { "Date", DateTime.UtcNow.ToString() }
         };
-        
+
         IBasicProperties properties = publish_channel.CreateBasicProperties();
         properties.Headers = headers;
         properties.CorrelationId = messageCorrelationID.ToString();
@@ -83,17 +86,17 @@ public class PublisherServiceBase : IDisposable
         return;
     }
 
-    public async Task<byte[]> GetReply(Guid messageCorrelationID)
+    public async Task<byte[]> GetReply(Guid messageCorrelationID, CancellationToken cancellationToken)
     {
         //Wait for reply
-        while (!replies[messageCorrelationID].IsReady)
+        while (!replies[messageCorrelationID].IsReady && !cancellationToken.IsCancellationRequested)
         {
             await Task.Delay(messagePollingDelay);
         }
         replies.TryRemove(messageCorrelationID,out var message);
-        message.TryGetReply(out var payload);
+        message!.TryGetReply(out var payload);
         
-        return payload;
+        return payload ?? Array.Empty<byte>();
     }
 
 }

@@ -21,14 +21,15 @@ namespace TransportService.TransportService
             int i = 0;
             while (!stoppingToken.IsCancellationRequested) {
                 await Task.Delay(1000);
-                Console.WriteLine($"Sending message");
+
                 var transport = new Transport() { Id = i.ToString(), Origin = "Polska", Destination = "Niemcy", PricePerTicket = 3.21M, SeatsNumber = 10, SeatsTaken = 1, Type = "Plane", DepartureDate = DateTime.Now, ArrivalDate = DateTime.Now.AddDays(2) };
 
                 var msgId = transportPublisherTest.PublishRequestWithReply<Transport>("resources/transport", "query", MessageType.ADD, transport);
+                
+                var body = MessagePackSerializer.Deserialize<Transport>(await transportPublisherTest.GetReply(msgId,stoppingToken));
 
-                var body = MessagePackSerializer.Deserialize<Transport>(await transportPublisherTest.GetReply(msgId));
+                //Do some stuff
 
-                Console.WriteLine($"Received Reply {body.Id}");
                 i++;
             }
             return;  

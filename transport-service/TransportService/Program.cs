@@ -16,7 +16,13 @@ var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddSingleton(logger);
 builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
-    { HostName = rabbitConfig.adress, Port = rabbitConfig.port, UserName = "guest", Password = "guest" });
+    {   
+        HostName = rabbitConfig.adress, 
+        Port = rabbitConfig.port, 
+        UserName = "guest", 
+        Password = "guest" , 
+        AutomaticRecoveryEnabled=true
+    });
 
 if (Console.ReadLine() == "1")
 {
@@ -24,7 +30,7 @@ if (Console.ReadLine() == "1")
     builder.WebHost.UseUrls("http://*:7135");
 } else 
 {
-    builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherTest>();
+    builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherService>();
     builder.Services.AddHostedService<ReplyService>();
     builder.Services.AddHostedService<TestPublish>();
     builder.WebHost.UseUrls("http://*:7136");

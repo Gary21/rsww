@@ -19,7 +19,6 @@ public abstract class ConsumerServiceBase : BackgroundService, IDisposable
     public ConsumerServiceBase(ILogger logger, IConnectionFactory connectionFactory, ConsumerConfig config)
     {
         _logger = logger;
-        //var config = config.GetSection("messageQueueConfig").Get<ConsumerConfig>()!;
          _exchangeName = config.exchange;
         _queueName = config.queue;
         _routingKey = config.routing;
@@ -32,6 +31,7 @@ public abstract class ConsumerServiceBase : BackgroundService, IDisposable
         _consumeChannel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: _routingKey);
 
     }
+
 
     public new void Dispose()
     {

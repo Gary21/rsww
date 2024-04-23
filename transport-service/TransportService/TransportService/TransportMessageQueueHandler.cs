@@ -22,12 +22,15 @@ namespace TransportService.TransportService
         {
             var headers = ea.BasicProperties.Headers;
             
-            if (!headers.TryGetValue("Type", out object typeObj))
+            if (!headers.TryGetValue("Type", out object? typeObj))
                 return;
-            
-            var typeString = ASCIIEncoding.ASCII.GetString((byte[]) typeObj);
+            var type = (MessageType)Enum.Parse(typeof(MessageType), ASCIIEncoding.ASCII.GetString((byte[])typeObj));
 
-            var type = (MessageType)Enum.Parse(typeof(MessageType),typeString);
+            if (!headers.TryGetValue("Date", out object? dateObj))
+                return;
+            DateTime.TryParse(ASCIIEncoding.ASCII.GetString((byte[])dateObj), out var date);
+
+
             switch (type)
             {
                 case MessageType.GET:
@@ -49,7 +52,6 @@ namespace TransportService.TransportService
                     _logger.Information($"Received message with unknown type.");
                     break;
             }
-            _logger.Information("Consumed message");
         }
 
         private void Get(BasicDeliverEventArgs ea)
@@ -65,8 +67,7 @@ namespace TransportService.TransportService
             var message = MessagePackSerializer.Deserialize<Transport>(body);
             _logger.Information($"ADD {MessagePackSerializer.ConvertToJson(body)}");
             Reply(ea,body);
-            //_logger.Information($"Reply {MessagePackSerializer.ConvertToJson(body)}");
-            //Task.Delay(2000).Wait();
+
 
         }
 
