@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TransportService.Repositories
+namespace TransportQueryService.Repositories
 {
-    internal class PostgresRepository
+    internal class MongoRepository
     {
     }
 }

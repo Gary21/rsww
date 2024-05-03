@@ -3,9 +3,9 @@ using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using Serilog;
-using TransportService.Entities;
+using TransportRequestService.Entities;
 
-namespace TransportService.TransportService
+namespace TransportRequestService.TransportServiceTests
 {
     public class TransportPublisherService : PublisherServiceBase
     {

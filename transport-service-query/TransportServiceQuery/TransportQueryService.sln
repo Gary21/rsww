@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPublish", "TestPublish.csproj", "{6DEAD943-679D-430A-8FAA-E421291B0D20}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportQueryService", "TransportQueryService.csproj", "{93B7C79A-068E-4599-B69F-4373B564B248}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6DEAD943-679D-430A-8FAA-E421291B0D20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6DEAD943-679D-430A-8FAA-E421291B0D20}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6DEAD943-679D-430A-8FAA-E421291B0D20}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6DEAD943-679D-430A-8FAA-E421291B0D20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93B7C79A-068E-4599-B69F-4373B564B248}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93B7C79A-068E-4599-B69F-4373B564B248}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93B7C79A-068E-4599-B69F-4373B564B248}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93B7C79A-068E-4599-B69F-4373B564B248}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {4FF7193C-66FB-4B92-982B-6E6333529812}
+		SolutionGuid = {CB982310-FB01-41CE-9465-18673187984F}
 	EndGlobalSection
 EndGlobal

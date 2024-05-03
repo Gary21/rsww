@@ -6,9 +6,9 @@ using RabbitUtilities;
 using Serilog;
 using System.Text;
 using System.Threading.Channels;
-using TransportService.Entities;
+using TransportRequestService.Entities;
 
-namespace TransportService.TransportService
+namespace TransportRequestService.TransportServiceTests
 {
     public class TransportMessageQueueHandler : ConsumerServiceBase
     {

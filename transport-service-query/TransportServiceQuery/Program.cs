@@ -2,11 +2,10 @@
 using Serilog;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using TransportService.TransportService;
 using RabbitMQ.Client;
 using Microsoft.AspNetCore.Hosting;
 using RabbitUtilities.Configuration;
-using RabbitUtilities;
+using TransportQueryService.QueryHandler;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -23,18 +22,8 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
         Password = "guest" , 
         AutomaticRecoveryEnabled=true
     });
-
-if (Console.ReadLine() == "1")
-{
-    builder.Services.AddHostedService<TransportMessageQueueHandler>();
-    builder.WebHost.UseUrls("http://*:7135");
-} else 
-{
-    builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherService>();
-    builder.Services.AddHostedService<ReplyService>();
-    builder.Services.AddHostedService<TestPublish>();
-    builder.WebHost.UseUrls("http://*:7136");
-}
+builder.Services.AddHostedService<TransportQueryHandler>();
+builder.WebHost.UseUrls("http://*:7134");
 builder.Services.AddCors(options =>
     {
         options.AddPolicy("*",

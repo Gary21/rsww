@@ -1,6 +1,6 @@
 ﻿using MessagePack;
 
-namespace TransportService.Entities
+namespace TransportRequestService.Entities
 {
     [MessagePackObject]
     public class Transport

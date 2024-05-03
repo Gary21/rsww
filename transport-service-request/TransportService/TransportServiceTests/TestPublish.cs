@@ -1,14 +1,9 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Hosting;
 using RabbitUtilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TransportService.Entities;
+using TransportRequestService.Entities;
 
-namespace TransportService.TransportService
+namespace TransportRequestService.TransportServiceTests
 {
     public class TestPublish : BackgroundService
     {
