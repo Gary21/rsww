@@ -29,6 +29,30 @@ services:
     ports:
       - "5673:5672"
       - "15673:15672"
+
+  example-backend-service-1:
+    build: ./ExampleBackend
+    environment:
+      - APP_PORT=8081
+      - INSTANCE_ID=1
+    ports:
+      - 8081:8081
+
+  example-backend-service-2:
+    build: ./ExampleBackend
+    environment:
+      - APP_PORT=8082
+      - INSTANCE_ID=2
+    ports:
+      - 8082:8082
+
+  load-balancer-service:
+    build: ./load-balancer-service
+    ports:
+      - 8080:80
+    depends_on:
+      - example-backend-service-1
+      - example-backend-service-2
   # transaction-service:
   #   image:
   #   build: 
