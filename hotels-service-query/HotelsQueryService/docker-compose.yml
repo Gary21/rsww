@@ -1,0 +1,22 @@
+version: '3.4'
+
+networks:
+  rsww-network:
+    external:
+      name: rsww-network
+
+services:
+  hotelsqueryservice:
+    image: ${DOCKER_REGISTRY-}hotelsqueryservice
+    container_name: hotels-query-service
+    build:
+      context: .
+      dockerfile: HotelsQueryService/Dockerfile
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres-db;Server=postgres-db;Port=5432;Database=hotels;Username=user;Password=postgres;Pooling=true;
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - rsww-network
+
+
+
