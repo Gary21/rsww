@@ -1,0 +1,12 @@
+@startuml
+class HotelsController {
+    + HotelsController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetHotels() : Task<ActionResult<IEnumerable<HotelResponseDTO>>>
+    + <<async>> GetHotel(id:int) : Task<ActionResult<HotelDetailsDTO>>
+    + <<async>> GetHotelWithRooms(id:int) : Task<ActionResult<HotelDetailsWithRoomsDTO>>
+    + <<async>> PutHotel(id:int, hotelDTO:HotelCreateDTO) : Task<IActionResult>
+    + <<async>> PostHotel(hotelDTO:HotelCreateDTO) : Task<ActionResult<Hotel>>
+    + <<async>> DeleteHotel(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- HotelsController
+@enduml

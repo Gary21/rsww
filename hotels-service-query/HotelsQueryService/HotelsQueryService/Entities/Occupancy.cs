@@ -28,5 +28,9 @@ namespace HotelsQueryService.Entities
         [ForeignKey("Id")]
         [MessagePack.Key(4)]
         public Reservation Reservation { get; set; }
+
+        [Required]
+        [MessagePack.Key(5)]
+        public HasRoom HasRoom { get; set; }
     }
 }

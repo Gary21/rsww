@@ -30,5 +30,8 @@ namespace HotelsQueryService.Entities
         [Required]
         [MessagePack.Key(5)] // Added MessagePack reference
         public RoomType RoomType { get; set; }
+
+        [MessagePack.IgnoreMember] // Added MessagePack reference
+        public IEnumerable<Occupancy> Occupancies { get; set; }
     }
 }

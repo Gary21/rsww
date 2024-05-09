@@ -1,0 +1,10 @@
+@startuml
+class RoomType {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Capacity : int <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+RoomType o-> "WhereExist<HasRoom>" "ICollection`1"
+@enduml

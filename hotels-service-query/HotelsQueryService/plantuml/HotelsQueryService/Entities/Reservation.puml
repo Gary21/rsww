@@ -1,0 +1,15 @@
+@startuml
+class Reservation {
+    + Id : int <<get>> <<set>>
+    + UserId : int <<get>> <<set>>
+    + BabyCount : int <<get>> <<set>>
+    + ChildCount : int <<get>> <<set>>
+    + TeenCount : int <<get>> <<set>>
+    + AdultCount : int <<get>> <<set>>
+    + IsPaid : bool <<get>> <<set>>
+    + WithFood : bool <<get>> <<set>>
+    + Discount : int <<get>> <<set>>
+}
+Reservation --> "ReservationTime" DateTime
+Reservation --> "Occupancy" Occupancy
+@enduml
