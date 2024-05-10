@@ -29,7 +29,6 @@ public abstract class ConsumerServiceBase : BackgroundService, IDisposable
         _consumeChannel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
         _consumeChannel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Topic, durable: true);
         _consumeChannel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: _routingKey);
-
     }
 
 

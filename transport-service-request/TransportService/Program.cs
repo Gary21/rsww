@@ -27,8 +27,8 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
 
 if (Console.ReadLine() == "1")
 {
-    builder.Services.AddHostedService<TransportRequestHandler>();
-    builder.WebHost.UseUrls("http://*:7137");
+    builder.Services.AddHostedService<SubscriberTest>();
+    builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
 } else 
 {
     builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherService>();

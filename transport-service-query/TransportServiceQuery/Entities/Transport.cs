@@ -6,7 +6,7 @@ namespace TransportQueryService.Entities
     public class Transport
     {
         [Key(0)]
-        public string Id { get; set; } = "";//long? 
+        public int Id { get; set; } = "";//long? 
         [Key(1)]
         public string Type { get; set; } = null;
         [Key(2)]

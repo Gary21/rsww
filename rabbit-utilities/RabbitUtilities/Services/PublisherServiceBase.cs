@@ -7,6 +7,7 @@ using RabbitMQ.Client.Events;
 using Serilog;
 using RabbitUtilities.Configuration;
 using RabbitUtilities.Misc;
+using System.Runtime.InteropServices;
 
 namespace RabbitUtilities;
 
@@ -33,6 +34,26 @@ public class PublisherServiceBase : IDisposable
     public void Dispose()
     {
         _connection.Dispose();
+    }
+
+    public void PublishToFanoutNoReply<T>(string exchangeName, MessageType type, T payload)
+    {
+        using var publish_channel = _connection.CreateModel();
+        publish_channel.ExchangeDeclare(exchange: exchangeName, type: ExchangeType.Fanout, durable: true);
+
+        Dictionary<string, object> headers = new()
+        {
+            { "Type", type.ToString() },
+            { "Date", DateTime.UtcNow.ToString() }
+        };
+
+        IBasicProperties properties = publish_channel.CreateBasicProperties();
+        properties.Headers = headers;
+
+        var body = MessagePackSerializer.Serialize(payload);
+
+        publish_channel.BasicPublish(exchange: exchangeName, routingKey: String.Empty, basicProperties: properties, body: body);
+        _logger.Information($"Sent {type} message to {exchangeName} fanout without reply.");
     }
 
     public void PublishRequestNoReply<T>(string exchangeName,string? routingKey, MessageType type, T payload)

@@ -17,9 +17,7 @@ public class ReplyService : BackgroundService, IDisposable
     protected readonly IModel _replyChannel;
     protected readonly string _replyQueueName;
 
-
     PublisherServiceBase _publisherService;
-
 
     public ReplyService(ILogger logger, IConnectionFactory connectionFactory, PublisherServiceBase publisherService)
     {
