@@ -1,12 +1,12 @@
 version: '3'
 services:
 
-  mongo-db:
-    #build: 
-    image: mongo
-    ports:
-      - "27017:27017"
-    #volumes:
+  # mongo-db:
+  #   #build: 
+  #   image: mongo
+  #   ports:
+  #     - "27017:27017"
+  #   #volumes:
      
   postgresql-db:
     #build: 
@@ -15,7 +15,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_PASSWORD: rsww123
+      POSTGRES_PASSWORD: rsww123  
+      POSTGRES_USER: admin
+      POSTGRES_DB: transport
 
 
   rabbitmq-main:
@@ -24,11 +26,11 @@ services:
       - "5672:5672"
       - "15672:15672"  # management opt
       
-  rabbitmq-transaction:
-    image: rabbitmq:3.12.13
-    ports:
-      - "5673:5672"
-      - "15673:15672"
+  # rabbitmq-transaction:
+  #   image: rabbitmq:3.12.13
+  #   ports:
+  #     - "5673:5672"
+  #     - "15673:15672"
   # transaction-service:
   #   image:
   #   build: 

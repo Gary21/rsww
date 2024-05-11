@@ -3,7 +3,7 @@ using MessagePack;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TransportQueryService.Entities
+namespace TransportRequestService.Entities
 {
     [MessagePackObject]
     [Table("Transports")]
@@ -14,11 +14,11 @@ namespace TransportQueryService.Entities
         [MessagePack.Key(0)]
         public int Id { get; set; }
 
-        [Required]
+        [Required] 
         [MessagePack.Key(1)]
         public string Type { get; set; }
 
-        [Required]
+        [Required] 
         [MessagePack.Key(2)]
         public DateTime DepartureDate { get; set; }
 
@@ -59,7 +59,7 @@ namespace TransportQueryService.Entities
 
     public enum TransportType
     {
-        Plane, Bus, Ship
+        Plane,Bus,Ship
     }
 
     [Table("TransportsEvents")]

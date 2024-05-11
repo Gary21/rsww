@@ -5,5 +5,6 @@ public enum MessageType {
     UPDATE = 2,
     DELETE = 3,
     RESERVE = 4,
-    EVENT = 5
+    EVENT = 5,
+    RELEASE = 6,
 }

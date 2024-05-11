@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace TransportQueryService.Repositories
 {
-    internal class PostgresRepository
+    public class PostgresRepository : DbContext
     {
+        public PostgresRepository(DbContextOptions<PostgresRepository> options) : base(options)
+        { }
+
+        public DbSet<Entities.Transport> Transports { get; set; }
+        public DbSet<Entities.TransportEvent> TransportEvents { get; set; }
     }
 }
+
