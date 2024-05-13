@@ -1,0 +1,11 @@
+@startuml
+class RoomTypeCreateDTO {
+    + <<required>> Name : string <<get>> <<set>>
+    + <<required>> Capacity : int <<get>> <<set>>
+}
+class RoomTypeResponseDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Capacity : int <<get>> <<set>>
+}
+@enduml

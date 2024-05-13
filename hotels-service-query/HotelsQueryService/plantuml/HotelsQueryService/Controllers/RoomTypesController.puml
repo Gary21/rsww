@@ -1,0 +1,11 @@
+@startuml
+class RoomTypesController {
+    + RoomTypesController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetRooms() : Task<ActionResult<IEnumerable<RoomTypeResponseDTO>>>
+    + <<async>> GetRoomType(id:int) : Task<ActionResult<RoomTypeResponseDTO>>
+    + <<async>> PutRoomType(id:int, roomTypeDTO:RoomTypeCreateDTO) : Task<IActionResult>
+    + <<async>> PostRoomType(roomTypeDTO:RoomTypeCreateDTO) : Task<ActionResult<RoomType>>
+    + <<async>> DeleteRoomType(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- RoomTypesController
+@enduml

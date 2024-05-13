@@ -1,0 +1,11 @@
+@startuml
+class CountriesController {
+    + CountriesController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetCountries() : Task<ActionResult<IEnumerable<CountryDetailsDTO>>>
+    + <<async>> GetCountry(id:int) : Task<ActionResult<CountryDetailsDTO>>
+    + <<async>> PutCountry(id:int, countryDTO:CountryCreateDTO) : Task<IActionResult>
+    + <<async>> PostCountry(countryDTO:CountryCreateDTO) : Task<ActionResult<Country>>
+    + <<async>> DeleteCountry(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- CountriesController
+@enduml

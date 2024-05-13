@@ -1,0 +1,12 @@
+@startuml
+class "Get`1"<T> {
+}
+class "AddDbContext`1"<T> {
+}
+class "Configure`1"<T> {
+}
+class "AddSingleton`1"<T> {
+}
+class "AddHostedService`1"<T> {
+}
+@enduml

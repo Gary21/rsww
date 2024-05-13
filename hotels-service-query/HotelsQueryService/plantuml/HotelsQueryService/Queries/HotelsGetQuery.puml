@@ -1,0 +1,6 @@
+@startuml
+class HotelsGetQuery {
+}
+HotelsGetQuery o-> "filters" Filter
+HotelsGetQuery o-> "sorting" Sort
+@enduml

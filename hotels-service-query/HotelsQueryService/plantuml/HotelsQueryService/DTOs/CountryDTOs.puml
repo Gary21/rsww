@@ -1,0 +1,21 @@
+@startuml
+class CountryCreateDTO {
+    + <<required>> Name : string <<get>> <<set>>
+}
+class CountryResponseDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+}
+class CountryResponseRecDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+}
+class CountryDetailsDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+CountryResponseRecDTO o-> "Cities<CityResponseRecDTO>" "ICollection`1"
+CountryDetailsDTO o-> "Cities<CityResponseDTO>" "ICollection`1"
+@enduml

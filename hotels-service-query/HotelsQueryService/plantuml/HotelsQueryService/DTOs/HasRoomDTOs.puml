@@ -1,0 +1,27 @@
+@startuml
+class HasRoomDTOs {
+}
+class HasRoomCreateDTO {
+    + RoomNumber : int <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + BasePrice : int <<get>> <<set>>
+    + RoomTypeId : int <<get>> <<set>>
+}
+class HasRoomResponseDTO {
+    + Id : int <<get>> <<set>>
+    + RoomsCount : int <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + BasePrice : int <<get>> <<set>>
+}
+class HasRoomResponseRecDTO {
+    + Id : int <<get>> <<set>>
+    + RoomsCount : int <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + BasePrice : int <<get>> <<set>>
+}
+HasRoomDTOs +-- HasRoomCreateDTO
+HasRoomDTOs +-- HasRoomResponseDTO
+HasRoomResponseDTO --> "RoomType" RoomTypeResponseDTO
+HasRoomDTOs +-- HasRoomResponseRecDTO
+HasRoomResponseRecDTO --> "RoomType" RoomTypeResponseDTO
+@enduml
