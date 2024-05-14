@@ -8,17 +8,17 @@ namespace HotelsQueryService.Entities
     [MessagePackObject]
     public class Hotel
     {
-        [MessagePack.Key(0)]
         [System.ComponentModel.DataAnnotations.Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [MessagePack.Key(0)]
         public int Id { get; set; }
 
-        [MessagePack.Key(1)]
         [Required]
+        [MessagePack.Key(1)]
         public string Name { get; set; }
 
-        [MessagePack.Key(2)]
         [Required]
+        [MessagePack.Key(2)]
         public string Address { get; set; }
 
         [MessagePack.Key(3)]
@@ -33,12 +33,9 @@ namespace HotelsQueryService.Entities
         [MessagePack.Key(6)]
         public bool HasFood { get; set; }
 
-
-        [MessagePack.Key(7)]
         [Required]
         public City City { get; set; }
 
-        [MessagePack.IgnoreMember]
         public ICollection<HasRoom> HasRooms { get; set; } = new List<HasRoom>();
     }
 }
