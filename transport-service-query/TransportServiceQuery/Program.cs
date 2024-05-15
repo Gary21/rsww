@@ -16,8 +16,7 @@ var connectionString = config.GetSection("postgresConfig").GetValue<string>("con
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
-builder.Services.AddDbContextFactory<PostgresRepository>((options => options.UseNpgsql(connectionString)));
-//builder.Services.AddDbContext<PostgresRepository>(options => options.UseNpgsql(connectionString), ServiceLifetime.Transient/*Singleton*/);
+builder.Services.AddDbContextFactory<PostgresRepository>(options => options.UseNpgsql(connectionString));
 builder.Services.AddSingleton(logger);
 builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     {   

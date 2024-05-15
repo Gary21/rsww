@@ -14,17 +14,19 @@ namespace OrderService.RequestHandler
 {
     public class OrderRequestHandler : ConsumerServiceBase
     {
-        private readonly PostgresRepository _repository;
+
+        private readonly IDbContextFactory<PostgresRepository> _repositoryFactory;
         private readonly PublisherServiceBase _publisher;
 
-        public OrderRequestHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisher, PostgresRepository repository) 
+        public OrderRequestHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisher, IDbContextFactory<PostgresRepository> repositoryFactory) 
             : base(logger, connectionFactory, config.GetSection("orderConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
         {
-            _repository = repository;
+            _repositoryFactory = repositoryFactory;
             _publisher = publisher;
-            _repository.Database.EnsureDeleted();
-            _repository.Database.EnsureCreated();
-            _repository.SaveChanges();
+            using var repository = repositoryFactory.CreateDbContext();
+            //repository.Database.EnsureDeleted();
+            repository.Database.EnsureCreated();
+            //repository.SaveChanges();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
@@ -61,18 +63,21 @@ namespace OrderService.RequestHandler
         {
             var body = ea.Body.ToArray();
             var message = MessagePackSerializer.Deserialize<AddRequest>(body);
-            
-            _repository.Orders.Add(message.Order);
-            await _repository.SaveChangesAsync();
+            using var repository = _repositoryFactory.CreateDbContext();
+
+            repository.Orders.Add(message.Order);
+            await repository.SaveChangesAsync();
         }
 
         private async void Get(BasicDeliverEventArgs ea)
         {
             var body = ea.Body.ToArray();
             var message = MessagePackSerializer.Deserialize<GetRequest>(body);
+            using var repository = _repositoryFactory.CreateDbContext();
+
             _logger.Information($"GET {MessagePackSerializer.ConvertToJson(body)}");
 
-            var orders = await _repository.Orders
+            var orders = await repository.Orders
                 .Where(o => message.Filters.Ids == null || message.Filters.Ids.Count() == 0 || message.Filters.Ids.Contains(o.Id) )
                 .Where(o => message.Filters.UserIds == null || message.Filters.UserIds.Count() == 0 || message.Filters.UserIds.Contains(o.UserId))
                 .ToListAsync();
@@ -84,12 +89,14 @@ namespace OrderService.RequestHandler
         {
             var body = ea.Body.ToArray();
             var message = MessagePackSerializer.Deserialize<DeleteRequest>(body);
+            using var repository = _repositoryFactory.CreateDbContext();
+
             _logger.Information($"DELETE {MessagePackSerializer.ConvertToJson(body)}");
 
-            var orderToDelete = await _repository.Orders.FirstAsync(o => o.Id == message.Id);
+            var orderToDelete = await repository.Orders.FirstAsync(o => o.Id == message.Id);
 
-            _repository.Orders.Remove(orderToDelete);
-            await _repository.SaveChangesAsync();
+            repository.Orders.Remove(orderToDelete);
+            await repository.SaveChangesAsync();
         }
     }
 }
