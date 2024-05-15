@@ -14,11 +14,10 @@ var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 var connectionString = config.GetSection("postgresConfig").GetValue<string>("connectionString");
 
-
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
-builder.Services.AddDbContext<PostgresRepository>(options => options.UseNpgsql(connectionString), ServiceLifetime.Transient/*Singleton*/);
-
+builder.Services.AddDbContextFactory<PostgresRepository>((options => options.UseNpgsql(connectionString)));
+//builder.Services.AddDbContext<PostgresRepository>(options => options.UseNpgsql(connectionString), ServiceLifetime.Transient/*Singleton*/);
 builder.Services.AddSingleton(logger);
 builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     {   

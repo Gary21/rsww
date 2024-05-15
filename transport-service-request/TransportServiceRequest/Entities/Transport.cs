@@ -66,18 +66,9 @@ namespace TransportRequestService.Entities
     [PrimaryKey(nameof(TransportId), nameof(SequenceNumber))]
     public class TransportEvent
     {
-        //[System.ComponentModel.DataAnnotations.Key]
-        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        //[MessagePack.Key(0)]
-        //public int Id { get; set; }
-
-        //[MessagePack.Key(0)]
-        //public Transport Transport { get; set; }
-
         [MessagePack.Key(0)]
         public int TransportId { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [MessagePack.Key(1)]
         public int SequenceNumber { get; set; }
 
@@ -86,7 +77,5 @@ namespace TransportRequestService.Entities
 
         [MessagePack.Key(3)]
         public decimal PriceChange { get; set; }
-
     }
-
 }

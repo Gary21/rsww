@@ -30,7 +30,7 @@ builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherService>()
 
 builder.Services.AddHostedService<ReplyService>();
 builder.Services.AddHostedService<TestPublish>();
-builder.WebHost.UseUrls("http://*:7139");
+builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
 
 builder.Services.AddCors(options =>
     {
