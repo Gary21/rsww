@@ -9,7 +9,7 @@ namespace CatalogRequestService.Controllers
     public class HotelsController : ControllerBase
     {
         // GET: api/<HotelsController>
-        [HttpGet]
+        [HttpGet("all")]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };

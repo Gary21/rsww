@@ -1,0 +1,13 @@
+@startuml
+class Room {
+    + HotelId : int <<get>> <<set>>
+    + RoomNumber : int <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + BasePrice : int <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+Room --> "Hotel" Hotel
+Room --> "RoomType" RoomType
+Room --> "Occupancies<Occupancy>" "ICollection`1"
+@enduml
