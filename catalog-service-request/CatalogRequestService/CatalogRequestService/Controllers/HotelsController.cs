@@ -11,9 +11,9 @@ namespace CatalogRequestService.Controllers
     [ApiController]
     public class HotelsController : ControllerBase
     {
-        private readonly HotelQueryPublisher _hotelQueryPublisher;
+        private readonly HotelRequestPublisher _hotelQueryPublisher;
 
-        public HotelsController(HotelQueryPublisher hotelQueryPublisher)
+        public HotelsController(HotelRequestPublisher hotelQueryPublisher)
         {
             _hotelQueryPublisher = hotelQueryPublisher;
         }
