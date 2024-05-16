@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HotelsQueryService.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20240516120813_init-mig")]
+    [Migration("20240516233132_init-mig")]
     partial class initmig
     {
         /// <inheritdoc />
@@ -142,8 +142,8 @@ namespace HotelsQueryService.Migrations
                         .HasColumnType("integer")
                         .HasColumnOrder(1);
 
-                    b.Property<int>("BasePrice")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("BasePrice")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");

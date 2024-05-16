@@ -59,7 +59,7 @@ namespace HotelsQueryService.Controllers
         }
 
         // GET: api/Hotels/5
-        [HttpGet("{id}/rooms")]
+        [HttpGet("{id}/HotelRooms")]
         public async Task<ActionResult<HotelDetailsWithRoomsDTO>> GetHotelWithRooms(int id)
         {
             var hotel = await _context.Hotels

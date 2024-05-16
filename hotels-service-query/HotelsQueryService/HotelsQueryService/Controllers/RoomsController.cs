@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelsQueryService.Controllers
 {
-    [Route("api/Hotels/{id}/rooms")]
+    [Route("api/Rooms/{id}")]
     [ApiController]
     public class RoomsController : ControllerBase
     {
@@ -27,7 +27,7 @@ namespace HotelsQueryService.Controllers
             var hotel = await _context.Hotels
                 .Include(h => h.Rooms)
                 .FirstOrDefaultAsync(h => h.Id == id);
-
+                
             if (hotel == null) { return NotFound(); }
 
             var roomsDTO = _mapper.Map<List<RoomResponseDTO>>(hotel.Rooms);
@@ -66,22 +66,7 @@ namespace HotelsQueryService.Controllers
             return NoContent();
         }
 
-        [HttpPost]
-        public async Task<ActionResult<RoomResponseDTO>> PostRoom(int id, RoomCreateDTO roomDTO)
-        {
-            var hotel = await _context.Hotels.FindAsync(id);
-            if (hotel == null) { return NotFound(); }
 
-            var room = _mapper.Map<Room>(roomDTO);
-            room.Hotel = hotel;
-
-            _context.Rooms.Add(room);
-            await _context.SaveChangesAsync();
-
-            var roomDetailsDTO = _mapper.Map<RoomResponseDTO>(room);
-
-            return CreatedAtAction("GetRooms", new { id = roomDetailsDTO.Id }, roomDetailsDTO);
-        }
 
         // DELETE: api/Hotels/5/rooms/5
         [HttpDelete("{roomId}")]

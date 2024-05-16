@@ -19,41 +19,12 @@ namespace CatalogRequestService.Controllers
         }
 
 
-        // GET: api/<HotelsController>
-        [HttpGet("all")]
-        public async Task<IEnumerable<HotelDTO>> Get()
-        {
-            var hotels = await _hotelQueryPublisher.GetHotelsAll();
-            return hotels;
-        }
-
-
-        // GET: api/<HotelsController>/Countries
-        [HttpGet("Countries")]
-        public async Task<IEnumerable<CountryDTO>> GetCountries()
-        {
-            var countries = await _hotelQueryPublisher.GetCountriesAll();
-            return countries;
-        }
-
-        // GET: api/<HotelsController>/Cities
-        [HttpGet("Cities")]
-        public async Task<IEnumerable<CityDTO>> GetCities()
-        {
-            var cities = await _hotelQueryPublisher.GetCitiesAll();
-            return cities;
-        }
-
-        // GET api/<HotelsController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
         // POST api/<HotelsController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public void Post([FromBody] HotelRequestDTO hotelRequestDTO)
+        {
+            _hotelQueryPublisher.PublishHotelRequest(hotelRequestDTO);
+        }
         {
         }
 

@@ -92,7 +92,7 @@ namespace HotelsQueryService.Migrations
                     HotelId = table.Column<int>(type: "integer", nullable: false),
                     RoomNumber = table.Column<int>(type: "integer", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
-                    BasePrice = table.Column<int>(type: "integer", nullable: false),
+                    BasePrice = table.Column<decimal>(type: "numeric", nullable: false),
                     RoomTypeId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>

@@ -24,7 +24,7 @@ namespace HotelsQueryService.Entities
         public string? Description { get; set; }
 
         [MP.Key(3)] 
-        public int BasePrice { get; set; }
+        public decimal BasePrice { get; set; }
 
         [DA.Required]
         [MP.Key(4)] 

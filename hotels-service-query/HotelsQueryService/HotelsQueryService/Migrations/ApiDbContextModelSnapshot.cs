@@ -139,8 +139,8 @@ namespace HotelsQueryService.Migrations
                         .HasColumnType("integer")
                         .HasColumnOrder(1);
 
-                    b.Property<int>("BasePrice")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("BasePrice")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
