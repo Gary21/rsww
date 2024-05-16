@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HotelsQueryService.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20240509033404_init-mig")]
+    [Migration("20240516120813_init-mig")]
     partial class initmig
     {
         /// <inheritdoc />
@@ -65,38 +65,6 @@ namespace HotelsQueryService.Migrations
                     b.ToTable("Countries");
                 });
 
-            modelBuilder.Entity("HotelsQueryService.Entities.HasRoom", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BasePrice")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<int>("HotelId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RoomNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HotelId");
-
-                    b.HasIndex("RoomTypeId");
-
-                    b.ToTable("HasRooms");
-                });
-
             modelBuilder.Entity("HotelsQueryService.Entities.Hotel", b =>
                 {
                     b.Property<int>("Id")
@@ -113,18 +81,21 @@ namespace HotelsQueryService.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("HasFood")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("ImgPaths")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Rating")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Stars")
                         .HasColumnType("integer");
@@ -153,55 +124,38 @@ namespace HotelsQueryService.Migrations
                     b.Property<DateTime>("CheckOut")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Id")
+                    b.Property<int>("ReservationId")
                         .HasColumnType("integer");
 
                     b.HasKey("HotelId", "RoomNumber", "CheckIn");
 
-                    b.HasIndex("Id")
-                        .IsUnique();
-
                     b.ToTable("Occupancies");
                 });
 
-            modelBuilder.Entity("HotelsQueryService.Entities.Reservation", b =>
+            modelBuilder.Entity("HotelsQueryService.Entities.Room", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("HotelId")
+                        .HasColumnType("integer")
+                        .HasColumnOrder(0);
+
+                    b.Property<int>("RoomNumber")
+                        .HasColumnType("integer")
+                        .HasColumnOrder(1);
+
+                    b.Property<int>("BasePrice")
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
 
-                    b.Property<int>("AdultCount")
+                    b.Property<int>("RoomTypeId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("BabyCount")
-                        .HasColumnType("integer");
+                    b.HasKey("HotelId", "RoomNumber");
 
-                    b.Property<int>("ChildCount")
-                        .HasColumnType("integer");
+                    b.HasIndex("RoomTypeId");
 
-                    b.Property<int>("Discount")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("ReservationTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("TeenCount")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("WithFood")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Reservations");
+                    b.ToTable("Rooms");
                 });
 
             modelBuilder.Entity("HotelsQueryService.Entities.RoomType", b =>
@@ -235,10 +189,32 @@ namespace HotelsQueryService.Migrations
                     b.Navigation("Country");
                 });
 
-            modelBuilder.Entity("HotelsQueryService.Entities.HasRoom", b =>
+            modelBuilder.Entity("HotelsQueryService.Entities.Hotel", b =>
+                {
+                    b.HasOne("HotelsQueryService.Entities.City", "City")
+                        .WithMany("Hotels")
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("City");
+                });
+
+            modelBuilder.Entity("HotelsQueryService.Entities.Occupancy", b =>
+                {
+                    b.HasOne("HotelsQueryService.Entities.Room", "HasRoom")
+                        .WithMany("Occupancies")
+                        .HasForeignKey("HotelId", "RoomNumber")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HasRoom");
+                });
+
+            modelBuilder.Entity("HotelsQueryService.Entities.Room", b =>
                 {
                     b.HasOne("HotelsQueryService.Entities.Hotel", "Hotel")
-                        .WithMany("HasRooms")
+                        .WithMany("Rooms")
                         .HasForeignKey("HotelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -254,28 +230,6 @@ namespace HotelsQueryService.Migrations
                     b.Navigation("RoomType");
                 });
 
-            modelBuilder.Entity("HotelsQueryService.Entities.Hotel", b =>
-                {
-                    b.HasOne("HotelsQueryService.Entities.City", "City")
-                        .WithMany("Hotels")
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("City");
-                });
-
-            modelBuilder.Entity("HotelsQueryService.Entities.Occupancy", b =>
-                {
-                    b.HasOne("HotelsQueryService.Entities.Reservation", "Reservation")
-                        .WithOne("Occupancy")
-                        .HasForeignKey("HotelsQueryService.Entities.Occupancy", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Reservation");
-                });
-
             modelBuilder.Entity("HotelsQueryService.Entities.City", b =>
                 {
                     b.Navigation("Hotels");
@@ -288,13 +242,12 @@ namespace HotelsQueryService.Migrations
 
             modelBuilder.Entity("HotelsQueryService.Entities.Hotel", b =>
                 {
-                    b.Navigation("HasRooms");
+                    b.Navigation("Rooms");
                 });
 
-            modelBuilder.Entity("HotelsQueryService.Entities.Reservation", b =>
+            modelBuilder.Entity("HotelsQueryService.Entities.Room", b =>
                 {
-                    b.Navigation("Occupancy")
-                        .IsRequired();
+                    b.Navigation("Occupancies");
                 });
 
             modelBuilder.Entity("HotelsQueryService.Entities.RoomType", b =>

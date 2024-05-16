@@ -1,37 +1,42 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using MessagePack;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+using EF = Microsoft.EntityFrameworkCore;
+using DA = System.ComponentModel.DataAnnotations;
+using MP = MessagePack;
 
 namespace HotelsQueryService.Entities
 {
-    [PrimaryKey("HotelId", "RoomNumber")]
-    [MessagePackObject]
+    [EF.PrimaryKey("HotelId", "RoomNumber")]
+    [MP.MessagePackObject]
     public class Room
     {
-        [System.ComponentModel.DataAnnotations.Key, Column(Order = 0)]
-        [MessagePack.Key(0)] 
+        [DA.Key, Column(Order = 0)]
+        [MP.Key(0)] 
+        required
         public int HotelId { get; set; }
 
-        [System.ComponentModel.DataAnnotations.Key, Column(Order = 1)]
-        [MessagePack.Key(1)] 
+        [DA.Key, Column(Order = 1)]
+        [MP.Key(1)] 
+        required
         public int RoomNumber { get; set; }
 
-        [MessagePack.Key(2)] 
+        [MP.Key(2)] 
         public string? Description { get; set; }
 
-        [MessagePack.Key(3)] 
+        [MP.Key(3)] 
         public int BasePrice { get; set; }
 
-        [Required]
-        [MessagePack.Key(4)] 
+        [DA.Required]
+        [MP.Key(4)] 
+        required
         public Hotel Hotel { get; set; }
 
-        [Required]
-        [MessagePack.Key(5)] 
+        [DA.Required]
+        [MP.Key(5)] 
+        required
         public RoomType RoomType { get; set; }
 
-        [MessagePack.IgnoreMember] 
-        public ICollection<Occupancy> Occupancies { get; set; }
+        [MP.IgnoreMember] 
+        public ICollection<Occupancy> Occupancies { get; set; } = new List<Occupancy>();
     }
 }

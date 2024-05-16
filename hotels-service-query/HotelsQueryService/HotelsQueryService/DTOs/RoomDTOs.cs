@@ -1,6 +1,4 @@
-﻿using HotelsQueryService.Entities;
-
-namespace HotelsQueryService.DTOs
+﻿namespace HotelsQueryService.DTOs
 {
     public class RoomCreateDTO
     {

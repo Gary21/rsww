@@ -1,36 +1,43 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using MessagePack;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+using EF = Microsoft.EntityFrameworkCore;
+using DA = System.ComponentModel.DataAnnotations;
+using MP = MessagePack;
 
 namespace HotelsQueryService.Entities
 {
-    [PrimaryKey("HotelId", "RoomNumber", "CheckIn")]
-    [MessagePackObject]
+    [EF.PrimaryKey("HotelId", "RoomNumber", "CheckIn")]
+    [MP.MessagePackObject]
     public class Occupancy
     {
-        [System.ComponentModel.DataAnnotations.Key, Column(Order = 0)]
-        [MessagePack.Key(0)]
+        [DA.Key, Column(Order = 0)]
+        [MP.Key(0)]
+        required
         public int HotelId { get; set; }
 
-        [System.ComponentModel.DataAnnotations.Key, Column(Order = 1)]
-        [MessagePack.Key(1)]
+        [DA.Key, Column(Order = 1)]
+        [MP.Key(1)]
+        required
         public int RoomNumber { get; set; }
 
-        [System.ComponentModel.DataAnnotations.Key, Column(Order = 2)]
-        [MessagePack.Key(2)]
+        [DA.Key, Column(Order = 2)]
+        [MP.Key(2)]
+        required
         public DateTime CheckIn { get; set; }
 
-        [Required]
-        [MessagePack.Key(3)]
+        [DA.Required]
+        [MP.Key(3)]
+        required
         public DateTime CheckOut { get; set; }
 
-        [ForeignKey("Id")]
-        [MessagePack.Key(4)]
-        public Reservation Reservation { get; set; }
+        [DA.Required]
+        [MP.Key(4)]
+        required
+        public int ReservationId { get; set; }
 
-        [Required]
-        [MessagePack.Key(5)]
-        public HasRoom HasRoom { get; set; }
+        [DA.Required]
+        [MP.Key(5)]
+        required
+        public Room HasRoom { get; set; }
     }
 }

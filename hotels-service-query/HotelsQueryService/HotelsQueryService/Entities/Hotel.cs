@@ -1,41 +1,50 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using MessagePack;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+using DA = System.ComponentModel.DataAnnotations;
+using MP = MessagePack;
 
 namespace HotelsQueryService.Entities
 {
-    [MessagePackObject]
+    [MP.MessagePackObject]
     public class Hotel
     {
-        [System.ComponentModel.DataAnnotations.Key]
+        [DA.Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [MessagePack.Key(0)]
+        [MP.Key(0)]
+        required
         public int Id { get; set; }
 
-        [Required]
-        [MessagePack.Key(1)]
+        [DA.Required]
+        [MP.Key(1)]
+        required
         public string Name { get; set; }
 
-        [Required]
-        [MessagePack.Key(2)]
+        [DA.Required]
+        [MP.Key(2)]
+        required
         public string Address { get; set; }
 
-        [MessagePack.Key(3)]
-        public string Description { get; set; }
+        [MP.Key(3)]
+        public string? Description { get; set; }
 
-        [MessagePack.Key(4)]
-        public int Rating { get; set; }
+        [MP.Key(4)]
+        public decimal Rating { get; set; }
 
-        [MessagePack.Key(5)]
+        [MP.Key(5)]
         public int Stars { get; set; }
 
-        [MessagePack.Key(6)]
+        [MP.Key(6)]
         public bool HasFood { get; set; }
 
-        [Required]
+        [MP.IgnoreMember]
+        [DA.Required]
+        required
         public City City { get; set; }
 
-        public ICollection<HasRoom> HasRooms { get; set; } = new List<HasRoom>();
+        [MP.Key(7)]
+        public string ImgPaths { get; set; }
+
+        [MP.IgnoreMember]
+        public ICollection<Room> Rooms { get; set; } = new List<Room>();
     }
 }

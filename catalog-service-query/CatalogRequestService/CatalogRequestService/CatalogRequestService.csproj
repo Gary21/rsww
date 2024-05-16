@@ -40,7 +40,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="QueryHandler\" />
     <Folder Include="Queries\" />
   </ItemGroup>

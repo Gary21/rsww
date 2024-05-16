@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using HotelsQueryService.Entities;
-using HotelsQueryService.DTOs;
 
 namespace HotelsQueryService.DTOs
 {
