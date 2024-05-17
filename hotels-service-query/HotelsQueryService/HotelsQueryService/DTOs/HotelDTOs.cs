@@ -2,6 +2,7 @@
 
 namespace HotelsQueryService.DTOs
 {
+    [MP.MessagePackObject]
     public class HotelDTO
     {
         [MP.Key(0)]
@@ -23,8 +24,10 @@ namespace HotelsQueryService.DTOs
         [MP.Key(8)]
         public string? CityName { get; set; }
         [MP.Key(9)]
-        public string? CountryName { get; set; }
+        public int? CountryId { get; set; }
         [MP.Key(10)]
+        public string? CountryName { get; set; }
+        [MP.Key(11)]
         public string ImgPaths { get; set; }
     }
 

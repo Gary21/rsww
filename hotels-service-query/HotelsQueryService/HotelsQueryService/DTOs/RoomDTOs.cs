@@ -11,10 +11,9 @@
     public class RoomResponseDTO
     {
         public int HotelId { get; set; }
-        public int RoomsNumber { get; set; }
+        public int RoomNumber { get; set; }
         public string? Description { get; set; }
         public decimal BasePrice { get; set; }
-        public RoomTypeResponseDTO RoomType { get; set; }
     }
 
     public class RoomResponseRecDTO

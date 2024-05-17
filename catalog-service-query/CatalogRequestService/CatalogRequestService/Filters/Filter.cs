@@ -1,6 +1,6 @@
 ﻿using MessagePack;
 
-namespace HotelsQueryService.Filters
+namespace CatalogQueryService.Filters
 {
     [MessagePackObject]
     public class Filter

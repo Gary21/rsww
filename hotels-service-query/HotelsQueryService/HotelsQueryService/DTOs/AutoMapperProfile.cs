@@ -23,9 +23,12 @@ namespace HotelsQueryService.DTOs
             CreateMap<Hotel, HotelDetailsDTO>();
             CreateMap<Hotel, HotelDetailsWithRoomsDTO>();
             CreateMap<HotelCreateDTO, Hotel>();
+            CreateMap<Hotel, HotelDTO>();
 
             CreateMap<RoomType, RoomTypeResponseDTO>();
             CreateMap<RoomTypeCreateDTO, RoomType>();
+
+            CreateMap<Room, RoomResponseDTO>();
 
 
         }

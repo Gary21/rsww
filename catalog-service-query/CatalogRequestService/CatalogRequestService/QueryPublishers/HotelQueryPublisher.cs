@@ -6,6 +6,8 @@ using RabbitUtilities.Configuration;
 using ILogger = Serilog.ILogger;
 using MessagePack;
 using CatalogQueryService.DTOs;
+using CatalogQueryService.Queries;
+using CatalogQueryService.Filters;
 
 
 
@@ -13,16 +15,19 @@ namespace CatalogRequestService.QueryPublishers
 {
     public class HotelQueryPublisher : PublisherServiceBase
     {
-        private readonly string _exchangeName = "Hotels";
-        private readonly string _routingKey = "Hotels";
+        private readonly string _exchangeName = "resources/hotels";
+        private readonly string _routingKey = "query";
 
         public HotelQueryPublisher(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory)
-            : base(logger, connectionFactory, config.GetSection("hotelQueryPublisher").Get<ServiceConfig>()!)
-        {}
-
-        public async Task<ICollection<HotelDTO>> GetHotelsAll()
+            : base(logger, connectionFactory, config.GetSection("CatalogQueryPublisher").Get<ServiceConfig>()!)
         {
-            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, "Hotels/all");
+            //_exchangeName = config.GetSection("CatalogQueryPublisher").GetValue<string>("exchange");
+            //_routingKey = config.GetSection("CatalogQueryPublisher").GetValue<string>("routing");
+        }
+
+        public async Task<ICollection<HotelDTO>> GetHotels(HotelsGetQuery query)
+        {
+            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, query);
 
             CancellationToken cancellationToken = new CancellationToken(false);
 
@@ -33,22 +38,9 @@ namespace CatalogRequestService.QueryPublishers
             return hotels;
         }
 
-        public async Task<HotelDTO> GetHotelById(int id)
-        {
-            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, $"Hotels/{id}");
-
-            CancellationToken cancellationToken = new CancellationToken(false);
-
-            var hotelBytes = await GetReply(messageCorellationId, cancellationToken);
-
-            var hotel = MessagePackSerializer.Deserialize<HotelDTO>(hotelBytes);
-
-            return hotel;
-        }
-
         public async Task<ICollection<CountryDTO>> GetCountriesAll()
         {
-            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, "Countries/all");
+            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, new HotelsGetQuery());
 
             CancellationToken cancellationToken = new CancellationToken(false);
 
@@ -61,16 +53,18 @@ namespace CatalogRequestService.QueryPublishers
 
         public async Task<ICollection<CityDTO>> GetCitiesAll()
         {
-            Guid guid = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, "Cities/all");
+            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, new HotelsGetQuery());
 
             CancellationToken cancellationToken = new CancellationToken(false);
 
-            var citiesBytes = await GetReply(guid, cancellationToken);
+            var citiesBytes = await GetReply(messageCorellationId, cancellationToken);
 
             var cities = MessagePackSerializer.Deserialize<ICollection<CityDTO>>(citiesBytes);
 
             return cities;
         }
+
+        
 
 
     }

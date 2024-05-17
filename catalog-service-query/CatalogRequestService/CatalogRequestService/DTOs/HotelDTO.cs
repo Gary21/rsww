@@ -1,27 +1,33 @@
-﻿using MessagePack;
+﻿using MP = MessagePack;
 
 namespace CatalogRequestService.DTOs
 {
-    [MessagePackObject]
+    [MP.MessagePackObject]
     public class HotelDTO
     {
-        [Key(0)]
-        public int Id;
-        [Key(1)]
-        public string Name;
-        [Key(2)]
-        public string Address;
-        [Key(3)]
-        public string City;
-        [Key(4)]
-        public string Country;
-        [Key(5)]
-        public string Description;
-        [Key(6)]
-        public int Rating;
-        [Key(7)]
-        public int Stars;
-        [Key(8)]
-        public bool HasFood;
+        [MP.Key(0)]
+        public int Id { get; set; }
+        [MP.Key(1)]
+        public string Name { get; set; }
+        [MP.Key(2)]
+        public string Address { get; set; }
+        [MP.Key(3)]
+        public string Description { get; set; }
+        [MP.Key(4)]
+        public decimal Rating { get; set; }
+        [MP.Key(5)]
+        public int Stars { get; set; }
+        [MP.Key(6)]
+        public bool HasFood { get; set; }
+        [MP.Key(7)]
+        public int? CityId { get; set; }
+        [MP.Key(8)]
+        public string? CityName { get; set; }
+        [MP.Key(9)]
+        public int? CountryId { get; set; }
+        [MP.Key(10)]
+        public string? CountryName { get; set; }
+        [MP.Key(11)]
+        public string ImgPaths { get; set; }
     }
 }

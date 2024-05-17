@@ -24,28 +24,28 @@ namespace HotelsQueryService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoomResponseDTO>>> GetRooms(int id)
         {
-            var hotel = await _context.Hotels
-                .Include(h => h.Rooms)
-                .FirstOrDefaultAsync(h => h.Id == id);
+            var rooms = await _context.Rooms
+                .Where(r => r.HotelId == id)
+                .ToListAsync();
                 
-            if (hotel == null) { return NotFound(); }
+            if (rooms == null) { return NotFound(); }
 
-            var roomsDTO = _mapper.Map<List<RoomResponseDTO>>(hotel.Rooms);
+            var roomsDTO = _mapper.Map<List<RoomResponseDTO>>(rooms);
 
             return Ok(roomsDTO);
         }
 
-        // GET: api/Hotels/5/rooms/5
-        [HttpGet("{roomId}")]
-        public async Task<ActionResult<RoomResponseDTO>> GetRoom(int id, int roomId)
-        {
-            var room = await _context.Rooms.FindAsync(roomId);
-            if (room == null) { return NotFound(); }
+        //// GET: api/Hotels/5/rooms/5
+        //[HttpGet("{roomId}")]
+        //public async Task<ActionResult<RoomResponseDTO>> GetRoom(int id, int roomId)
+        //{
+        //    var room = await _context.Rooms.FindAsync(roomId);
+        //    if (room == null) { return NotFound(); }
 
-            var roomDTO = _mapper.Map<RoomResponseDTO>(room);
+        //    var roomDTO = _mapper.Map<RoomResponseDTO>(room);
 
-            return Ok(roomDTO);
-        }
+        //    return Ok(roomDTO);
+        //}
 
         // PUT: api/Hotels/5/rooms/5
         [HttpPut("{roomId}")]
