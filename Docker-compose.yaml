@@ -69,7 +69,7 @@ services:
   #   ports:
 
   transport-query-service:
-    image: rsww-transport-query-service
+    image: ricopsych/rsww-transport-query-service
     environment:
       - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Hotels;Username=admin;Password=rsww123;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
@@ -78,7 +78,7 @@ services:
       - rabbitmq-main
     #ports:
   transport-request-service:
-    image: rsww-transport-request-service
+    image: ricopsych/rsww-transport-request-service
     environment:
       - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Hotels;Username=admin;Password=rsww123;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
@@ -87,7 +87,7 @@ services:
       - rabbitmq-main
 
   order-service:
-    image: rsww-order-service
+    image: ricopsych/rsww-order-service
     environment:
       - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Orders;Username=admin;Password=rsww123;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
