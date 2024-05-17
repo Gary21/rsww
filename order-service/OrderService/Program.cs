@@ -5,41 +5,48 @@ using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using Microsoft.AspNetCore.Hosting;
 using RabbitUtilities.Configuration;
-using TransportQueryService.QueryHandler;
+using RabbitUtilities;
+using OrderService.RequestHandler;
+using OrderService.Repositories;
 using Microsoft.EntityFrameworkCore;
-using TransportQueryService.Repositories;
+using OrderService.Publisher;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
-
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 var connectionString = config.GetValue<string>("postgresConfig:connectionString");//.GetValue<string>("connectionString");
-
+//var rabbitAdress = config.GetValue<string>("rabbitConfig:adress");
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddDbContextFactory<PostgresRepository>(options => options.UseNpgsql(connectionString));
+//builder.Services.AddDbContext<PostgresRepository>(options => options.UseNpgsql(connectionString), ServiceLifetime.Transient/*Singleton*/);
 builder.Services.AddSingleton(logger);
 builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
-    {   
-        HostName = rabbitConfig.adress, 
-        Port = rabbitConfig.port, 
-        UserName = "guest", 
-        Password = "guest" , 
-        AutomaticRecoveryEnabled=true
-    });
-builder.Services.AddHostedService<TransportQueryHandler>();
-//builder.WebHost.UseUrls("http://*:7134");
+{
+    HostName = rabbitConfig.adress,
+    Port = rabbitConfig.port,
+    UserName = rabbitConfig.user,
+    Password = rabbitConfig.password,
+    AutomaticRecoveryEnabled = true
+});
+builder.Services.AddSingleton<PublisherServiceBase, OrderPublisherService>();
+builder.Services.AddHostedService<OrderRequestHandler>();
+
+
+
+//builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
+
 builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("*",
-            policy =>
-            {
-                policy.AllowAnyOrigin()
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-    });
+{
+    options.AddPolicy("*",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 
 var app = builder.Build();
 

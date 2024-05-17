@@ -18,11 +18,13 @@ namespace TransportQueryService.QueryHandler
 {
     public class TransportQueryHandler : ConsumerServiceBase
     {
-        private readonly PostgresRepository _repository;
-        public TransportQueryHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PostgresRepository repository) 
+        private readonly IDbContextFactory<PostgresRepository> _repositoryFactory;
+        public TransportQueryHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<PostgresRepository> repositoryFactory) 
             : base(logger, connectionFactory, config.GetSection("transportQueryConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
         {
-            _repository = repository;
+            _repositoryFactory = repositoryFactory;
+            using var repository = _repositoryFactory.CreateDbContext();
+            repository.Database.EnsureCreated();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
@@ -50,40 +52,39 @@ namespace TransportQueryService.QueryHandler
 
         private async void Get(BasicDeliverEventArgs ea)
         {
+            using var repository = _repositoryFactory.CreateDbContext();
             var message = MessagePackSerializer.Deserialize<TransportGetQuery>(ea.Body.ToArray());
             var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
             _logger.Information($"GET Transport {filt_ser}");
-            //message.filters
-            //message.sort
+            //message.sort?
 
-            var transports = await _repository.Transports
-                .Where(t => message.filters.Ids.Contains(t.Id) || message.filters.Ids == null || message.filters.Ids.Count() == 0)
-                .Where(t => message.filters.Types.Contains(t.Type) || message.filters.Types == null || message.filters.Types.Count() == 0)
-                .Where(t => message.filters.DepartureDates.Contains(t.DepartureDate) || message.filters.DepartureDates == null || message.filters.DepartureDates.Count() == 0)
-                .Where(t => message.filters.ArrivalDates.Contains(t.ArrivalDate) || message.filters.ArrivalDates == null || message.filters.ArrivalDates.Count() == 0)
-                .Where(t => message.filters.CountryDestinations.Contains(t.DestinationCountry) || message.filters.CountryDestinations == null || message.filters.CountryDestinations.Count() == 0)
-                .Where(t => message.filters.CountryOrigins.Contains(t.OriginCountry) || message.filters.CountryOrigins == null || message.filters.CountryOrigins.Count() == 0)
-                .Where(t => message.filters.CityDestinations.Contains(t.DestinationCity) || message.filters.CityDestinations == null || message.filters.CityDestinations.Count() == 0)
-                .Where(t => message.filters.CityOrigins.Contains(t.OriginCity) || message.filters.CityOrigins == null || message.filters.CityOrigins.Count() == 0)
+            //message.filters
+            var transports = await repository.Transports
+                .Where(t => message.filters.Ids == null || message.filters.Ids.Count() == 0 || message.filters.Ids.Contains(t.Id))
+                .Where(t => message.filters.Types == null || message.filters.Types.Count() == 0 || message.filters.Types.Contains(t.Type))
+                .Where(t => message.filters.DepartureDates == null || message.filters.DepartureDates.Count() == 0 || message.filters.DepartureDates.Contains(t.DepartureDate))
+                .Where(t => message.filters.ArrivalDates == null || message.filters.ArrivalDates.Count() == 0 || message.filters.ArrivalDates.Contains(t.ArrivalDate))
+                .Where(t => message.filters.CountryDestinations == null || message.filters.CountryDestinations.Count() == 0 || message.filters.CountryDestinations.Contains(t.DestinationCountry))
+                .Where(t => message.filters.CountryOrigins == null || message.filters.CountryOrigins.Count() == 0 || message.filters.CountryOrigins.Contains(t.OriginCountry))
+                .Where(t => message.filters.CityDestinations == null || message.filters.CityDestinations.Count() == 0 || message.filters.CityDestinations.Contains(t.DestinationCity))
+                .Where(t => message.filters.CityOrigins == null || message.filters.CityOrigins.Count() == 0 || message.filters.CityOrigins.Contains(t.OriginCity))
                 //.Where(t => t.SeatsNumber - t.SeatsTaken >= message.filters.AvailableSeats || message.filters.AvailableSeats == null)
                 .ToListAsync();
-            var transportEvents = await _repository.TransportEvents
+            var transportEvents = await repository.TransportEvents
                 .Where(t => transports.Select(x=>x.Id).Contains(t.TransportId))
                 .OrderBy(t => t.SequenceNumber)
                 .ToListAsync();
 
             foreach (var transport in transports)
             {
-                _repository.Entry(transport).State = EntityState.Detached;
+                repository.Entry(transport).State = EntityState.Detached;
                 foreach (var transportEvent in transportEvents.Where(x=>x.TransportId==transport.Id))
                 {
                     transport.SeatsTaken += transportEvent.SeatsChange;
                     transport.PricePerTicket += transportEvent.PriceChange;
                 }
             }
-
             transports = transports.Where(t => t.SeatsNumber - t.SeatsTaken >= message.filters.AvailableSeats || message.filters.AvailableSeats == null).ToList();
-            //GetFromDB
 
             var serialized = MessagePackSerializer.Serialize(transports);
             Reply(ea, serialized);

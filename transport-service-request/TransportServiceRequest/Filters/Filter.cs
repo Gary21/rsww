@@ -23,8 +23,7 @@ namespace TransportRequestService.Filters
         //public int SeatsTaken { get; set; }
         //[Key(8)]
         //public decimal PricePerTicket { get; set; }
-        public Filter() { }
-        
+       
 
     }
 }

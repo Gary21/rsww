@@ -23,7 +23,7 @@ namespace TransportRequestService.TransportServiceTests
                 {
                     filters = new TransportQueryService.Filters.Filter()
                     {
-                        Ids = new List<int>() { 1 },
+                        Ids = new List<int>() { Random.Shared.Next(10000), Random.Shared.Next(10000)},
                         //Origins = new List<string>() { "Gdańsk", "Poznań" },
                         //Destinations = new List<string>() { "Egipt", "Malta" }
                     }
@@ -45,14 +45,20 @@ namespace TransportRequestService.TransportServiceTests
                 //transportPublisherTest.PublishToFanoutNoReply<Transport>("event", MessageType.GET, transport);
         
 
-                var query2 = new ReserveRequest(){Id = 1, Seats = 3};
+                //var query2 = new ReserveRequest(){Id = 8, Seats = 1};
 
-                var msgId = transportPublisherTest.PublishRequestWithReply("resources/transport","request",MessageType.RESERVE,query2);
-                var msgId2 = transportPublisherTest.PublishRequestWithReply<TransportGetQuery>("resources/transport", "query", MessageType.GET, query);
-                await Task.Delay(1000);
-                bool result = MessagePackSerializer.Deserialize<bool>( await transportPublisherTest.GetReply(msgId, stoppingToken));
+                //var msgId = transportPublisherTest.PublishRequestWithReply("resources/transport","request",MessageType.RESERVE,query2);
                 
+                var msgId2 = transportPublisherTest.PublishRequestWithReply<TransportGetQuery>("resources/transport", "query", MessageType.GET, query);
+                
+                //bool result = MessagePackSerializer.Deserialize<bool>( await transportPublisherTest.GetReply(msgId, stoppingToken));
+
                 var result2 = MessagePackSerializer.Deserialize<IEnumerable<Transport>>(await transportPublisherTest.GetReply(msgId2, stoppingToken));
+                foreach (var result in result2)
+                {
+                    Console.WriteLine(result.Id);
+                }
+
                 //await transportPublisherTest.GetReply(msgId3, stoppingToken);
 
                 var query3 = new TransportGetQuery
@@ -63,16 +69,17 @@ namespace TransportRequestService.TransportServiceTests
                     }
                 };
             
-                var msgId3 = transportPublisherTest.PublishRequestWithReply<TransportGetQuery>("resources/transport", "query", MessageType.GET, query3);
+                //var msgId3 = transportPublisherTest.PublishRequestWithReply<TransportGetQuery>("resources/transport", "query", MessageType.GET, query3);
 
-                var result3 = MessagePackSerializer.Deserialize<IEnumerable<Transport>>(await transportPublisherTest.GetReply(msgId3, stoppingToken));
+           //     var result3 = MessagePackSerializer.Deserialize<IEnumerable<Transport>>(await transportPublisherTest.GetReply(msgId3, stoppingToken));
                 //var body = MessagePackSerializer.Deserialize<IEnumerable<Transport>>(await transportPublisherTest.GetReply(msgId,stoppingToken));
 
-                //Do some stuff
+                //Console.WriteLine(MessagePackSerializer.SerializeToJson(result));
 
-                Console.WriteLine(result2.First()?.SeatsTaken);
-                Console.WriteLine(MessagePackSerializer.SerializeToJson(result3));
+                //Console.WriteLine(result2.First()?.SeatsTaken);
+            //    Console.WriteLine(MessagePackSerializer.SerializeToJson(result3));
                 i++;
+                await Task.Delay(2);
             }
             return;  
         }

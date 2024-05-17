@@ -11,9 +11,6 @@ namespace TransportRequestService.Publisher
     {
         public TransportPublisherService(ILogger logger, IConnectionFactory connectionFactory, IConfiguration config)
             : base(logger, connectionFactory, config.GetSection("serviceInfo").Get<RabbitUtilities.Configuration.ServiceConfig>()!)
-        {
-
-        }
-
+        { }
     }
 }
