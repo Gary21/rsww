@@ -12,10 +12,10 @@ using Microsoft.EntityFrameworkCore;
 using OrderService.Publisher;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
-var connectionString = config.GetSection("postgresConfig").GetValue<string>("connectionString");
-
+var connectionString = config.GetValue<string>("postgresConfig:connectionString");//.GetValue<string>("connectionString");
+//var rabbitAdress = config.GetValue<string>("rabbitConfig:adress");
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
@@ -35,7 +35,7 @@ builder.Services.AddHostedService<OrderRequestHandler>();
 
 
 
-builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
+//builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
 
 builder.Services.AddCors(options =>
 {

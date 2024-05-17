@@ -9,6 +9,7 @@ services:
   #   #volumes:
      
   postgresql-db:
+    container_name: postgresql-db
     #build: 
     image: postgres
     #volumes: ??
@@ -21,6 +22,7 @@ services:
 
 
   rabbitmq-main:
+    container_name: rabbitmq-main
     image: rabbitmq:3.12.13-management #later change to non management version
     ports:
       - "5672:5672"
@@ -32,29 +34,30 @@ services:
       - "5673:5672"
       - "15673:15672"
 
-  example-backend-service-1:
-    build: ./ExampleBackend
-    environment:
-      - APP_PORT=8081
-      - INSTANCE_ID=1
-    ports:
-      - 8081:8081
+  # example-backend-service-1:
+  #   build: ./ExampleBackend
+  #   environment:
+  #     - APP_PORT=8081
+  #     - INSTANCE_ID=1
+  #   ports:
+  #     - 8081:8081
 
-  example-backend-service-2:
-    build: ./ExampleBackend
-    environment:
-      - APP_PORT=8082
-      - INSTANCE_ID=2
-    ports:
-      - 8082:8082
+  # example-backend-service-2:
+  #   build: ./ExampleBackend
+  #   environment:
+  #     - APP_PORT=8082
+  #     - INSTANCE_ID=2
+  #   ports:
+  #     - 8082:8082
 
-  load-balancer-service:
-    build: ./load-balancer-service
-    ports:
-      - 8080:80
-    depends_on:
-      - example-backend-service-1
-      - example-backend-service-2
+  # load-balancer-service:
+  #   build: ./load-balancer-service
+  #   ports:
+  #     - 8080:80
+  #   depends_on:
+  #     - example-backend-service-1
+  #     - example-backend-service-2
+
   # transaction-service:
   #   image:
   #   build: 
@@ -65,10 +68,32 @@ services:
   #image:
   #   ports:
 
-  #transport-service:
-    #build: 
-    #image:
-  #   ports:
+  transport-query-service:
+    image: rsww-transport-query-service
+    environment:
+      - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Hotels;Username=admin;Password=rsww123;Pooling=true;
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+    #  - postgresql-db
+      - rabbitmq-main
+    #ports:
+  transport-request-service:
+    image: rsww-transport-request-service
+    environment:
+      - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Hotels;Username=admin;Password=rsww123;Pooling=true;
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+    #  - postgresql-db
+      - rabbitmq-main
+
+  order-service:
+    image: rsww-order-service
+    environment:
+      - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Orders;Username=admin;Password=rsww123;Pooling=true;
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+    #  - postgresql-db
+      - rabbitmq-main
 
   #catalog-read-service:
     #build: 
@@ -76,16 +101,6 @@ services:
   #   ports:
 
   #catalog-write-service:
-    #build: 
-    #image:
-  #   ports:
-
-  #order-service:
-    #build: 
-    #image:
-  #   ports:
-
-  #authentication-service:
     #build: 
     #image:
   #   ports:

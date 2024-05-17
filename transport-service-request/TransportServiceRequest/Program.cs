@@ -12,10 +12,10 @@ using Microsoft.EntityFrameworkCore;
 using TransportRequestService.Publisher;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
 
-var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
-var connectionString = config.GetSection("postgresConfig").GetValue<string>("connectionString");
+var connectionString = config.GetValue<string>("postgresConfig:connectionString");//.GetValue<string>("connectionString");
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
@@ -31,7 +31,7 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     });
 builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherService>();
 builder.Services.AddHostedService<TransportRequestHandler>();
-builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
+//builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
 builder.Services.AddCors(options =>
     {
         options.AddPolicy("*",
