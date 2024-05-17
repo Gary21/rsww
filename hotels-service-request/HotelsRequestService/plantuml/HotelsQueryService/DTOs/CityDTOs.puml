@@ -1,0 +1,30 @@
+@startuml
+class CityCreateDTO {
+    + <<required>> Name : string <<get>> <<set>>
+    + <<required>> CountryId : int <<get>> <<set>>
+}
+class CityResponseDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+}
+class CityResponseRecDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+}
+class CityDetailsDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + CountryId : int? <<get>> <<set>>
+    + CountryName : string? <<get>> <<set>>
+}
+class CityWithCountryResponseDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + CountryId : int? <<get>> <<set>>
+    + CountryName : string? <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+CityResponseRecDTO o-> "Hotels<HotelResponseRecDTO>" "ICollection`1"
+CityDetailsDTO o-> "Hotels<HotelResponseDTO>" "ICollection`1"
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+class HotelCreateDTO {
+    + <<required>> Name : string <<get>> <<set>>
+    + <<required>> CityId : int <<get>> <<set>>
+    + <<required>> Address : string <<get>> <<set>>
+    + <<required>> Description : string <<get>> <<set>>
+    + <<required>> Rating : int <<get>> <<set>>
+}
+class HotelResponseDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + Rating : int <<get>> <<set>>
+    + CityId : int? <<get>> <<set>>
+    + CityName : string? <<get>> <<set>>
+}
+class HotelResponseRecDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + Rating : int <<get>> <<set>>
+}
+class HotelDetailsDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + Rating : int <<get>> <<set>>
+    + CityId : int? <<get>> <<set>>
+    + CityName : string? <<get>> <<set>>
+}
+class HotelDetailsWithRoomsDTO {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + Rating : int <<get>> <<set>>
+    + CityId : int? <<get>> <<set>>
+    + CityName : string? <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+HotelResponseRecDTO o-> "HasRoom<HasRoomResponseRecDTO>" "ICollection`1"
+HotelDetailsWithRoomsDTO o-> "HasRooms<HasRoomResponseDTO>" "ICollection`1"
+@enduml

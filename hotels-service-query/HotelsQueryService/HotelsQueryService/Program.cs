@@ -14,12 +14,12 @@ var builder = WebApplication.CreateBuilder(args);
 Serilog.ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
-
-var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
 
-builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(conn), ServiceLifetime.Singleton);
+builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(connectionString), ServiceLifetime.Singleton);
+builder.Services.AddDbContextFactory<ApiDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddSingleton(logger);
@@ -32,7 +32,7 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     AutomaticRecoveryEnabled = true
 });
 builder.Services.AddHostedService<HotelsQueryHandler>();
-builder.WebHost.UseUrls("http://*:7134");
+//builder.WebHost.UseUrls("http://*:7134");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("*",

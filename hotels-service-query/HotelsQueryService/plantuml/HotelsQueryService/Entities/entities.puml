@@ -1,0 +1,9 @@
+@startuml
+!include .\City.puml
+!include .\Country.puml
+!include .\HasRoom.puml
+!include .\Hotel.puml
+!include .\Occupancy.puml
+!include .\Reservation.puml
+!include .\RoomType.puml
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+class HasRoom {
+    + Id : int <<get>> <<set>>
+    + RoomNumber : int <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + BasePrice : int <<get>> <<set>>
+}
+HasRoom --> "Hotel" Hotel
+HasRoom --> "RoomType" RoomType
+@enduml

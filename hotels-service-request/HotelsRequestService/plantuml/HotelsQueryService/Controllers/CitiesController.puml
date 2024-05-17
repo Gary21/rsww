@@ -1,0 +1,11 @@
+@startuml
+class CitiesController {
+    + CitiesController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetCities() : Task<ActionResult<IEnumerable<CityWithCountryResponseDTO>>>
+    + <<async>> GetCity(id:int) : Task<ActionResult<CityDetailsDTO>>
+    + <<async>> PutCity(id:int, cityDTO:CityCreateDTO) : Task<IActionResult>
+    + <<async>> PostCity(cityDTO:CityCreateDTO) : Task<ActionResult<City>>
+    + <<async>> DeleteCity(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- CitiesController
+@enduml

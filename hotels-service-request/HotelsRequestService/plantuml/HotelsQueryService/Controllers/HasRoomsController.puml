@@ -1,0 +1,11 @@
+@startuml
+class HasRoomsController {
+    + HasRoomsController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetRooms(id:int) : Task<ActionResult<IEnumerable<HasRoomResponseDTO>>>
+    + <<async>> GetRoom(id:int, roomId:int) : Task<ActionResult<HasRoomResponseDTO>>
+    + <<async>> PutRoom(id:int, roomId:int, roomDTO:HasRoomCreateDTO) : Task<IActionResult>
+    + <<async>> PostRoom(id:int, roomDTO:HasRoomCreateDTO) : Task<ActionResult<HasRoomResponseDTO>>
+    + <<async>> DeleteRoom(id:int, roomId:int) : Task<IActionResult>
+}
+ControllerBase <|-- HasRoomsController
+@enduml
