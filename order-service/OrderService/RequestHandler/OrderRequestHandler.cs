@@ -18,8 +18,8 @@ namespace OrderService.RequestHandler
         private readonly IDbContextFactory<PostgresRepository> _repositoryFactory;
         private readonly PublisherServiceBase _publisher;
 
-        public OrderRequestHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisher, IDbContextFactory<PostgresRepository> repositoryFactory) 
-            : base(logger, connectionFactory, config.GetSection("orderConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
+        public OrderRequestHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisher, IDbContextFactory<PostgresRepository> repositoryFactory,IHostApplicationLifetime appLifetime) 
+            : base(logger, connectionFactory, config.GetSection("orderConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!,appLifetime)
         {
             _repositoryFactory = repositoryFactory;
             _publisher = publisher;

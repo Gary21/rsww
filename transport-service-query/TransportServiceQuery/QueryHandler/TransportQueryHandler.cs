@@ -1,6 +1,7 @@
 ﻿using MessagePack;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitUtilities;
@@ -19,8 +20,13 @@ namespace TransportQueryService.QueryHandler
     public class TransportQueryHandler : ConsumerServiceBase
     {
         private readonly IDbContextFactory<PostgresRepository> _repositoryFactory;
-        public TransportQueryHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<PostgresRepository> repositoryFactory) 
-            : base(logger, connectionFactory, config.GetSection("transportQueryConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
+        public TransportQueryHandler(
+            ILogger logger, 
+            IConfiguration config, 
+            IConnectionFactory connectionFactory, 
+            IDbContextFactory<PostgresRepository> repositoryFactory, 
+            IHostApplicationLifetime appLifetime ) 
+            : base(logger, connectionFactory, config.GetSection("transportQueryConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!, appLifetime)
         {
             _repositoryFactory = repositoryFactory;
             using var repository = _repositoryFactory.CreateDbContext();

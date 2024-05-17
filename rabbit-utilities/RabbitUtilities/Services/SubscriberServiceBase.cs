@@ -1,29 +1,36 @@
 ﻿using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitUtilities.Common;
 using RabbitUtilities.Configuration;
 using Serilog;
 
 namespace RabbitUtilities
 {
-    public abstract class SubscriberServiceBase : BackgroundService, IDisposable
+    public abstract class SubscriberServiceBase : BackgroundService, RabbitClient ,IDisposable
     {
         protected readonly ILogger _logger;
-        protected readonly IConnection _connection;
-        protected readonly IModel _consumeChannel;
+        protected IConnection? _connection;
+        protected IModel? _consumeChannel;
+        protected readonly IConnectionFactory _connectionFactory;
 
         protected readonly string _exchangeName;
         protected readonly string _queueName;
 
-        public SubscriberServiceBase(ILogger logger, IConnectionFactory connectionFactory, SubscriberConfig config)
+        ILogger RabbitClient._logger => _logger;
+
+        public SubscriberServiceBase(ILogger logger, IConnectionFactory connectionFactory, SubscriberConfig config, IHostApplicationLifetime appLifetime)
         {
             _logger = logger;
+            _connectionFactory = connectionFactory;
             _exchangeName = config.exchange;
             _queueName = "event" + Guid.NewGuid().ToString();
 
-            _connection = connectionFactory.CreateConnection();
-            _consumeChannel = _connection.CreateModel();
-
+            ((RabbitClient)this).ConnectToRabbit(_connectionFactory, appLifetime.ApplicationStopping, out _connection);
+            _consumeChannel = _connection?.CreateModel();
+            if(_consumeChannel is null ) {
+                return;
+            }
             //Bind queue
             _consumeChannel.QueueDeclare(queue: _queueName);
             _consumeChannel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Fanout, durable: true);

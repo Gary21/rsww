@@ -9,8 +9,8 @@ namespace OrderService.Publisher
 {
     public class OrderPublisherService : PublisherServiceBase
     {
-        public OrderPublisherService(ILogger logger, IConnectionFactory connectionFactory, IConfiguration config)
-            : base(logger, connectionFactory, config.GetSection("serviceInfo").Get<RabbitUtilities.Configuration.ServiceConfig>()!)
+        public OrderPublisherService(ILogger logger, IConnectionFactory connectionFactory, IConfiguration config, IHostApplicationLifetime appLifetime)
+            : base(logger, connectionFactory, config.GetSection("serviceInfo").Get<RabbitUtilities.Configuration.ServiceConfig>()!,appLifetime)
         {
 
         }

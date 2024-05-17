@@ -17,6 +17,7 @@ var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 var connectionString = config.GetValue<string>("postgresConfig:connectionString");//.GetValue<string>("connectionString");
 //var rabbitAdress = config.GetValue<string>("rabbitConfig:adress");
 
+//Console.Writeline(rabbitConfig.adress);
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddDbContextFactory<PostgresRepository>(options => options.UseNpgsql(connectionString));
