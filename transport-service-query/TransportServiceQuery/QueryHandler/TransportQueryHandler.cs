@@ -23,6 +23,8 @@ namespace TransportQueryService.QueryHandler
             : base(logger, connectionFactory, config.GetSection("transportQueryConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
         {
             _repositoryFactory = repositoryFactory;
+            using var repository = _repositoryFactory.CreateDbContext();
+            repository.Database.EnsureCreated();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)

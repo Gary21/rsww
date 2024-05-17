@@ -2,6 +2,7 @@
 using MessagePack;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace TransportRequestService.Entities
 {
@@ -20,38 +21,50 @@ namespace TransportRequestService.Entities
 
         [Required] 
         [MessagePack.Key(2)]
+        [Column(TypeName = "Date")]
         public DateTime DepartureDate { get; set; }
 
         [Required]
         [MessagePack.Key(3)]
-        public DateTime ArrivalDate { get; set; }
+        [Column(TypeName = "Time")]
+        public TimeSpan DepartureTime { get; set; }
 
         [Required]
         [MessagePack.Key(4)]
-        public string DestinationCity { get; set; }
+        [Column(TypeName = "Date")]
+        public DateTime ArrivalDate { get; set; }
 
         [Required]
         [MessagePack.Key(5)]
-        public string DestinationCountry { get; set; }
+        [Column(TypeName = "Time")]
+        public TimeSpan ArrivalTime { get; set; }
 
         [Required]
         [MessagePack.Key(6)]
-        public string OriginCity { get; set; }
+        public string DestinationCity { get; set; }
 
         [Required]
         [MessagePack.Key(7)]
-        public string OriginCountry { get; set; }
+        public string DestinationCountry { get; set; }
 
         [Required]
         [MessagePack.Key(8)]
-        public int SeatsNumber { get; set; }
+        public string OriginCity { get; set; }
 
         [Required]
         [MessagePack.Key(9)]
-        public int SeatsTaken { get; set; }
+        public string OriginCountry { get; set; }
 
         [Required]
         [MessagePack.Key(10)]
+        public int SeatsNumber { get; set; }
+
+        [Required]
+        [MessagePack.Key(11)]
+        public int SeatsTaken { get; set; }
+
+        [Required]
+        [MessagePack.Key(12)]
         public decimal PricePerTicket { get; set; }
 
 

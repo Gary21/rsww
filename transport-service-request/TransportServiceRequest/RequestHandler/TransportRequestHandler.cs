@@ -25,12 +25,25 @@ namespace TransportRequestService.RequestHandler
             _publisher = publisher;
 
             using var repository = _repositoryFactory.CreateDbContext();
-            //repository.Database.EnsureDeleted();
+            repository.Database.EnsureDeleted();
             repository.Database.EnsureCreated();
-            //repository.Transports.Add(new Transport() { OriginCountry = "Polska", OriginCity = "Gdańsk",
-            //    DestinationCountry = "Niemcy", DestinationCity = "Berlin",
-            //    PricePerTicket = 3.21M, SeatsNumber = 1000, SeatsTaken = 0, Type = "Plane", DepartureDate = DateTime.UtcNow, ArrivalDate = DateTime.UtcNow.AddDays(2) });
-            //repository.SaveChanges();
+            repository.Transports.Add(new Transport()
+            {
+                OriginCountry = "Polska",
+                OriginCity = "Gdańsk",
+                DestinationCountry = "Niemcy",
+                DestinationCity = "Berlin",
+                PricePerTicket = 3.21M,
+                SeatsNumber = 1000,
+                SeatsTaken = 0,
+                Type = "Plane",
+                DepartureTime = TimeSpan.FromHours(3),
+                DepartureDate = DateTime.UtcNow,
+                ArrivalTime = TimeSpan.Zero,
+                ArrivalDate = DateTime.UtcNow.AddDays(2)
+            }) ;
+            repository.TransportEvents.Add(new TransportEvent() { TransportId = 1, SequenceNumber = 0, SeatsChange = 1 });
+            repository.SaveChanges();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
