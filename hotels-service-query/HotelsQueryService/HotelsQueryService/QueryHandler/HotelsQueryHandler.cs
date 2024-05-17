@@ -69,7 +69,9 @@ namespace HotelsQueryService.QueryHandler
                         where message.filters.CityIds == null || message.filters.CityIds.Contains(city.Id) || message.filters.CityIds.Count() == 0
                         where message.filters.RoomTypeIds == null || hotel.Rooms.Any(r => message.filters.RoomTypeIds.Contains(r.RoomType.Id)) || message.filters.RoomTypeIds.Count() == 0
                         where message.filters.RoomCapacities == null || hotel.Rooms.Any(r => message.filters.RoomCapacities.Contains(r.RoomType.Capacity)) || message.filters.RoomCapacities.Count() == 0
-                               select new { hotel, city, country };
+                        where message.filters.MinPrice == null || hotel.Rooms.Any(hotel => hotel.BasePrice >= message.filters.MinPrice) || message.filters.MinPrice == 0
+                        where message.filters.MaxPrice == null || hotel.Rooms.Any(hotel => hotel.BasePrice <= message.filters.MaxPrice) || message.filters.MaxPrice == 0
+                        select new { hotel, city, country };
 
             var result = await query.ToListAsync();
             var hotelsDTO = result.Select(r => new HotelDTO

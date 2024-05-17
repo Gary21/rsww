@@ -13,12 +13,12 @@ using CatalogQueryService.Filters;
 
 namespace CatalogRequestService.QueryPublishers
 {
-    public class HotelQueryPublisher : PublisherServiceBase
+    public class CatalogQueryPublisher : PublisherServiceBase
     {
         private readonly string _exchangeName = "resources/hotels";
         private readonly string _routingKey = "query";
 
-        public HotelQueryPublisher(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory)
+        public CatalogQueryPublisher(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory)
             : base(logger, connectionFactory, config.GetSection("CatalogQueryPublisher").Get<ServiceConfig>()!)
         {
             //_exchangeName = config.GetSection("CatalogQueryPublisher").GetValue<string>("exchange");
@@ -27,7 +27,7 @@ namespace CatalogRequestService.QueryPublishers
 
         public async Task<ICollection<HotelDTO>> GetHotels(HotelsGetQuery query)
         {
-            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, query);
+            Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.GET, query);
 
             CancellationToken cancellationToken = new CancellationToken(false);
 
@@ -38,34 +38,18 @@ namespace CatalogRequestService.QueryPublishers
             return hotels;
         }
 
-        public async Task<ICollection<CountryDTO>> GetCountriesAll()
+        public async Task<ICollection<TransportDTO>> GetTransports(TransportGetQuery query)
         {
-            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, new HotelsGetQuery());
+            Guid messageCorellationId = PublishRequestWithReply("resources/transport", _routingKey, MessageType.GET, query);
 
             CancellationToken cancellationToken = new CancellationToken(false);
 
-            var countriesBytes = await GetReply(messageCorellationId, cancellationToken);
+            var transportsBytes = await GetReply(messageCorellationId, cancellationToken);
 
-            var countries = MessagePackSerializer.Deserialize<ICollection<CountryDTO>>(countriesBytes);
+            var transports = MessagePackSerializer.Deserialize<ICollection<TransportDTO>>(transportsBytes);
 
-            return countries;
+            return transports;
         }
-
-        public async Task<ICollection<CityDTO>> GetCitiesAll()
-        {
-            Guid messageCorellationId = PublishRequestWithReply(_exchangeName, _routingKey, MessageType.GET, new HotelsGetQuery());
-
-            CancellationToken cancellationToken = new CancellationToken(false);
-
-            var citiesBytes = await GetReply(messageCorellationId, cancellationToken);
-
-            var cities = MessagePackSerializer.Deserialize<ICollection<CityDTO>>(citiesBytes);
-
-            return cities;
-        }
-
-        
-
 
     }
 }

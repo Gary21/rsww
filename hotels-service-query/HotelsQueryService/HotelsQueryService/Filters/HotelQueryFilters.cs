@@ -1,9 +1,9 @@
 ﻿using MessagePack;
 
-namespace CatalogQueryService.Filters
+namespace HotelsQueryService.Filters
 {
     [MessagePackObject]
-    public class Filter
+    public class HotelQueryFilters
     {
         [Key(0)]
         public IEnumerable<int>? HotelIds { get; set; } = null;
@@ -20,8 +20,8 @@ namespace CatalogQueryService.Filters
         public int? MinPrice { get; set; } = null;
         [Key(6)]
         public int? MaxPrice { get; set; } = null;
-        public Filter() { }
-        
+        public HotelQueryFilters() { }
+
 
     }
 }

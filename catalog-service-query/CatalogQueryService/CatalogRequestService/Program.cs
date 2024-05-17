@@ -39,7 +39,7 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
 
 // Add services to the container.
 
-builder.Services.AddSingleton<PublisherServiceBase, HotelQueryPublisher>();
+builder.Services.AddSingleton<PublisherServiceBase, CatalogQueryPublisher>();
 builder.Services.AddHostedService<ReplyService>();
 
 
