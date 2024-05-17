@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
-using Serilog;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
-using Microsoft.AspNetCore.Hosting;
 using RabbitUtilities.Configuration;
+using Serilog;
 using TransportQueryService.QueryHandler;
-using Microsoft.EntityFrameworkCore;
 using TransportQueryService.Repositories;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();

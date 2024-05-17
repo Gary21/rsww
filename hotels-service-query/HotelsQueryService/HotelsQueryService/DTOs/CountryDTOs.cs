@@ -2,6 +2,7 @@
 
 namespace HotelsQueryService.DTOs
 {
+    [MP.MessagePackObject]
     public class CountryDTO
     {
         [MP.Key(0)]

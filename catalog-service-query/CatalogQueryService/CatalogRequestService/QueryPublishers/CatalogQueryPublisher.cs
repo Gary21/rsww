@@ -25,6 +25,46 @@ namespace CatalogRequestService.QueryPublishers
             //_routingKey = config.GetSection("CatalogQueryPublisher").GetValue<string>("routing");
         }
 
+
+        public async Task<ICollection<CountryDTO>> GetCountries()
+        {
+            Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.UPDATE, "countries");
+
+            CancellationToken cancellationToken = new CancellationToken(false);
+
+            var countriesBytes = await GetReply(messageCorellationId, cancellationToken);
+
+            var countries = MessagePackSerializer.Deserialize<ICollection<CountryDTO>>(countriesBytes);
+
+            return countries;
+        }
+
+        public async Task<ICollection<CityDTO>> GetCities()
+        {
+            Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.UPDATE, "cities");
+
+            CancellationToken cancellationToken = new CancellationToken(false);
+
+            var citiesBytes = await GetReply(messageCorellationId, cancellationToken);
+
+            var cities = MessagePackSerializer.Deserialize<ICollection<CityDTO>>(citiesBytes);
+
+            return cities;
+        }
+
+        public async Task<ICollection<RoomTypeDTO>> GetRoomTypes()
+        {
+            Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.UPDATE, "roomtypes");
+
+            CancellationToken cancellationToken = new CancellationToken(false);
+
+            var roomTypesBytes = await GetReply(messageCorellationId, cancellationToken);
+
+            var roomTypes = MessagePackSerializer.Deserialize<ICollection<RoomTypeDTO>>(roomTypesBytes);
+
+            return roomTypes;
+        }
+
         public async Task<ICollection<HotelDTO>> GetHotels(HotelsGetQuery query)
         {
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.GET, query);

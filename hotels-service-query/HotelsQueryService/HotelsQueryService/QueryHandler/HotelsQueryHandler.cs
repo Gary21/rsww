@@ -43,13 +43,44 @@ namespace HotelsQueryService.QueryHandler
                 case MessageType.GET:
                     Get(ea);
                     break;
-                case MessageType.ADD:
-                    _logger.Information($"Received message with type POST.");
-                    //Reserve(ea);
+                case MessageType.UPDATE:
+                    _logger.Information($"Received getlistof");
+                    GetListOf(ea);
                     break;
                 default:
                     _logger.Information($"Received message with unknown type.");
                     break;
+            }
+        }
+
+        private async void GetListOf(BasicDeliverEventArgs ea)
+        {
+            using var repository = _contextFactory.CreateDbContext();
+            var message = MessagePackSerializer.Deserialize<string>(ea.Body.ToArray());
+            if (message == "countries")
+            {
+                var countries = await repository.Countries.ToListAsync();
+                var countriesDTO = _mapper.Map<List<CountryDTO>>(countries);
+                var serialized = MessagePackSerializer.Serialize(countriesDTO);
+                Reply(ea, serialized);
+            }
+            else if (message == "cities")
+            {
+                var cities = await repository.Cities.ToListAsync();
+                var citiesDTO = _mapper.Map<List<CityDTO>>(cities);
+                var serialized = MessagePackSerializer.Serialize(citiesDTO);
+                Reply(ea, serialized);
+            }
+            else if (message == "roomtypes")
+            {
+                var roomTypes = await repository.RoomTypes.ToListAsync();
+                var roomTypesDTO = _mapper.Map<List<RoomTypeDTO>>(roomTypes);
+                var serialized = MessagePackSerializer.Serialize(roomTypesDTO);
+                Reply(ea, serialized);
+            }
+            else
+            {
+                _logger.Information($"Received message with unknown type.");
             }
         }
 
@@ -65,6 +96,7 @@ namespace HotelsQueryService.QueryHandler
             var query = from hotel in repository.Hotels
                                join city in repository.Cities on hotel.City equals city
                                join country in repository.Countries on city.Country equals country
+                        where message.filters.HotelIds == null || message.filters.HotelIds.Contains(hotel.Id) || message.filters.HotelIds.Count() == 0
                         where message.filters.CountryIds == null || message.filters.CountryIds.Contains(country.Id) || message.filters.CountryIds.Count() == 0
                         where message.filters.CityIds == null || message.filters.CityIds.Contains(city.Id) || message.filters.CityIds.Count() == 0
                         where message.filters.RoomTypeIds == null || hotel.Rooms.Any(r => message.filters.RoomTypeIds.Contains(r.RoomType.Id)) || message.filters.RoomTypeIds.Count() == 0

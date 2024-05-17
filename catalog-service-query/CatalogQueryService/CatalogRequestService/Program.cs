@@ -1,19 +1,9 @@
-﻿using CatalogRequestService.Controllers;
-using CatalogRequestService.QueryPublishers;
+﻿using CatalogRequestService.QueryPublishers;
 using RabbitMQ.Client;
+using RabbitUtilities;
 using RabbitUtilities.Configuration;
-using Microsoft.AspNetCore.Hosting;
 using Serilog;
 using ILogger = Serilog.ILogger;
-using Microsoft.Extensions.Configuration;
-using Serilog;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using RabbitMQ.Client;
-using Microsoft.AspNetCore.Hosting;
-using RabbitUtilities.Configuration;
-using Microsoft.EntityFrameworkCore;
-using RabbitUtilities;
 
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();

@@ -11,12 +11,14 @@ namespace HotelsQueryService.DTOs
             CreateMap<Country, CountryResponseRecDTO>();
             CreateMap<Country, CountryDetailsDTO>();
             CreateMap<CountryCreateDTO, Country>();
+            CreateMap<Country, CountryDTO>();
 
             CreateMap<City, CityResponseDTO>();
             CreateMap<City, CityResponseRecDTO>();
             CreateMap<City, CityDetailsDTO>();
             CreateMap<City, CityWithCountryResponseDTO>();
             CreateMap<CityCreateDTO, City>();
+            CreateMap<City, CityDTO>();
 
             CreateMap<Hotel, HotelResponseDTO>();
             CreateMap<Hotel, HotelResponseRecDTO>();

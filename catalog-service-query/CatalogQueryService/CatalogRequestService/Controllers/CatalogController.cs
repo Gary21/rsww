@@ -1,4 +1,5 @@
-﻿using CatalogQueryService.Filters;
+﻿using CatalogQueryService.DTOs;
+using CatalogQueryService.Filters;
 using CatalogQueryService.Queries;
 using CatalogRequestService.DTOs;
 using CatalogRequestService.QueryPublishers;
@@ -20,10 +21,25 @@ namespace CatalogRequestService.Controllers
             _catalogQueryPublisher = (CatalogQueryPublisher)catalogQueryPublisher;
         }
 
+        [HttpGet("countries")]
+        public async Task<IEnumerable<CountryDTO>> GetCountries()
+        {
+            var countries = await _catalogQueryPublisher.GetCountries();
+            return countries;
+        }
+
+        [HttpGet("cities")]
+        public async Task<IEnumerable<CityDTO>> GetCities()
+        {
+            var cities = await _catalogQueryPublisher.GetCities();
+            return cities;
+        }
+
 
         // GET: api/<HotelsController>
         [HttpGet("hotels")]
         public async Task<IEnumerable<HotelDTO>> Get(
+            [FromQuery] List<int>? hotelId = null,
             [FromQuery] List<int>? countryIds = null, 
             [FromQuery] List<int>? cityIds = null, 
             [FromQuery] List<int>? roomTypes = null,
@@ -35,6 +51,7 @@ namespace CatalogRequestService.Controllers
             HotelsGetQuery query = new HotelsGetQuery();
             query.filters = new HotelQueryFilters();
 
+            if (hotelId != null) { query.filters.HotelIds = hotelId; }
             if (countryIds != null) { query.filters.CountryIds = countryIds; }
             if (cityIds != null) { query.filters.CityIds = cityIds;}
             if (roomTypes != null) { query.filters.RoomTypeIds = roomTypes; }
@@ -45,6 +62,9 @@ namespace CatalogRequestService.Controllers
             var hotels = await _catalogQueryPublisher.GetHotels(query);
             return hotels;
         }
+
+
+
 
 
         [HttpGet("transports")]

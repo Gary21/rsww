@@ -2,6 +2,7 @@
 
 namespace HotelsQueryService.DTOs
 {
+    [MP.MessagePackObject]
     public class CityDTO
     {
         [MP.Key(0)]
