@@ -92,8 +92,16 @@ namespace TransportRequestService.RequestHandler
             while (!success) 
             {
                 var repository = _repositoryFactory.CreateDbContext(); 
+                var transport = (await repository.Transports.Where(t => t.Id == message.Id).ToListAsync()).FirstOrDefault();
+                
+                if (transport == null)
+                {
+                    _logger.Information($"Rejected reservation for transport {message.Id}");
+                    break;
+                }
+                    
                 var transportEvents = await repository.TransportEvents.Where(t => t.TransportId == message.Id).OrderBy(t => t.SequenceNumber).ToListAsync();
-                var transport = await repository.Transports.Where(t => t.Id == message.Id).FirstAsync();
+
 
                 int seats = transport.SeatsTaken;
                 decimal price = transport.PricePerTicket;

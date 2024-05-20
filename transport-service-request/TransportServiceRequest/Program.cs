@@ -31,7 +31,7 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     });
 builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherService>();
 builder.Services.AddHostedService<TransportRequestHandler>();
-//builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
+builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
 builder.Services.AddCors(options =>
     {
         options.AddPolicy("*",

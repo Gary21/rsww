@@ -14,11 +14,11 @@ services:
     image: postgres
     #volumes: ??
     ports:
-      - "5432:5432"
+      - "6000:5432"
     environment:
       POSTGRES_PASSWORD: rsww123  
       POSTGRES_USER: admin
-      POSTGRES_DB: transport
+
 
 
   rabbitmq-main:
@@ -71,7 +71,7 @@ services:
   transport-query-service:
     image: ricopsych/rsww-transport-query-service
     environment:
-      - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Hotels;Username=admin;Password=rsww123;Pooling=true;
+      - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Transports;Username=admin;Password=rsww123;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     #  - postgresql-db
@@ -80,7 +80,7 @@ services:
   transport-request-service:
     image: ricopsych/rsww-transport-request-service
     environment:
-      - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Hotels;Username=admin;Password=rsww123;Pooling=true;
+      - postgresConfig__connectionString=Server=postgresql-db;Port=5432;Database=RSWW_184387_Transports;Username=admin;Password=rsww123;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     #  - postgresql-db

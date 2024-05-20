@@ -1,5 +1,6 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitUtilities.Configuration;
@@ -10,8 +11,8 @@ namespace TransportRequestService.TransportServiceTests
 {
     public class SubscriberTest : RabbitUtilities.SubscriberServiceBase
     {
-        public SubscriberTest(ILogger logger, IConnectionFactory connectionFactory, IConfiguration config) 
-            : base(logger, connectionFactory, config.GetSection("subscriberConfig").Get<RabbitUtilities.Configuration.SubscriberConfig>()!)
+        public SubscriberTest(ILogger logger, IConnectionFactory connectionFactory, IConfiguration config, IHostApplicationLifetime applifetime) 
+            : base(logger, connectionFactory, config.GetSection("subscriberConfig").Get<RabbitUtilities.Configuration.SubscriberConfig>()!,applifetime)
         {
         }
 

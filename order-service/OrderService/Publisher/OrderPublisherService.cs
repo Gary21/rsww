@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using RabbitUtilities;
 using Serilog;
 using OrderService.Entities;
+using Microsoft.Extensions.Hosting;
 
 namespace OrderService.Publisher
 {

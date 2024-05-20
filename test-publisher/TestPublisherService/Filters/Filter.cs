@@ -33,4 +33,14 @@ namespace TransportQueryService.Filters
         
 
     }
+
+    [MessagePackObject]
+    public class OrderFilter
+    {
+        [Key(0)]
+        public IEnumerable<int>? Ids { get; set; } = null;//long?
+        [Key(1)]
+        public IEnumerable<int>? UserIds { get; set; } = null;
+
+    }
 }
