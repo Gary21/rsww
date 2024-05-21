@@ -15,12 +15,6 @@ import pl.pg.lkawa.transactionservice.model.Transaction;
 @Service
 public class Producer {
 
-    @Value("${rabbitmq.queue.exchange_name}")
-    private String exchangeName;
-
-    @Value("${rabbitmq.queue.response_routing_key}")
-    private String responseRoutingKey;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Consumer.class);
 
     private final RabbitTemplate rabbitTemplate;
@@ -33,12 +27,12 @@ public class Producer {
         this.transactionMapper = transactionMapper;
     }
 
-    public void send(Transaction transaction) throws JsonProcessingException {
-        LOGGER.info("Thread ID %d : Message sent -> %s".formatted(Thread.currentThread().getId(), transaction));
+    public void send(boolean transactionResult, String queueName) throws JsonProcessingException {
+        LOGGER.info("Thread ID %d : Queue Name: %s\t Message sent -> %s".formatted(Thread.currentThread().getId(), queueName, transactionResult));
 
-        byte[] bytes = transactionMapper.writeValueAsBytes(transaction);
+        byte[] bytes = new byte[] {(byte) (transactionResult ? 1 : 0)};
 
-        rabbitTemplate.convertAndSend(exchangeName, responseRoutingKey, bytes);
+        rabbitTemplate.convertAndSend(queueName, bytes);
     }
 
 }
