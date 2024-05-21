@@ -9,6 +9,8 @@ using System.Text;
 using OrderService.Entities;
 using OrderService.Repositories;
 using OrderService.Requests;
+using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace OrderService.RequestHandler
 {
@@ -18,8 +20,8 @@ namespace OrderService.RequestHandler
         private readonly IDbContextFactory<PostgresRepository> _repositoryFactory;
         private readonly PublisherServiceBase _publisher;
 
-        public OrderRequestHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisher, IDbContextFactory<PostgresRepository> repositoryFactory) 
-            : base(logger, connectionFactory, config.GetSection("orderConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
+        public OrderRequestHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisher, IDbContextFactory<PostgresRepository> repositoryFactory,IHostApplicationLifetime appLifetime) 
+            : base(logger, connectionFactory, config.GetSection("orderConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!,appLifetime)
         {
             _repositoryFactory = repositoryFactory;
             _publisher = publisher;
@@ -64,9 +66,16 @@ namespace OrderService.RequestHandler
             var body = ea.Body.ToArray();
             var message = MessagePackSerializer.Deserialize<AddRequest>(body);
             using var repository = _repositoryFactory.CreateDbContext();
-
-            repository.Orders.Add(message.Order);
-            await repository.SaveChangesAsync();
+            if (message.Order is null || repository.Orders.All(order => message.Order.Id != order.Id))
+            {
+                repository.Orders.Add(message.Order);
+                await repository.SaveChangesAsync();
+                _logger.Information($"ADD {MessagePackSerializer.ConvertToJson(body)}");
+            }
+            else
+            {
+                _logger.Warning($"ADD rejected, duplicate Id {message.Order.Id}");
+            }
         }
 
         private async void Get(BasicDeliverEventArgs ea)
@@ -93,10 +102,16 @@ namespace OrderService.RequestHandler
 
             _logger.Information($"DELETE {MessagePackSerializer.ConvertToJson(body)}");
 
-            var orderToDelete = await repository.Orders.FirstAsync(o => o.Id == message.Id);
+            try
+            {
+                var orderToDelete = await repository.Orders.FirstAsync(o => o.Id == message.Id);
+                repository.Orders.Remove(orderToDelete);
+                await repository.SaveChangesAsync();
+            }
+            catch(Exception ex) {
+                _logger.Warning($"Cannot delete {MessagePackSerializer.ConvertToJson(body)}");
+            }
 
-            repository.Orders.Remove(orderToDelete);
-            await repository.SaveChangesAsync();
         }
     }
 }

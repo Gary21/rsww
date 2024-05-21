@@ -8,27 +8,32 @@ using Serilog;
 using RabbitUtilities.Configuration;
 using RabbitUtilities.Misc;
 using System.Runtime.InteropServices;
+using RabbitUtilities.Common;
 
 namespace RabbitUtilities;
 
-public class PublisherServiceBase : IDisposable
+public class PublisherServiceBase : RabbitClient,IDisposable
 {
     protected readonly ILogger _logger;
     protected readonly IConnection _connection;
     protected readonly string _replyQueueName;
+    protected readonly IConnectionFactory _connectionFactory;
     public string ReplyQueueName { get => _replyQueueName; }
+
+    ILogger RabbitClient._logger => _logger;
 
     protected ConcurrentDictionary<Guid,MessageReply> replies;
     private int messagePollingDelay = 10;
 
 
-    public PublisherServiceBase(ILogger logger, IConnectionFactory connectionFactory, ServiceConfig? config)
+    public PublisherServiceBase(ILogger logger, IConnectionFactory connectionFactory, ServiceConfig? config, IHostApplicationLifetime appLifetime)
     {
         _logger = logger;
-        _connection = connectionFactory.CreateConnection();
-
         _replyQueueName = $"{config?.name ?? ""}.reply.{Guid.NewGuid()}";
         replies = new();
+        _connectionFactory = connectionFactory;
+
+        ((RabbitClient)this).ConnectToRabbit(connectionFactory, appLifetime.ApplicationStopping, out _connection);
     }
 
     public void Dispose()

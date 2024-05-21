@@ -1,6 +1,7 @@
 ﻿using MessagePack;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -18,32 +19,38 @@ namespace TransportRequestService.RequestHandler
         private readonly IDbContextFactory<PostgresRepository> _repositoryFactory;
         private readonly PublisherServiceBase _publisher;
 
-        public TransportRequestHandler(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase publisher, IDbContextFactory<PostgresRepository> repositoryFactory)
-            : base(logger, connectionFactory, config.GetSection("transportConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!)
+        public TransportRequestHandler(
+            ILogger logger, 
+            IConfiguration config, 
+            IConnectionFactory connectionFactory, 
+            PublisherServiceBase publisher, 
+            IDbContextFactory<PostgresRepository> repositoryFactory, 
+            IHostApplicationLifetime appLifetime )
+                : base(logger, connectionFactory, config.GetSection("transportConsumer").Get<RabbitUtilities.Configuration.ConsumerConfig>()!, appLifetime)
         {
             _repositoryFactory= repositoryFactory;
             _publisher = publisher;
 
             using var repository = _repositoryFactory.CreateDbContext();
-            repository.Database.EnsureDeleted();
+            //repository.Database.EnsureDeleted();
             repository.Database.EnsureCreated();
-            repository.Transports.Add(new Transport()
-            {
-                OriginCountry = "Polska",
-                OriginCity = "Gdańsk",
-                DestinationCountry = "Niemcy",
-                DestinationCity = "Berlin",
-                PricePerTicket = 3.21M,
-                SeatsNumber = 1000,
-                SeatsTaken = 0,
-                Type = "Plane",
-                DepartureTime = TimeSpan.FromHours(3),
-                DepartureDate = DateTime.UtcNow,
-                ArrivalTime = TimeSpan.Zero,
-                ArrivalDate = DateTime.UtcNow.AddDays(2)
-            }) ;
-            repository.TransportEvents.Add(new TransportEvent() { TransportId = 1, SequenceNumber = 0, SeatsChange = 1 });
-            repository.SaveChanges();
+            //repository.Transports.Add(new Transport()
+            //{
+            //    OriginCountry = "Polska",
+            //    OriginCity = "Gdańsk",
+            //    DestinationCountry = "Niemcy",
+            //    DestinationCity = "Berlin",
+            //    PricePerTicket = 3.21M,
+            //    SeatsNumber = 1000,
+            //    SeatsTaken = 0,
+            //    Type = "Plane",
+            //    DepartureTime = TimeSpan.FromHours(3),
+            //    DepartureDate = DateTime.UtcNow,
+            //    ArrivalTime = TimeSpan.Zero,
+            //    ArrivalDate = DateTime.UtcNow.AddDays(2)
+            //}) ;
+            //repository.TransportEvents.Add(new TransportEvent() { TransportId = 1, SequenceNumber = 0, SeatsChange = 1 });
+            //repository.SaveChanges();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
@@ -85,8 +92,16 @@ namespace TransportRequestService.RequestHandler
             while (!success) 
             {
                 var repository = _repositoryFactory.CreateDbContext(); 
+                var transport = (await repository.Transports.Where(t => t.Id == message.Id).ToListAsync()).FirstOrDefault();
+                
+                if (transport == null)
+                {
+                    _logger.Information($"Rejected reservation for transport {message.Id}");
+                    break;
+                }
+                    
                 var transportEvents = await repository.TransportEvents.Where(t => t.TransportId == message.Id).OrderBy(t => t.SequenceNumber).ToListAsync();
-                var transport = await repository.Transports.Where(t => t.Id == message.Id).FirstAsync();
+
 
                 int seats = transport.SeatsTaken;
                 decimal price = transport.PricePerTicket;

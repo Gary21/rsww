@@ -1,42 +1,34 @@
-﻿using System.Collections.Concurrent;
-using MessagePack;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Serilog;
-using RabbitUtilities.Configuration;
-using RabbitUtilities.Misc;
-
+using RabbitUtilities.Common;
 namespace RabbitUtilities;
 
-public class ReplyService : BackgroundService, IDisposable
+public class ReplyService : BackgroundService, RabbitClient,IDisposable
 {
     protected readonly ILogger _logger;
-    protected readonly IConnection _connection;
-    protected readonly IModel _replyChannel;
+    protected readonly IConnectionFactory _connectionFactory;
+    protected IConnection _connection;
+    protected IModel _replyChannel;
     protected readonly string _replyQueueName;
 
     PublisherServiceBase _publisherService;
 
-    public ReplyService(ILogger logger, IConnectionFactory connectionFactory, PublisherServiceBase publisherService)
+    ILogger RabbitClient._logger => _logger;
+    public ReplyService(ILogger logger, IConnectionFactory connectionFactory, PublisherServiceBase publisherService, IHostApplicationLifetime appLifetime)
     {
         _publisherService = publisherService;
         _replyQueueName = _publisherService.ReplyQueueName;
-
+        _connectionFactory = connectionFactory;
         _logger = logger;
-        _connection = connectionFactory.CreateConnection();
-        _replyChannel = _connection.CreateModel();
+
+        ((RabbitClient)this).ConnectToRabbit(_connectionFactory, appLifetime.ApplicationStopping, out _connection);
+        _replyChannel = _connection?.CreateModel();
+        if (_replyChannel is null)
+            return;
 
         _replyChannel.QueueDeclare(queue: _replyQueueName, durable: false, exclusive: true, autoDelete: true, arguments: null);
-        
-        var consumer = new EventingBasicConsumer(_replyChannel);
-        consumer.Received += async (model, ea) =>
-        {
-            await Task.Run(() => FetchReply(model, ea));
-            _replyChannel.BasicAck(ea.DeliveryTag, false);
-        };
-        _replyChannel.BasicConsume(queue: _replyQueueName, autoAck: false, consumer: consumer);
     }
 
     public new void Dispose()
@@ -48,7 +40,15 @@ public class ReplyService : BackgroundService, IDisposable
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var consumer = new EventingBasicConsumer(_replyChannel);
+        consumer.Received += async (model, ea) =>
+        {
+            await Task.Run(() => FetchReply(model, ea));
+            _replyChannel.BasicAck(ea.DeliveryTag, false);
+        };
+        _replyChannel.BasicConsume(queue: _replyQueueName, autoAck: false, consumer: consumer);
         _logger.Information($"Subscribed to queue {_replyQueueName}");
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000);

@@ -4,9 +4,10 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Serilog;
 using RabbitUtilities.Configuration;
+using RabbitUtilities.Common;
 
 namespace RabbitUtilities;
-public abstract class ConsumerServiceBase : BackgroundService, IDisposable
+public abstract class ConsumerServiceBase : BackgroundService, RabbitClient, IDisposable
 {
     protected readonly ILogger _logger;
     protected readonly IConnection _connection;
@@ -16,15 +17,20 @@ public abstract class ConsumerServiceBase : BackgroundService, IDisposable
     protected readonly string _queueName;
     protected readonly string _routingKey;
 
-    public ConsumerServiceBase(ILogger logger, IConnectionFactory connectionFactory, ConsumerConfig config)
+    ILogger RabbitClient._logger => _logger;
+
+    public ConsumerServiceBase(ILogger logger, IConnectionFactory connectionFactory, ConsumerConfig config, IHostApplicationLifetime appLifetime)
     {
         _logger = logger;
          _exchangeName = config.exchange;
         _queueName = config.queue;
         _routingKey = config.routing;
+        
+        ((RabbitClient)this).ConnectToRabbit(connectionFactory, appLifetime.ApplicationStopping, out _connection);
+        _consumeChannel = _connection?.CreateModel();
+        if (_consumeChannel is null)
+            return;
 
-        _connection = connectionFactory.CreateConnection();
-        _consumeChannel = _connection.CreateModel();
         //Bind queue
         _consumeChannel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
         _consumeChannel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Topic, durable: true);

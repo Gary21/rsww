@@ -1,5 +1,6 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using Serilog;
@@ -9,8 +10,8 @@ namespace TransportRequestService.Publisher
 {
     public class TransportPublisherService : PublisherServiceBase
     {
-        public TransportPublisherService(ILogger logger, IConnectionFactory connectionFactory, IConfiguration config)
-            : base(logger, connectionFactory, config.GetSection("serviceInfo").Get<RabbitUtilities.Configuration.ServiceConfig>()!)
+        public TransportPublisherService(ILogger logger, IConnectionFactory connectionFactory, IConfiguration config, IHostApplicationLifetime appLifetime)
+            : base(logger, connectionFactory, config.GetSection("serviceInfo").Get<RabbitUtilities.Configuration.ServiceConfig>()!, appLifetime)
         { }
     }
 }
