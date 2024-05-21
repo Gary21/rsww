@@ -10,5 +10,3 @@ rabbitmq:
     exchange_name: transactions-exchange
     incoming_transactions_queue: incoming-transactions-queue
     incoming_routing_key: incoming.#
-    transactions_responses_queue: transactions-responses-queue
-    response_routing_key: responses.#

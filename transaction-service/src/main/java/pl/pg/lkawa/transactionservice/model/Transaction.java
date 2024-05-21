@@ -11,14 +11,14 @@ import java.util.UUID;
 @Builder
 @Data
 public class Transaction {
-    private UUID id;
-    private TransactionStatus status;
+    private UUID id = UUID.randomUUID();
+    private boolean isAccepted = false;
 
     public void accept(){
-        status = TransactionStatus.ACCEPTED;
+        isAccepted = true;
     }
 
     public void reject(){
-        status = TransactionStatus.REJECTED;
+        isAccepted = false;
     }
 }

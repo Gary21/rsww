@@ -21,27 +21,15 @@ public class RabbitMQConfig {
     @Value("${rabbitmq.queue.incoming_routing_key}")
     private String incomingRoutingKey;
 
-    @Value("${rabbitmq.queue.transactions_responses_queue}")
-    private String transactionsResponsesQueue;
-
-    @Value("${rabbitmq.queue.response_routing_key}")
-    private String transactionsResponsesRoutingKey;
-
     @Value("${rabbitmq.concurrent-consumers}")
     private int concurrentConsumers;
 
     @Value("${rabbitmq.max-concurrent-consumers}")
     private int maxConcurrentConsumers;
 
-
     @Bean
     Queue incomingTransactionsQueue(){
         return new Queue(incomingTransactionsQueueName, false);
-    }
-
-    @Bean
-    Queue transactionsResponsesQueue(){
-        return new Queue(transactionsResponsesQueue, false);
     }
 
     @Bean
@@ -55,14 +43,6 @@ public class RabbitMQConfig {
                 .bind(incomingTransactionsQueue)
                 .to(exchange)
                 .with(incomingRoutingKey);
-    }
-
-    @Bean
-    Binding transactionsResponsesBinding(Queue transactionsResponsesQueue, TopicExchange exchange){
-        return BindingBuilder
-                .bind(transactionsResponsesQueue)
-                .to(exchange)
-                .with(transactionsResponsesRoutingKey);
     }
 
     @Bean
