@@ -35,8 +35,8 @@ namespace TransportRequestService.TransportServiceTests
         }
         async Task PaymentTest(CancellationToken token)
         {
-            var query = new TransportGetQuery { };
-            var msgId = payment.PublishRequestWithReply<TransportGetQuery>("transaction", "incoming", MessageType.GET, query);
+            //var query = new TransportGetQuery { filters = null};
+            var msgId = payment.PublishRequestWithReply<int>("transactions-exchange", "incoming.all", MessageType.GET, 23);
             var result = MessagePackSerializer.Deserialize<bool>(await payment.GetReply(msgId, token));
             Console.WriteLine(MessagePackSerializer.SerializeToJson(result));
 

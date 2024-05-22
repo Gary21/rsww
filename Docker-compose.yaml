@@ -61,7 +61,7 @@ services:
   transaction-service:
     image: transaction-service
     environment:
-      - spring.rabbitmq.host=rabbitmq-main
+      - spring.rabbitmq.host=rabbitmq-transaction
       - spring.rabbitmq.port=5672
     # build: 
     # ports:
