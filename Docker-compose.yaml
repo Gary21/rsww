@@ -58,10 +58,11 @@ services:
   #     - example-backend-service-1
   #     - example-backend-service-2
 
-  # transaction-service:
-  #   image:
-  #   build: 
-  #   ports:
+  transaction-service:
+    image: transaction-service
+    environment:
+    - spring.rabbitmq.host=rabbitmq-main
+    - spring.rabbitmq.port=5672 
  
   #hotel-room-service:
   #build: 
