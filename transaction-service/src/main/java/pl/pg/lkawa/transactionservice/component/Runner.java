@@ -1,6 +1,8 @@
 package pl.pg.lkawa.transactionservice.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,15 +36,16 @@ public class Runner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Transaction transaction = Transaction.builder()
-                .id(UUID.randomUUID())
-                .status(TransactionStatus.PROCESSING)
-                .build();
-        byte[] bytes = transactionMapper.writeValueAsBytes(transaction);
-        rabbitTemplate.convertAndSend(topicExchangeName, incomingRoutingKey, bytes);
-        rabbitTemplate.convertAndSend(topicExchangeName, incomingRoutingKey, bytes);
-        rabbitTemplate.convertAndSend(topicExchangeName, incomingRoutingKey, bytes);
-        rabbitTemplate.convertAndSend(topicExchangeName, incomingRoutingKey, bytes);
+//        Transaction transaction = Transaction.builder()
+//                .id(UUID.randomUUID())
+//                .status(TransactionStatus.PROCESSING)
+//                .build();
+//        byte[] bytes = transactionMapper.writeValueAsBytes(transaction);
+        MessageProperties properties = new MessageProperties();
+        byte[] body = new byte[] {(byte) 1};
+        properties.setReplyTo(incomingRoutingKey);
+        Message message = new Message(body, properties);
+        rabbitTemplate.convertAndSend(queueName, message);
     }
 
 }
