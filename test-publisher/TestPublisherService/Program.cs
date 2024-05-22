@@ -7,15 +7,17 @@ using RabbitMQ.Client;
 using Microsoft.AspNetCore.Hosting;
 using RabbitUtilities.Configuration;
 using RabbitUtilities;
+using TestPublisherService.SecondPublisher;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
+var rabbitTransactionConfig = config.GetSection("rabbitTransactionConfig").Get<RabbitConfig>()!;
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddSingleton(logger);
-builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
+builder.Services.AddKeyedSingleton<IConnectionFactory>("Main", new ConnectionFactory
     {   
         HostName = rabbitConfig.adress, 
         Port = rabbitConfig.port, 
@@ -23,12 +25,23 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
         Password = "guest" , 
         AutomaticRecoveryEnabled=true
     });
+builder.Services.AddKeyedSingleton<IConnectionFactory>("Transaction", new ConnectionFactory
+{
+    HostName = rabbitTransactionConfig.adress,
+    Port = rabbitTransactionConfig.port,
+    UserName = "guest",
+    Password = "guest",
+    AutomaticRecoveryEnabled = true
+});
 
 
+builder.Services.AddSingleton<TransportPublisherService>();
+builder.Services.AddSingleton<Publisher2Service>();
 
-builder.Services.AddSingleton<PublisherServiceBase, TransportPublisherService>();
 
-builder.Services.AddHostedService<ReplyService>();
+builder.Services.AddHostedService<Reply2Service>();
+builder.Services.AddHostedService<ReplyMain>();
+
 builder.Services.AddHostedService<TestPublish>();
 builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
 

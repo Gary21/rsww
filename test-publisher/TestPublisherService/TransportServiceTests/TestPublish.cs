@@ -1,8 +1,10 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Hosting;
 using RabbitUtilities;
+using System.Runtime.InteropServices;
 using TestPublisherService.Entities;
 using TestPublisherService.Requests;
+using TestPublisherService.SecondPublisher;
 using TransportQueryService.Filters;
 using TransportQueryService.Queries;
 using TransportRequestService.Entities;
@@ -11,9 +13,11 @@ namespace TransportRequestService.TransportServiceTests
 {
     public class TestPublish : BackgroundService
     {
-        private readonly PublisherServiceBase transportPublisherTest;
-        public TestPublish(PublisherServiceBase test) { 
+        private readonly TransportPublisherService transportPublisherTest;
+        private readonly Publisher2Service payment;
+        public TestPublish(TransportPublisherService test,Publisher2Service publisher2) { 
             transportPublisherTest = test;
+            payment = publisher2;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -21,14 +25,35 @@ namespace TransportRequestService.TransportServiceTests
             while (!stoppingToken.IsCancellationRequested) {
 
                 //await OrderTestsAsync(stoppingToken);
-                await TransportTestsAsync(stoppingToken);
-
+                //await TransportTestsAsync(stoppingToken);
+                await PaymentTest(stoppingToken);
 
                 i++;
                 await Task.Delay(1000);
             }
             return;  
         }
+        async Task PaymentTest(CancellationToken token)
+        {
+            var query = new TransportGetQuery { };
+            var msgId = payment.PublishRequestWithReply<TransportGetQuery>("transaction", "incoming", MessageType.GET, query);
+            var result = MessagePackSerializer.Deserialize<bool>(await payment.GetReply(msgId, token));
+            Console.WriteLine(MessagePackSerializer.SerializeToJson(result));
+
+            var query2 = new TransportGetQuery
+            {
+                filters = new TransportQueryService.Filters.Filter()
+                {
+                    AvailableSeats = 25
+                }
+            };
+
+            var msgId2 = transportPublisherTest.PublishRequestWithReply<TransportGetQuery>("resources/transport", "query", MessageType.GET, query2);
+            var result2 = MessagePackSerializer.Deserialize<IEnumerable<Transport>>(await transportPublisherTest.GetReply(msgId2, token));
+
+            Console.WriteLine(MessagePackSerializer.SerializeToJson(result2));
+        }
+
 
         async Task TransportTestsAsync(CancellationToken token)
         {
