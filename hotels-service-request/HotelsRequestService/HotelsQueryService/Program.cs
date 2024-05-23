@@ -9,13 +9,13 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 Serilog.ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
 
-builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(connectionString), ServiceLifetime.Singleton);
+//builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(connectionString), ServiceLifetime.Singleton);
 builder.Services.AddDbContextFactory<ApiDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.Configure<IConfiguration>(config);

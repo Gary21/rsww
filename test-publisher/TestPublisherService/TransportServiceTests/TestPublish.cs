@@ -28,8 +28,8 @@ namespace TransportRequestService.TransportServiceTests
 
                 //await OrderTestsAsync(stoppingToken);
                 //await TransportTestsAsync(stoppingToken);
-                await PaymentTest(stoppingToken);
-                //await HotelTests(stoppingToken);
+                //await PaymentTest(stoppingToken);
+                await HotelTests(stoppingToken);
 
                 i++;
                 await Task.Delay(1000);
@@ -41,10 +41,18 @@ namespace TransportRequestService.TransportServiceTests
         async Task HotelTests(CancellationToken token)
         {
             //resources/hotels
-            var msgId = transportPublisherTest.PublishRequestWithReply("resources/hotels", "query", MessageType.GET, new HotelsGetQuery { filters = new HotelQueryFilters { RoomCapacities = new List<int> { 4 } } });;
-            var result = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(await transportPublisherTest.GetReply(msgId, token));
-            Console.WriteLine(MessagePackSerializer.SerializeToJson(result));
+            //var msgId = transportPublisherTest.PublishRequestWithReply("resources/hotels", "query", MessageType.GET, new HotelsGetQuery { filters = new HotelQueryFilters { RoomCapacities = new List<int> { 4 } } });
+            //var result = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(await transportPublisherTest.GetReply(msgId, token));
+            //Console.WriteLine(MessagePackSerializer.SerializeToJson(result));
 
+            var msgId2 = transportPublisherTest.PublishRequestWithReply("resources/hotels", "query", MessageType.GET, new HotelsGetQuery { filters = new HotelQueryFilters { HotelIds = new List<int>() { 1 } } });
+            var result2 = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(await transportPublisherTest.GetReply(msgId2, token));
+            Console.WriteLine(MessagePackSerializer.SerializeToJson(result2));
+            
+
+            var msgId3 = transportPublisherTest.PublishRequestWithReply("resources/hotels", "request", MessageType.RESERVE, new RoomReserveRequest{ HotelId = result2.First().Id, RoomTypeId = 2, ReservationId = 0 , CheckInDate = DateTime.Today.Date, CheckOutDate = DateTime.Today.Date.AddDays(2)});
+            var result3 = MessagePackSerializer.Deserialize<int>(await transportPublisherTest.GetReply(msgId3, token));
+            Console.WriteLine(MessagePackSerializer.SerializeToJson(result3));
 
         }
 
