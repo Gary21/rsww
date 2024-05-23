@@ -58,11 +58,11 @@ services:
   #     - example-backend-service-1
   #     - example-backend-service-2
 
-  transaction-service:
-    image: transaction-service
-    environment:
-      - spring.rabbitmq.host=rabbitmq-main
-      - spring.rabbitmq.port=5672
+  #transaction-service:
+  #  image: transaction-service
+  #  environment:
+  #    - spring.rabbitmq.host=rabbitmq-main
+  #    - spring.rabbitmq.port=5672
     # build: 
     # ports:
  
@@ -95,6 +95,16 @@ services:
     depends_on:
       - rabbitmq-main
 
+  api-gateway:
+    build: api-gateway
+    container_name: api-gateway
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    ports:
+      - 8080:80
+    depends_on:
+      - rabbitmq-main
+
 
   #catalog-read-service:
     #build: 
@@ -106,7 +116,12 @@ services:
     #image:
   #   ports:
 
-  #frontend:
-    #build: 
-    #image:
-  #   ports:
+  frontend:
+    build: frontend
+    container_name: frontend
+    ports:
+      - 80:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - default

@@ -47,7 +47,7 @@ export default {
         });
         },
         async fetchData() {
-            const response = await fetch('catalog-query:5105/hotels');
+            const response = await fetch('http://localhost:8080/Offers/GetHotel?id=' + this.$route.query.id);
             offer = await response.json()[0];
             this.name = offer.Name;
             this.address = offer.Address;
