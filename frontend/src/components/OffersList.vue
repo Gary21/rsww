@@ -49,11 +49,11 @@
         });
         },
         async fetchData() {
-            const response = await fetch('catalog-query:5105/hotels');
+            const response = await fetch('http://localhost:8080/Offers/GetHotels');
             this.offers = await response.json();
         }
     },
-    mounted: {
+    mounted() {
         this.fetchData()
     }
   };

@@ -117,11 +117,11 @@ import { VNumberInput } from 'vuetify/labs/VNumberInput'
         });
         },
         async fetchData() {
-            const response = await fetch('catalog-query:5105/cities');
-            this.destination = await response.json();
+            const response = await fetch('http://localhost:8080/Offers/GetDestinations');
+            this.destinations = await response.json();
         }
     },
-    mounted: {
+    mounted() {
         this.fetchData()
     },
   };

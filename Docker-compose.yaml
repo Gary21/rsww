@@ -106,6 +106,24 @@ services:
       - db-network
       - default
 
+  api-gateway:
+    build: api-gateway
+    container_name: api-gateway
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    ports:
+      - 8080:80
+    depends_on:
+      - rabbitmq-main
+
+  frontend:
+    build: frontend
+    container_name: frontend
+    ports:
+      - 80:8080
+    depends_on:
+      - api-gateway
+
 networks:
   db-network:
     name: admin-postgres_default
