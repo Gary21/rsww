@@ -1,18 +1,19 @@
 ﻿using MessagePack;
-using HotelsQueryService.Filters;
 
-namespace HotelsQueryService.Queries
+namespace HotelsRequestService.Queries
 {
     [MessagePackObject]
     public class RoomReserveRequest
     {
         [Key(0)]
-        public int hotelId { get; set; }
+        public int HotelId { get; set; }
         [Key(1)]
-        public int roomNumber { get; set; }
+        public int RoomTypeId { get; set; }
         [Key(2)]
-        public DateTime checkIn { get; set; }
+        public DateTime CheckInDate { get; set; }
         [Key(3)]
-        public DateTime checkOut { get; set; }
+        public DateTime CheckOutDate { get; set; }
+        [Key(4)]
+        public int ReservationId { get; set; }
     }
 }

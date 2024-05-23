@@ -10,5 +10,11 @@ namespace HotelsQueryService.Queries
         public HotelQueryFilters? filters { get; set; } = null;
         [Key(1)]
         public Sort? sorting { get; set; } = null;
+
+        public HotelsGetQuery() 
+        {
+            filters = new HotelQueryFilters();
+            sorting = new Sort();
+        }
     }
 }

@@ -114,17 +114,14 @@ namespace HotelsQueryService.Migrations
                         .HasColumnType("integer")
                         .HasColumnOrder(1);
 
-                    b.Property<DateTime>("CheckIn")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnOrder(2);
-
-                    b.Property<DateTime>("CheckOut")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ReservationId")
                         .HasColumnType("integer");
 
-                    b.HasKey("HotelId", "RoomNumber", "CheckIn");
+                    b.HasKey("HotelId", "RoomNumber", "Date");
 
                     b.ToTable("Occupancies");
                 });
@@ -199,13 +196,13 @@ namespace HotelsQueryService.Migrations
 
             modelBuilder.Entity("HotelsQueryService.Entities.Occupancy", b =>
                 {
-                    b.HasOne("HotelsQueryService.Entities.Room", "HasRoom")
+                    b.HasOne("HotelsQueryService.Entities.Room", "Room")
                         .WithMany("Occupancies")
                         .HasForeignKey("HotelId", "RoomNumber")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("HasRoom");
+                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("HotelsQueryService.Entities.Room", b =>

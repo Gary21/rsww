@@ -7,9 +7,10 @@ networks:
 
 services:
   catalogqueryservice:
+    container_name: catalog-query
     image: ${DOCKER_REGISTRY-}catalogqueryservice
     build:
       context: .
-      dockerfile: CatalogRequestService/Dockerfile
+      dockerfile: CatalogQueryService/Dockerfile
     networks:
       - rsww-network

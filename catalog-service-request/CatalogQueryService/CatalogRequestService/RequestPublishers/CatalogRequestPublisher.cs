@@ -21,7 +21,7 @@ namespace CatalogRequestService.QueryPublishers
             //_routingKey = config.GetSection("CatalogQueryPublisher").GetValue<string>("routing");
         }
 
-        public async Task<bool> ReserveRoom(RoomReserveRequest query)
+        public async Task<int> ReserveRoom(RoomReserveRequest query)
         {
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.RESERVE, query);
 
@@ -29,7 +29,7 @@ namespace CatalogRequestService.QueryPublishers
 
             var result = await GetReply(messageCorellationId, cancellationToken);
 
-            var success = MessagePackSerializer.Deserialize<bool>(result);
+            var success = MessagePackSerializer.Deserialize<int>(result);
 
             return success;
         }

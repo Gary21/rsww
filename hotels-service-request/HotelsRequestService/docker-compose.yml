@@ -17,8 +17,8 @@ services:
     networks:
       - rsww-network
 
-  hotelsqueryservice:
-    image: ${DOCKER_REGISTRY-}hotelsqueryservice
+  HotelsRequestService:
+    image: ${DOCKER_REGISTRY-}hotelsrequestservice
     container_name: hotels-query-service-gr-mhpl
     build:
       context: .

@@ -1,4 +1,4 @@
-﻿using CatalogRequestService.QueryPublishers;
+﻿using CatalogQueryService.QueryPublishers;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using RabbitUtilities.Configuration;
@@ -9,7 +9,6 @@ using ILogger = Serilog.ILogger;
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
-var connectionString = config.GetSection("postgresConfig").GetValue<string>("connectionString");
 
 
 

@@ -1,6 +1,6 @@
 ﻿using MP = MessagePack;
 
-namespace CatalogRequestService.DTOs
+namespace CatalogQueryService.DTOs
 {
     [MP.MessagePackObject]
     public class HotelDTO

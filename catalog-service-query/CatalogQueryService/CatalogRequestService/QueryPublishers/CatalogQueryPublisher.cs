@@ -1,4 +1,4 @@
-﻿using CatalogRequestService.DTOs;
+﻿using CatalogQueryService.DTOs;
 using NuGet.Protocol.Core.Types;
 using RabbitMQ.Client;
 using RabbitUtilities;
@@ -11,7 +11,7 @@ using CatalogQueryService.Filters;
 
 
 
-namespace CatalogRequestService.QueryPublishers
+namespace CatalogQueryService.QueryPublishers
 {
     public class CatalogQueryPublisher : PublisherServiceBase
     {

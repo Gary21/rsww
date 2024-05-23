@@ -28,9 +28,21 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
 });
 
 // Add services to the container.
+while (true)
+{
+    try
+    {
+        builder.Services.AddSingleton<PublisherServiceBase, CatalogRequestPublisher>();
+        builder.Services.AddHostedService<ReplyService>();
+        break;
+    }
+    catch (Exception e)
+    {
+        logger.Error(e, "Failed to connect to RabbitMQ. Retrying in 1 seconds.");
+        Thread.Sleep(1000);
+    }
+}
 
-builder.Services.AddSingleton<PublisherServiceBase, CatalogRequestPublisher>();
-builder.Services.AddHostedService<ReplyService>();
 
 
 builder.Services.AddControllers();

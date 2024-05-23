@@ -1,6 +1,6 @@
-@HotelsQueryService_HostAddress = http://localhost:5098
+@HotelsRequestService_HostAddress = http://localhost:5098
 
-GET {{HotelsQueryService_HostAddress}}/weatherforecast/
+GET {{HotelsRequestService_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###

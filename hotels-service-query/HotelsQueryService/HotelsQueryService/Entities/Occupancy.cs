@@ -6,7 +6,7 @@ using MP = MessagePack;
 
 namespace HotelsQueryService.Entities
 {
-    [EF.PrimaryKey("HotelId", "RoomNumber", "CheckIn")]
+    [EF.PrimaryKey("HotelId", "RoomNumber", "Date")]
     [MP.MessagePackObject]
     public class Occupancy
     {
@@ -23,21 +23,16 @@ namespace HotelsQueryService.Entities
         [DA.Key, Column(Order = 2)]
         [MP.Key(2)]
         required
-        public DateTime CheckIn { get; set; }
+        public DateTime Date { get; set; }
 
         [DA.Required]
         [MP.Key(3)]
         required
-        public DateTime CheckOut { get; set; }
+        public int ReservationId { get; set; }
 
         [DA.Required]
         [MP.Key(4)]
         required
-        public int ReservationId { get; set; }
-
-        [DA.Required]
-        [MP.Key(5)]
-        required
-        public Room HasRoom { get; set; }
+        public Room Room { get; set; }
     }
 }

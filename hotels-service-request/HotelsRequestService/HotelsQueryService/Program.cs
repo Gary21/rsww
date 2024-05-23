@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using Microsoft.AspNetCore.Hosting;
 using RabbitUtilities.Configuration;
-using HotelsQueryService.QueryHandler;
-using HotelsQueryService.Data;
+using HotelsRequestService.QueryHandler;
+using HotelsRequestService.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +31,21 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     Password = "guest",
     AutomaticRecoveryEnabled = true
 });
-builder.Services.AddHostedService<HotelsRequestHandler>();
+
+while(true)
+{
+    try
+    {
+        builder.Services.AddHostedService<HotelsRequestHandler>();
+        break;
+    }
+    catch (Exception e)
+    {
+        logger.Error(e.Message);
+        await Task.Delay(1000);
+    }
+}
+
 //builder.WebHost.UseUrls("http://*:7134");
 builder.Services.AddCors(options =>
 {

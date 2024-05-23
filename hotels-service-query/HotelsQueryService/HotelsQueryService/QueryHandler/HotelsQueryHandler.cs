@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using HotelsQueryService.Data;
 using HotelsQueryService.DTOs;
+using HotelsQueryService.Entities;
+using HotelsQueryService.Filters;
 using HotelsQueryService.Queries;
 using MessagePack;
 using Microsoft.EntityFrameworkCore;
@@ -74,8 +76,8 @@ namespace HotelsQueryService.QueryHandler
             else if (message == "roomtypes")
             {
                 var roomTypes = await repository.RoomTypes.ToListAsync();
-                var roomTypesDTO = _mapper.Map<List<RoomTypeDTO>>(roomTypes);
-                var serialized = MessagePackSerializer.Serialize(roomTypesDTO);
+                var roomTypeNames = roomTypes.Select(rt => rt.Name).ToList();
+                var serialized = MessagePackSerializer.Serialize(roomTypeNames);
                 Reply(ea, serialized);
             }
             else
@@ -90,73 +92,79 @@ namespace HotelsQueryService.QueryHandler
             var message = MessagePackSerializer.Deserialize<HotelsGetQuery>(ea.Body.ToArray());
             var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
             _logger.Information($"GET Hotels {filt_ser}");
-            //message.filters
-            //message.sort
 
-            var query = from hotel in repository.Hotels
-                               join city in repository.Cities on hotel.City equals city
-                               join country in repository.Countries on city.Country equals country
-                        where message.filters.HotelIds == null || message.filters.HotelIds.Contains(hotel.Id) || message.filters.HotelIds.Count() == 0
-                        where message.filters.CountryIds == null || message.filters.CountryIds.Contains(country.Id) || message.filters.CountryIds.Count() == 0
-                        where message.filters.CityIds == null || message.filters.CityIds.Contains(city.Id) || message.filters.CityIds.Count() == 0
-                        where message.filters.RoomTypeIds == null || hotel.Rooms.Any(r => message.filters.RoomTypeIds.Contains(r.RoomType.Id)) || message.filters.RoomTypeIds.Count() == 0
-                        where message.filters.RoomCapacities == null || hotel.Rooms.Any(r => message.filters.RoomCapacities.Contains(r.RoomType.Capacity)) || message.filters.RoomCapacities.Count() == 0
-                        where message.filters.MinPrice == null || hotel.Rooms.Any(hotel => hotel.BasePrice >= message.filters.MinPrice) || message.filters.MinPrice == 0
-                        where message.filters.MaxPrice == null || hotel.Rooms.Any(hotel => hotel.BasePrice <= message.filters.MaxPrice) || message.filters.MaxPrice == 0
-                        select new { hotel, city, country };
-
-            var result = await query.ToListAsync();
-            var hotelsDTO = result.Select(r => new HotelDTO
+            var mf = message.filters ?? new HotelQueryFilters();
+            if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
+            if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
+            if (mf.CheckInDate == null || mf.CheckOutDate == null)
             {
-                Id = r.hotel.Id,
-                Name = r.hotel.Name,
-                Description = r.hotel.Description,
-                Address = r.hotel.Address,
-                CityId = r.city.Id,
-                CityName = r.city.Name,
-                CountryId = r.country.Id,
-                CountryName = r.country.Name,
-                ImgPaths = r.hotel.ImgPaths
-            }).ToList();
+                mf.CheckInDate = null;
+                mf.CheckOutDate = null;
+            }
+            
+
+            var query = from h in repository.Hotels
+                            //join room in repository.Rooms on h.Id equals room.HotelId
+                            //join occupancy in repository.Occupancies on room equals occupancy.Room
+                            join city in repository.Cities on h.City equals city
+                            join country in repository.Countries on city.Country equals country
+
+                        where mf.HotelIds   == null || mf.HotelIds.Count()      == 0 || mf.HotelIds.Contains(h.Id)
+                        where mf.CountryIds == null || mf.CountryIds.Count()    == 0 || mf.CountryIds.Contains(country.Id)
+                        where mf.CityIds    == null || mf.CityIds.Count()       == 0 || mf.CityIds.Contains(city.Id)
+
+                        where   
+                                h.Rooms.Any(r => 
+                                    (
+                                        mf.RoomTypes == null || mf.RoomTypes.Count() == 0 ||
+                                        mf.RoomTypes.Contains(r.RoomType.Name)
+                                        ) &&
+
+                                    (
+                                        mf.MinPrice == null || r.BasePrice >= mf.MinPrice
+                                        ) &&
+
+                                    (
+                                        mf.MaxPrice == null || r.BasePrice <= mf.MaxPrice
+                                        ) &&
+
+                                    (
+                                        mf.RoomCapacities == null || mf.RoomCapacities.Count() == 0 ||
+                                        (r.RoomType.Capacity >= mf.RoomCapacities.Min() && r.RoomType.Capacity <= mf.RoomCapacities.Max())
+                                        ) &&
+
+                                    !r.Occupancies.Any(o => o.Date >= mf.CheckInDate && o.Date <= mf.CheckOutDate)
+                                )
+
+                        select new { h, city, country };
 
 
-                //.Where(h => message.filters.HotelIds.Contains(h.Id) || message.filters.HotelIds.Count() == 0)
-                //.Where(h => message.filters.CityIds.Contains(h.City.Id) || message.filters.CityIds.Count() == 0)
-                //.Where(h => message.filters.CountryIds.Contains(h.City.Country.Id) || message.filters.CountryIds.Count() == 0)
+            try
+            {
+                var result = await query.ToListAsync();
+                var hotelsDTO = result.Select(r => new HotelDTO
+                {
+                    Id = r.h.Id,
+                    Name = r.h.Name,
+                    Description = r.h.Description,
+                    Address = r.h.Address,
+                    CityId = r.city.Id,
+                    CityName = r.city.Name,
+                    CountryId = r.country.Id,
+                    CountryName = r.country.Name,
+                    ImgPaths = r.h.ImgPaths
+                }).ToList();
+                var serialized = MessagePackSerializer.Serialize(hotelsDTO);
+                Reply(ea, serialized);
+                return;
 
-                //.Include(h => h.Rooms)
-                //    .ThenInclude(r => r.RoomType)
-                //.Where(h => h.Rooms.Any(r => message.filters.RoomTypeIds.Contains(r.RoomType.Id)) || message.filters.RoomTypeIds.Count() == 0)
-                //.Where(h => h.Rooms.Any(r => message.filters.RoomCapacities.Contains(r.RoomType.Capacity)) || message.filters.RoomCapacities.Count() == 0)
-
-                //.Include(h => h.Rooms)
-                //    .ThenInclude(r => r.BasePrice)
-                //.ToListAsync();
-
-            //var hotels = await repository.Hotels.ToListAsync();
-
-            var serialized = MessagePackSerializer.Serialize(hotelsDTO);
-            Reply(ea, serialized);
+            }
+            catch (Exception e)
+            {
+                _logger.Information(e.Message);
+                Reply(ea, MessagePackSerializer.Serialize(new List<HotelDTO>()));
+                return;
+            }
         }
-
-        //private async void Reserve(BasicDeliverEventArgs ea)
-        //{
-        //    var message = MessagePackSerializer.Deserialize<HotelsReserveQuery>(ea.Body.ToArray());
-        //    _logger.Information($"POST Hotels {message}");
-
-        //    var hasRoom = _context.Rooms
-        //        .Include(r => r.RoomType)
-        //        .Where(r => r.HotelId == message.HotelId)
-        //        .Where(r => r.RoomNumber == message.RoomNumber)
-        //        .FirstOrDefault();
-
-        //    if (hasRoom == null)
-        //    {
-        //        _logger.Information($"Room with number {message.RoomNumber} not found.");
-        //        return;
-        //    }
-
-        //}
-
     }
 }

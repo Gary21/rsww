@@ -9,17 +9,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["HotelsQueryService/HotelsQueryService.csproj", "HotelsQueryService/"]
-RUN dotnet restore "./HotelsQueryService/HotelsQueryService.csproj"
+COPY ["HotelsRequestService/HotelsRequestService.csproj", "HotelsRequestService/"]
+RUN dotnet restore "./HotelsRequestService/HotelsRequestService.csproj"
 COPY . .
-WORKDIR "/src/HotelsQueryService"
-RUN dotnet build "./HotelsQueryService.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/HotelsRequestService"
+RUN dotnet build "./HotelsRequestService.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./HotelsQueryService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./HotelsRequestService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "HotelsQueryService.dll"]
+ENTRYPOINT ["dotnet", "HotelsRequestService.dll"]

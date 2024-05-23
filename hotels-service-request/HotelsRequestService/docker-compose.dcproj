@@ -7,7 +7,7 @@
     <ProjectGuid>f41b3ad8-10d6-43ad-9133-759b4734e6a4</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
-    <DockerServiceName>hotelsqueryservice</DockerServiceName>
+    <DockerServiceName>HotelsRequestService</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.override.yml">

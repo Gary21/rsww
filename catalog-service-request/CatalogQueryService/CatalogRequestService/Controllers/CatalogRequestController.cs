@@ -1,5 +1,4 @@
-﻿using CatalogQueryService.Filters;
-using CatalogQueryService.Queries;
+﻿using CatalogQueryService.Queries;
 using CatalogRequestService.DTOs;
 using CatalogRequestService.QueryPublishers;
 using Microsoft.AspNetCore.Mvc;
@@ -24,32 +23,27 @@ namespace CatalogRequestService.Controllers
         // GET: api/<HotelsController>
         [HttpPost("hotels")]
         public async Task<ActionResult> Reserve(
-            [FromQuery] int? hotelId = null,
-            [FromQuery] int? roomNumber = null,
-            [FromQuery] DateTime? checkIn = null,
-            [FromQuery] DateTime? checkOut = null
+            [FromQuery] int hotelId,
+            [FromQuery] int roomTypeId,
+            [FromQuery] List<DateTime>? checkIn,
+            [FromQuery] List<DateTime>? checkOut,
+            [FromQuery] int reservationId
             )
         {
-            if (hotelId == null || roomNumber == null || checkIn == null || checkOut == null)
+            if (hotelId == null || roomTypeId == null || checkIn == null || checkOut == null || reservationId == null)
             {
                 return BadRequest("Invalid request parameters");
             }
 
             RoomReserveRequest request = new RoomReserveRequest();
-            request.hotelId = hotelId.Value;
-            request.roomNumber = roomNumber.Value;
-            request.checkIn = checkIn.Value;
-            request.checkOut = checkOut.Value;
+            request.HotelId = hotelId;
+            request.RoomTypeId = roomTypeId;
+            request.CheckInDate = checkIn.FirstOrDefault();
+            request.CheckOutDate = checkOut.FirstOrDefault();
+            request.ReservationId = reservationId;
 
-            var success = await _catalogQueryPublisher.ReserveRoom(request);
-            if (success)
-            {
-                return Ok();
-            }
-            else
-            {
-                return BadRequest();
-            }
+            var result = await _catalogQueryPublisher.ReserveRoom(request);
+            return Ok(result);
         }
 
 

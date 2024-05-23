@@ -1,6 +1,6 @@
 ﻿using MessagePack;
 
-namespace CatalogRequestService.DTOs
+namespace CatalogQueryService.DTOs
 {
     [MessagePackObject]
     public class TransportDTO

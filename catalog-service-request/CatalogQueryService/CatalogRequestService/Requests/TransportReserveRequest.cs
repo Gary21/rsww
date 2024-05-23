@@ -1,5 +1,4 @@
 ﻿using MessagePack;
-using CatalogQueryService.Filters;
 
 namespace CatalogQueryService.Queries
 {

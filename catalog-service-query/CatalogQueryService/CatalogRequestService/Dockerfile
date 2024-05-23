@@ -9,17 +9,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["CatalogRequestService/CatalogRequestService.csproj", "CatalogRequestService/"]
-RUN dotnet restore "./CatalogRequestService/CatalogRequestService.csproj"
+COPY ["CatalogQueryService/CatalogQueryService.csproj", "CatalogQueryService/"]
+RUN dotnet restore "./CatalogQueryService/CatalogQueryService.csproj"
 COPY . .
-WORKDIR "/src/CatalogRequestService"
-RUN dotnet build "./CatalogRequestService.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/CatalogQueryService"
+RUN dotnet build "./CatalogQueryService.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./CatalogRequestService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./CatalogQueryService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "CatalogRequestService.dll"]
+ENTRYPOINT ["dotnet", "CatalogQueryService.dll"]

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using HotelsQueryService.Entities;
+using HotelsRequestService.Entities;
 
-namespace HotelsQueryService.Data
+namespace HotelsRequestService.Data
 {
     public class ApiDbContext : DbContext
     {

@@ -6,13 +6,13 @@ namespace CatalogQueryService.Filters
     public class TransportQueryFilters
     {
         [Key(0)]
-        public IEnumerable<int>? DepartureCityIds { get; set; } = null;
+        public IEnumerable<string>? DepartureCityIds { get; set; } = null;
         [Key(1)]
-        public IEnumerable<int>? ArrivalCityIds { get; set; } = null;
+        public string DestinationCity { get; set; }
         [Key(2)]
         public IEnumerable<string>? TransportTypes { get; set; } = null;
         [Key(3)]
-        public int? NumberOfPassengers { get; set; } = null;
+        public int NumberOfPassengers { get; set; } = 0;
 
         public TransportQueryFilters() { }
         

@@ -3,7 +3,7 @@
 using DA = System.ComponentModel.DataAnnotations;
 using MP = MessagePack;
 
-namespace HotelsQueryService.Entities
+namespace HotelsRequestService.Entities
 {
     [MP.MessagePackObject]
     public class Hotel

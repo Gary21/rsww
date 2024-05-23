@@ -10,6 +10,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["HotelsQueryService/HotelsQueryService.csproj", "HotelsQueryService/"]
+COPY ["HotelsQueryService/rabbit_utils/RabbitUtilities.dll", "HotelsQueryService/rabbit_utils/"]
 RUN dotnet restore "./HotelsQueryService/HotelsQueryService.csproj"
 COPY . .
 WORKDIR "/src/HotelsQueryService"
