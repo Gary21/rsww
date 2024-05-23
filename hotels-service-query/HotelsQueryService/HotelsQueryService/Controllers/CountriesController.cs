@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using HotelsQueryService.Data;
 using HotelsQueryService.DTOs;
 using HotelsQueryService.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelsQueryService.Controllers
 {
@@ -17,7 +12,6 @@ namespace HotelsQueryService.Controllers
     public class CountriesController : ControllerBase
     {
         private readonly ApiDbContext _context;
-        private readonly ILogger<CitiesController> _logger;
         private readonly IMapper _mapper;
 
         public CountriesController(IMapper mapper, ApiDbContext context)
@@ -34,16 +28,19 @@ namespace HotelsQueryService.Controllers
                 .Include(c => c.Cities)
                 .ToListAsync();
 
-            var countriesDTO = countries.Select(c => new CountryDetailsDTO
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Cities = c.Cities.Select(city => new CityResponseDTO
-                {
-                    Id = city.Id,
-                    Name = city.Name
-                }).ToList()
-            });
+            var countriesDTO = _mapper.Map<List<CountryDetailsDTO>>(countries);
+
+
+            //var countriesDTO = countries.Select(c => new CountryDetailsDTO
+            //{
+            //    Id = c.Id,
+            //    Name = c.Name,
+            //    Cities = c.Cities.Select(city => new CityResponseDTO
+            //    {
+            //        Id = city.Id,
+            //        Name = city.Name
+            //    }).ToList()
+            //});
 
             return Ok(countriesDTO);
         }
@@ -60,11 +57,7 @@ namespace HotelsQueryService.Controllers
 
             var countryDTO = _mapper.Map<CountryDetailsDTO>(country);
 
-            countryDTO.Cities = country.Cities.Select(city => new CityResponseDTO
-            {
-                Id = city.Id,
-                Name = city.Name
-            }).ToList();
+            countryDTO.Cities = _mapper.Map<List<CityResponseDTO>>(country.Cities);
 
             return countryDTO;
         }

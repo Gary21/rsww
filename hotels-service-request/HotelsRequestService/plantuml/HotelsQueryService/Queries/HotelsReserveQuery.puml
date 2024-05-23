@@ -1,0 +1,9 @@
+@startuml
+class HotelsReserveQuery {
+    + HotelId : int <<get>> <<set>>
+    + RoomId : int <<get>> <<set>>
+    + ReservationId : int <<get>> <<set>>
+}
+HotelsReserveQuery --> "CheckIn" DateTime
+HotelsReserveQuery --> "CheckOut" DateTime
+@enduml

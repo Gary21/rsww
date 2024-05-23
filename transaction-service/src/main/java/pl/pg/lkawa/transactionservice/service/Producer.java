@@ -2,8 +2,15 @@ package pl.pg.lkawa.transactionservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.msgpack.core.MessageBufferPacker;
+import org.msgpack.core.MessagePack;
+import org.msgpack.jackson.dataformat.MessagePackKeySerializer;
+import org.msgpack.jackson.dataformat.MessagePackSerializerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +18,8 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import pl.pg.lkawa.transactionservice.model.Transaction;
+
+import java.io.IOException;
 
 @Service
 public class Producer {
@@ -27,12 +36,20 @@ public class Producer {
         this.transactionMapper = transactionMapper;
     }
 
-    public void send(boolean transactionResult, String queueName) throws JsonProcessingException {
+    public void send(boolean transactionResult, String queueName, String correlationId) throws IOException {
         LOGGER.info("Thread ID %d : Queue Name: %s\t Message sent -> %s".formatted(Thread.currentThread().getId(), queueName, transactionResult));
 
-        byte[] bytes = new byte[] {(byte) (transactionResult ? 1 : 0)};
+        MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
+        packer.packBoolean(transactionResult);
+        packer.close();
 
-        rabbitTemplate.convertAndSend(queueName, bytes);
+        MessageProperties properties = new MessageProperties();
+        properties.setReplyTo(queueName);
+        properties.setCorrelationId(correlationId);
+
+        Message message = new Message(packer.toByteArray(), properties);
+
+        rabbitTemplate.convertAndSend(queueName, message);
     }
 
 }

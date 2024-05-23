@@ -1,0 +1,36 @@
+@startuml
+!include .\\HotelsQueryService\Program.puml
+!include .\\HotelsQueryService\Controllers\CitiesController.puml
+!include .\\HotelsQueryService\Controllers\CountriesController.puml
+!include .\\HotelsQueryService\Controllers\HasRoomsController.puml
+!include .\\HotelsQueryService\Controllers\HotelsController.puml
+!include .\\HotelsQueryService\Controllers\RoomTypesController.puml
+!include .\\HotelsQueryService\Data\ApiDbContext.puml
+!include .\\HotelsQueryService\DTOs\AutoMapperProfile.puml
+!include .\\HotelsQueryService\DTOs\CityDTOs.puml
+!include .\\HotelsQueryService\DTOs\CountryDTOs.puml
+!include .\\HotelsQueryService\DTOs\HasRoomDTOs.puml
+!include .\\HotelsQueryService\DTOs\HotelDTOs.puml
+!include .\\HotelsQueryService\DTOs\RoomTypeDTOs.puml
+!include .\\HotelsQueryService\Entities\City.puml
+!include .\\HotelsQueryService\Entities\Country.puml
+!include .\\HotelsQueryService\Entities\HasRoom.puml
+!include .\\HotelsQueryService\Entities\Hotel.puml
+!include .\\HotelsQueryService\Entities\Occupancy.puml
+!include .\\HotelsQueryService\Entities\Reservation.puml
+!include .\\HotelsQueryService\Entities\RoomType.puml
+!include .\\HotelsQueryService\Filters\Filter.puml
+!include .\\HotelsQueryService\Filters\Sort.puml
+!include .\\HotelsQueryService\Migrations\20240509033404_init-mig.puml
+!include .\\HotelsQueryService\Migrations\20240509033404_init-mig.Designer.puml
+!include .\\HotelsQueryService\Migrations\ApiDbContextModelSnapshot.puml
+!include .\\HotelsQueryService\Queries\HotelsGetQuery.puml
+!include .\\HotelsQueryService\QueryHandler\HotelsQueryHandler.puml
+!include .\\HotelsQueryService\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.puml
+!include .\\HotelsQueryService\obj\Debug\net8.0\HotelsQueryService.AssemblyInfo.puml
+!include .\\HotelsQueryService\obj\Debug\net8.0\HotelsQueryService.GlobalUsings.g.puml
+!include .\\HotelsQueryService\obj\Debug\net8.0\HotelsQueryService.MvcApplicationPartsAssemblyInfo.puml
+!include .\\HotelsQueryService\obj\Release\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.puml
+!include .\\HotelsQueryService\obj\Release\net8.0\HotelsQueryService.AssemblyInfo.puml
+!include .\\HotelsQueryService\obj\Release\net8.0\HotelsQueryService.GlobalUsings.g.puml
+@enduml

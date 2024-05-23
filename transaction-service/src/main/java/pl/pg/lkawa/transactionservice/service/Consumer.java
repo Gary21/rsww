@@ -48,7 +48,7 @@ public class Consumer {
             } else {
                 transactionResult = false;
             }
-            producer.send(transactionResult, message.getMessageProperties().getReplyTo());
+            producer.send(transactionResult, message.getMessageProperties().getReplyTo(), message.getMessageProperties().getCorrelationId());
         } catch (InterruptedException e){
             Thread.currentThread().interrupt();
         }

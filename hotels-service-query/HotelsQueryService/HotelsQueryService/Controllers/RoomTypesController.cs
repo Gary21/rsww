@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using HotelsQueryService.Data;
 using HotelsQueryService.DTOs;
 using HotelsQueryService.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelsQueryService.Controllers
 {
@@ -29,7 +24,7 @@ namespace HotelsQueryService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoomTypeResponseDTO>>> GetRooms()
         {
-            var roomTypes = await _context.Rooms.ToListAsync();
+            var roomTypes = await _context.RoomTypes.ToListAsync();
             var roomTypesDTO = _mapper.Map<List<RoomTypeResponseDTO>>(roomTypes);
 
             return Ok(roomTypesDTO);
@@ -39,7 +34,7 @@ namespace HotelsQueryService.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<RoomTypeResponseDTO>> GetRoomType(int id)
         {
-            var roomType = await _context.Rooms.FindAsync(id);
+            var roomType = await _context.RoomTypes.FindAsync(id);
             if (roomType == null) { return NotFound(); }
             var roomTypeDTO = _mapper.Map<RoomTypeResponseDTO>(roomType);
 
@@ -71,7 +66,7 @@ namespace HotelsQueryService.Controllers
         {
             var roomType = _mapper.Map<RoomType>(roomTypeDTO);
 
-            _context.Rooms.Add(roomType);
+            _context.RoomTypes.Add(roomType);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetRoomType", new { id = roomType.Id }, roomType);
@@ -81,10 +76,10 @@ namespace HotelsQueryService.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoomType(int id)
         {
-            var roomType = await _context.Rooms.FindAsync(id);
+            var roomType = await _context.RoomTypes.FindAsync(id);
             if (roomType == null) { return NotFound(); }
 
-            _context.Rooms.Remove(roomType);
+            _context.RoomTypes.Remove(roomType);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -92,7 +87,7 @@ namespace HotelsQueryService.Controllers
 
         private bool RoomTypeExists(int id)
         {
-            return _context.Rooms.Any(e => e.Id == id);
+            return _context.RoomTypes.Any(e => e.Id == id);
         }
     }
 }

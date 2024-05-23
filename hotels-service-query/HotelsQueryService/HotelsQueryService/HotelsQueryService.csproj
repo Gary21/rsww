@@ -33,13 +33,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="RabbitUtilities">
-      <HintPath>..\..\..\rabbit-utilities\RabbitUtilities\bin\Debug\net6.0\RabbitUtilities.dll</HintPath>
-    </Reference>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <Reference Include="RabbitUtilities">
+      <HintPath>..\..\..\rabbit-utilities\RabbitUtilities\bin\Debug\net6.0\RabbitUtilities.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

@@ -12,14 +12,14 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 Serilog.ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
-
-var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
 
-builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(conn), ServiceLifetime.Singleton);
+//builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(connectionString), ServiceLifetime.Singleton);
+builder.Services.AddDbContextFactory<ApiDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddSingleton(logger);
@@ -32,39 +32,39 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     AutomaticRecoveryEnabled = true
 });
 builder.Services.AddHostedService<HotelsQueryHandler>();
-builder.WebHost.UseUrls("http://*:7134");
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("*",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
+////builder.WebHost.UseUrls("http://*:7134");
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("*",
+//        policy =>
+//        {
+//            policy.AllowAnyOrigin()
+//                .AllowAnyHeader()
+//                .AllowAnyMethod();
+//        });
+//});
 
 
 builder.Services.AddAutoMapper(typeof(Program));
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddControllers();
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//// Configure the HTTP request pipeline.
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
-app.UseAuthorization();
+//app.UseAuthorization();
 
-app.MapControllers();
+//app.MapControllers();
 
-app.UseCors("*");
+//app.UseCors("*");
 
 app.Run();

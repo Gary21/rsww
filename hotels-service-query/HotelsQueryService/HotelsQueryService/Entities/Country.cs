@@ -1,24 +1,26 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using MessagePack;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+using DA = System.ComponentModel.DataAnnotations;
+using MP = MessagePack;
 
 namespace HotelsQueryService.Entities
 {
-    [MessagePackObject]
+    [MP.MessagePackObject]
     public class Country
     {
-        [System.ComponentModel.DataAnnotations.Key]
+        [DA.Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [MessagePack.Key(0)]
+        [MP.Key(0)]
+        required
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        [MessagePack.Key(1)]
+        [DA.Required]
+        [DA.MaxLength(100)]
+        [MP.Key(1)]
+        required
         public string Name { get; set; }
 
-        [MessagePack.IgnoreMember]
+        [MP.IgnoreMember]
         public ICollection<City> Cities { get; set; } = new List<City>();
     }
 }

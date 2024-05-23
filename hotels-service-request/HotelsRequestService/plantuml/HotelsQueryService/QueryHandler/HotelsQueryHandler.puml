@@ -1,0 +1,6 @@
+@startuml
+class HotelsQueryHandler {
+    + HotelsQueryHandler(logger:Serilog.ILogger, config:IConfiguration, connectionFactory:IConnectionFactory, context:ApiDbContext)
+}
+ConsumerServiceBase <|-- HotelsQueryHandler
+@enduml

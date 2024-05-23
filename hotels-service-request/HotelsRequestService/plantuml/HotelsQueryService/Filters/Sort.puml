@@ -1,0 +1,10 @@
+@startuml
+class Sort {
+    + Column : string <<get>> <<set>> = null
+    + Order : string <<get>> <<set>> = null
+}
+enum SortOrder {
+    Ascending,
+    Descending,
+}
+@enduml
