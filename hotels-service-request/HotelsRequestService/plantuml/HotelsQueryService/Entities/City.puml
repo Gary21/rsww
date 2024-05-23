@@ -1,0 +1,10 @@
+@startuml
+class City {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+City --> "Country" Country
+City o-> "Hotels<Hotel>" "ICollection`1"
+@enduml

@@ -1,0 +1,11 @@
+@startuml
+class Filter {
+    + Filter()
+}
+Filter o-> "Ids<string>" "IEnumerable`1"
+Filter o-> "Types<string>" "IEnumerable`1"
+Filter o-> "DepartureDates<DateTime>" "IEnumerable`1"
+Filter o-> "ArrivalDates<DateTime>" "IEnumerable`1"
+Filter o-> "Destinations<string>" "IEnumerable`1"
+Filter o-> "Origins<string>" "IEnumerable`1"
+@enduml

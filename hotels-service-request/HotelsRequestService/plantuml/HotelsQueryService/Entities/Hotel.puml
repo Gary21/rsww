@@ -1,0 +1,15 @@
+@startuml
+class Hotel {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + Rating : int <<get>> <<set>>
+    + Stars : int <<get>> <<set>>
+    + HasFood : bool <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+Hotel --> "City" City
+Hotel o-> "HasRooms<HasRoom>" "ICollection`1"
+@enduml

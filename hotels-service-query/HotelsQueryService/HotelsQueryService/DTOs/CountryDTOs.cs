@@ -1,5 +1,16 @@
-﻿namespace HotelsQueryService.DTOs
+﻿using MP = MessagePack;
+
+namespace HotelsQueryService.DTOs
 {
+    [MP.MessagePackObject]
+    public class CountryDTO
+    {
+        [MP.Key(0)]
+        public int Id { get; set; }
+        [MP.Key(1)]
+        public string Name { get; set; }
+    }
+
     public class CountryCreateDTO
     {
         public required string Name { get; set; }

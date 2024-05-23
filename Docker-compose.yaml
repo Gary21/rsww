@@ -42,6 +42,13 @@ services:
   #     - INSTANCE_ID=1
   #   ports:
   #     - 8081:8081
+  # example-backend-service-1:
+  #   build: ./ExampleBackend
+  #   environment:
+  #     - APP_PORT=8081
+  #     - INSTANCE_ID=1
+  #   ports:
+  #     - 8081:8081
 
   # example-backend-service-2:
   #   build: ./ExampleBackend

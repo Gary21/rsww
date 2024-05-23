@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using HotelsQueryService.Data;
 using HotelsQueryService.DTOs;
 using HotelsQueryService.Entities;
-using static HotelsQueryService.DTOs.HasRoomDTOs;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelsQueryService.Controllers
 {
@@ -65,12 +59,12 @@ namespace HotelsQueryService.Controllers
         }
 
         // GET: api/Hotels/5
-        [HttpGet("{id}/rooms")]
+        [HttpGet("{id}/HotelRooms")]
         public async Task<ActionResult<HotelDetailsWithRoomsDTO>> GetHotelWithRooms(int id)
         {
             var hotel = await _context.Hotels
                 .Include(h => h.City)
-                .Include(h => h.HasRooms)
+                .Include(h => h.Rooms)
                 .FirstOrDefaultAsync(h => h.Id == id);
 
             if (hotel == null) { return NotFound(); }
@@ -80,7 +74,7 @@ namespace HotelsQueryService.Controllers
             hotelDTO.CityId = hotel?.City.Id;
             hotelDTO.CityName = hotel?.City.Name;
 
-            var rooms = _mapper.Map<List<HasRoomResponseDTO>>(hotel.HasRooms);
+            var rooms = _mapper.Map<List<RoomResponseDTO>>(hotel.Rooms);
             hotelDTO.HasRooms = rooms;
 
             return Ok(hotelDTO);

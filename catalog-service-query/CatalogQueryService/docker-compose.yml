@@ -1,0 +1,16 @@
+version: '3.4'
+
+networks:
+  rsww-network:
+    external:
+      name: rsww-network
+
+services:
+  catalogqueryservice:
+    container_name: catalog-query
+    image: ${DOCKER_REGISTRY-}catalogqueryservice
+    build:
+      context: .
+      dockerfile: CatalogQueryService/Dockerfile
+    networks:
+      - rsww-network

@@ -1,0 +1,5 @@
+@startuml
+class ApiDbContextModelSnapshot <<partial>> {
+}
+ModelSnapshot <|-- ApiDbContextModelSnapshot
+@enduml

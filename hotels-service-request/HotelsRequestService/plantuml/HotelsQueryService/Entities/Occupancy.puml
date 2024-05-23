@@ -1,0 +1,9 @@
+@startuml
+class Occupancy {
+    + HotelId : int <<get>> <<set>>
+    + RoomNumber : int <<get>> <<set>>
+}
+Occupancy --> "CheckIn" DateTime
+Occupancy --> "CheckOut" DateTime
+Occupancy --> "Reservation" Reservation
+@enduml

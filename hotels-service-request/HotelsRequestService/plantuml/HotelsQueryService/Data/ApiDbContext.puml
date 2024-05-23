@@ -1,0 +1,15 @@
+@startuml
+class ApiDbContext {
+    + ApiDbContext(options:DbContextOptions<ApiDbContext>)
+}
+class "DbSet`1"<T> {
+}
+DbContext <|-- ApiDbContext
+ApiDbContext --> "Countries<Entities.Country>" "DbSet`1"
+ApiDbContext --> "Cities<Entities.City>" "DbSet`1"
+ApiDbContext --> "Hotels<Entities.Hotel>" "DbSet`1"
+ApiDbContext --> "Rooms<Entities.RoomType>" "DbSet`1"
+ApiDbContext --> "HasRooms<Entities.HasRoom>" "DbSet`1"
+ApiDbContext --> "Occupancies<Entities.Occupancy>" "DbSet`1"
+ApiDbContext --> "Reservations<Entities.Reservation>" "DbSet`1"
+@enduml

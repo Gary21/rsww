@@ -1,0 +1,277 @@
+@startuml
+class "AddDbContext`1"<T> {
+}
+
+class CitiesController {
+    + CitiesController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetCities() : Task<ActionResult<IEnumerable<CityWithCountryResponseDTO>>>
+    + <<async>> GetCity(id:int) : Task<ActionResult<CityDetailsDTO>>
+    + <<async>> PutCity(id:int, cityDTO:CityCreateDTO) : Task<IActionResult>
+    + <<async>> PostCity(cityDTO:CityCreateDTO) : Task<ActionResult<City>>
+    + <<async>> DeleteCity(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- CitiesController
+
+class CountriesController {
+    + CountriesController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetCountries() : Task<ActionResult<IEnumerable<CountryDetailsDTO>>>
+    + <<async>> GetCountry(id:int) : Task<ActionResult<CountryDetailsDTO>>
+    + <<async>> PutCountry(id:int, countryDTO:CountryCreateDTO) : Task<IActionResult>
+    + <<async>> PostCountry(countryDTO:CountryCreateDTO) : Task<ActionResult<Country>>
+    + <<async>> DeleteCountry(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- CountriesController
+
+class HotelsController {
+    + HotelsController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetHotels() : Task<ActionResult<IEnumerable<HotelResponseDTO>>>
+    + <<async>> GetHotel(id:int) : Task<ActionResult<HotelDetailsDTO>>
+    + <<async>> GetHotelWithRooms(id:int) : Task<ActionResult<HotelDetailsWithRoomsDTO>>
+    + <<async>> PutHotel(id:int, hotelDTO:HotelCreateDTO) : Task<IActionResult>
+    + <<async>> PostHotel(hotelDTO:HotelCreateDTO) : Task<ActionResult<Hotel>>
+    + <<async>> DeleteHotel(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- HotelsController
+
+class RoomsController {
+    + RoomsController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetRooms(id:int) : Task<ActionResult<IEnumerable<RoomResponseDTO>>>
+    + <<async>> GetRoom(id:int, roomId:int) : Task<ActionResult<RoomResponseDTO>>
+    + <<async>> PutRoom(id:int, roomId:int, roomDTO:RoomCreateDTO) : Task<IActionResult>
+    + <<async>> PostRoom(id:int, roomDTO:RoomCreateDTO) : Task<ActionResult<RoomResponseDTO>>
+    + <<async>> DeleteRoom(id:int, roomId:int) : Task<IActionResult>
+}
+ControllerBase <|-- RoomsController
+
+class RoomTypesController {
+    + RoomTypesController(mapper:IMapper, context:ApiDbContext)
+    + <<async>> GetRooms() : Task<ActionResult<IEnumerable<RoomTypeResponseDTO>>>
+    + <<async>> GetRoomType(id:int) : Task<ActionResult<RoomTypeResponseDTO>>
+    + <<async>> PutRoomType(id:int, roomTypeDTO:RoomTypeCreateDTO) : Task<IActionResult>
+    + <<async>> PostRoomType(roomTypeDTO:RoomTypeCreateDTO) : Task<ActionResult<RoomType>>
+    + <<async>> DeleteRoomType(id:int) : Task<IActionResult>
+}
+ControllerBase <|-- RoomTypesController
+
+class ApiDbContext {
+    + ApiDbContext(options:DbContextOptions<ApiDbContext>)
+}
+class "DbSet`1"<T> {
+}
+DbContext <|-- ApiDbContext
+ApiDbContext --> "Countries<Entities.Country>" "DbSet`1"
+ApiDbContext --> "Cities<Entities.City>" "DbSet`1"
+ApiDbContext --> "Hotels<Entities.Hotel>" "DbSet`1"
+ApiDbContext --> "RoomTypes<Entities.RoomType>" "DbSet`1"
+ApiDbContext --> "Rooms<Entities.Room>" "DbSet`1"
+ApiDbContext --> "Occupancies<Entities.Occupancy>" "DbSet`1"
+
+class AutoMapperProfile {
+    + AutoMapperProfile()
+}
+Profile <|-- AutoMapperProfile
+
+class CityCreateDTO {
+    + <<required>> Name : string
+    + <<required>> CountryId : int
+}
+class CityResponseDTO {
+    + Id : int
+    + Name : string
+}
+class CityResponseRecDTO {
+    + Id : int
+    + Name : string
+}
+class CityDetailsDTO {
+    + Id : int
+    + Name : string
+    + CountryId : int?
+    + CountryName : string?
+}
+class CityWithCountryResponseDTO {
+    + Id : int
+    + Name : string
+    + CountryId : int?
+    + CountryName : string?
+}
+
+class CountryCreateDTO {
+    + <<required>> Name : string
+}
+class CountryResponseDTO {
+    + Id : int
+    + Name : string
+}
+class CountryResponseRecDTO {
+    + Id : int
+    + Name : string
+}
+class CountryDetailsDTO {
+    + Id : int
+    + Name : string
+}
+
+class HotelCreateDTO {
+    + <<required>> Name : string
+    + <<required>> CityId : int
+    + <<required>> Address : string
+    + <<required>> Description : string
+    + <<required>> Rating : int
+}
+class HotelResponseDTO {
+    + Id : int
+    + Name : string
+    + Address : string
+    + Description : string
+    + Rating : int
+    + CityId : int?
+    + CityName : string?
+}
+class HotelResponseRecDTO {
+    + Id : int
+    + Name : string
+    + Address : string
+    + Description : string
+    + Rating : int
+}
+class HotelDetailsDTO {
+    + Id : int
+    + Name : string
+    + Address : string
+    + Description : string
+    + Rating : int
+    + CityId : int?
+    + CityName : string?
+}
+class HotelDetailsWithRoomsDTO {
+    + Id : int
+    + Name : string
+    + Address : string
+    + Description : string
+    + Rating : int
+    + CityId : int?
+    + CityName : string?
+}
+
+class RoomCreateDTO {
+    + RoomNumber : int
+    + Description : string
+    + BasePrice : int
+    + RoomTypeId : int
+}
+class RoomResponseDTO {
+    + Id : int
+    + RoomsCount : int
+    + Description : string
+    + BasePrice : int
+}
+class RoomResponseRecDTO {
+    + Id : int
+    + RoomsCount : int
+    + Description : string
+    + BasePrice : int
+}
+RoomResponseDTO --> "RoomType" RoomTypeResponseDTO
+RoomResponseRecDTO --> "RoomType" RoomTypeResponseDTO
+
+class RoomTypeCreateDTO {
+    + <<required>> Name : string
+    + <<required>> Capacity : int
+}
+class RoomTypeResponseDTO {
+    + Id : int
+    + Name : string
+    + Capacity : int
+}
+
+class City {
+    + Id : int
+    + Name : string
+}
+City --> "Country" Country
+
+class Country {
+    + Id : int
+    + Name : string
+}
+
+class Hotel {
+    + Id : int
+    + Name : string
+    + Address : string
+    + Description : string
+    + Rating : int
+    + Stars : int
+    + HasFood : bool
+}
+Hotel --> "City" City
+
+class Occupancy {
+    + HotelId : int
+    + RoomNumber : int
+    + ReservationId : int
+}
+Occupancy --> "CheckIn" DateTime
+Occupancy --> "CheckOut" DateTime
+Occupancy --> "HasRoom" Room
+
+class Room {
+    + HotelId : int
+    + RoomNumber : int
+    + Description : string?
+    + BasePrice : int
+}
+Room --> "Hotel" Hotel
+Room --> "RoomType" RoomType
+
+class RoomType {
+    + Id : int
+    + Name : string
+    + Capacity : int
+}
+
+class Filter {
+    + MinPrice : int? = null
+    + MaxPrice : int? = null
+    + Filter()
+}
+
+class Sort {
+    + Column : string = null
+    + Order : string = null
+}
+enum SortOrder {
+    Ascending,
+    Descending,
+}
+
+class initmig <<partial>> {
+}
+Migration <|-- initmig
+
+class initmig <<partial>> {
+}
+
+class ApiDbContextModelSnapshot <<partial>> {
+}
+ModelSnapshot <|-- ApiDbContextModelSnapshot
+
+class HotelsGetQuery {
+}
+HotelsGetQuery o-> "filters" Filter
+HotelsGetQuery o-> "sorting" Sort
+
+class HotelsReserveQuery {
+    + HotelId : int
+    + RoomId : int
+    + ReservationId : int
+}
+HotelsReserveQuery --> "CheckIn" DateTime
+HotelsReserveQuery --> "CheckOut" DateTime
+
+class HotelsQueryHandler {
+    + HotelsQueryHandler(logger:Serilog.ILogger, config:IConfiguration, connectionFactory:IConnectionFactory, context:ApiDbContext)
+}
+ConsumerServiceBase <|-- HotelsQueryHandler
+@enduml
