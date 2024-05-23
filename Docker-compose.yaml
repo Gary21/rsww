@@ -1,33 +1,29 @@
 version: '3'
 services:
-
   # mongo-db:
   #   #build: 
   #   image: mongo
   #   ports:
   #     - "27017:27017"
   #   #volumes:
-     
   admin-postgres_db:
     container_name: admin-postgres_db
-    #build: 
     image: postgres
-    #volumes: ??
     ports:
       - "6000:5432"
+    #  - "5432:5432"
     environment:
       POSTGRES_PASSWORD: student  
       POSTGRES_USER: postgres
-
-
-
+    networks:
+      - db-network
+        
   rabbitmq-main:
     container_name: rabbitmq-main
     image: rabbitmq:3.12.13-management #later change to non management version
     ports:
       - "5672:5672"
-      - "15672:15672"  # management opt
-      
+      - "15672:15672"  # management opt     
   rabbitmq-transaction:
     container_name: rabbitmq-transaction
     image: rabbitmq:3.12.13-management #later change to non management version
@@ -35,50 +31,12 @@ services:
       - "5673:5672"
       - "15673:15672"
 
-  # example-backend-service-1:
-  #   build: ./ExampleBackend
-  #   environment:
-  #     - APP_PORT=8081
-  #     - INSTANCE_ID=1
-  #   ports:
-  #     - 8081:8081
-  # example-backend-service-1:
-  #   build: ./ExampleBackend
-  #   environment:
-  #     - APP_PORT=8081
-  #     - INSTANCE_ID=1
-  #   ports:
-  #     - 8081:8081
-
-  # example-backend-service-2:
-  #   build: ./ExampleBackend
-  #   environment:
-  #     - APP_PORT=8082
-  #     - INSTANCE_ID=2
-  #   ports:
-  #     - 8082:8082
-
-  # load-balancer-service:
-  #   build: ./load-balancer-service
-  #   ports:
-  #     - 8080:80
-  #   depends_on:
-  #     - example-backend-service-1
-  #     - example-backend-service-2
-
   transaction-service:
     image: transaction-service
     environment:
       - spring.rabbitmq.host=rabbitmq-transaction
       - spring.rabbitmq.port=5672
-    # build: 
-    # ports:
- 
-  #hotel-room-service:
-  #build: 
-  #image:
-  #   ports:
-
+  
   transport-query-service:
     image: ricopsych/rsww-transport-query-service
     environment:
@@ -86,7 +44,10 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
-
+    networks:
+      - db-network
+      - default
+      
   transport-request-service:
     image: ricopsych/rsww-transport-request-service
     environment:
@@ -94,6 +55,9 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
+    networks:
+      - db-network
+      - default
 
   order-service:
     image: ricopsych/rsww-order-service
@@ -102,21 +66,47 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
+    networks:
+      - db-network
+      - default
 
+  catalog-query-service:
+    image: rsww-catalog-query-service
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+      - rabbitmq-main
+  
+  catalog-request-service:
+    image: rsww-catalog-request-service
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+      - rabbitmq-main
+  
+  hotels-request-service:
+    image: rsww-hotels-request-service
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+    - rabbitmq-main  
+    networks:
+      - db-network
+      - default
+      
+  hotels-query-service:
+    image: rsww-hotels-query-service
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+    - rabbitmq-main  
+    networks:
+      - db-network
+      - default
 
-  #catalog-read-service:
-    #build: 
-    #image:
-  #   ports:
-
-  #catalog-write-service:
-    #build: 
-    #image:
-  #   ports:
-
-  #frontend:
-    #build: 
-    #image:
-  #   ports:
-
-    
+networks:
+  db-network:
+    name: admin-postgres_default
+#    external: true

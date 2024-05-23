@@ -1,24 +1,32 @@
 version: '3'
 services:
+#RABBITS
   rabbitmq-main:
     container_name: rabbitmq-main
     image: rabbitmq:3.12.13
-    networks:
-      - default
-
   rabbitmq-transaction:
     container_name: rabbitmq-transaction
     image: rabbitmq:3.12.13
-    networks:
-      - default
 
+  catalog-query-service:
+    image: ricopsych/rsww-catalog-query-service
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+      - rabbitmq-main
+  
+  catalog-request-service:
+    image: ricopsych/rsww-catalog-request-service
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+      - rabbitmq-main
+  
   transaction-service:
-    image: transaction-service
+    image: ricopsych/rsww-transaction-service
     environment:
       - spring.rabbitmq.host=rabbitmq-main
       - spring.rabbitmq.port=5672
-    networks:
-      - default
 
   transport-query-service:
     image: ricopsych/rsww-transport-query-service
@@ -49,6 +57,29 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
+    networks:
+      - db-network
+      - default
+
+
+  hotels-request-service:
+    image: ricopsych/rsww-hotels-request-service
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+    - rabbitmq-main  
+    networks:
+      - db-network
+      - default
+      
+  hotels-query-service:
+    image: ricopsych/rsww-hotels-query-service
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+    - rabbitmq-main  
     networks:
       - db-network
       - default
