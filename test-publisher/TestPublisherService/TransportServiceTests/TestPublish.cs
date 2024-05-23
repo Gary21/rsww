@@ -1,8 +1,10 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Hosting;
 using RabbitUtilities;
+using System.Resources;
 using System.Runtime.InteropServices;
 using TestPublisherService.Entities;
+using TestPublisherService.HotelQueries;
 using TestPublisherService.Requests;
 using TestPublisherService.SecondPublisher;
 using TransportQueryService.Filters;
@@ -27,12 +29,25 @@ namespace TransportRequestService.TransportServiceTests
                 //await OrderTestsAsync(stoppingToken);
                 //await TransportTestsAsync(stoppingToken);
                 await PaymentTest(stoppingToken);
+                //await HotelTests(stoppingToken);
 
                 i++;
                 await Task.Delay(1000);
             }
             return;  
         }
+
+
+        async Task HotelTests(CancellationToken token)
+        {
+            //resources/hotels
+            var msgId = transportPublisherTest.PublishRequestWithReply("resources/hotels", "query", MessageType.GET, new HotelsGetQuery { filters = new HotelQueryFilters { RoomCapacities = new List<int> { 4 } } });;
+            var result = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(await transportPublisherTest.GetReply(msgId, token));
+            Console.WriteLine(MessagePackSerializer.SerializeToJson(result));
+
+
+        }
+
         async Task PaymentTest(CancellationToken token)
         {
             //var query = new TransportGetQuery { filters = null};

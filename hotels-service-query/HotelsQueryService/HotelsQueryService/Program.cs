@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 Serilog.ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
