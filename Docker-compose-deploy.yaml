@@ -3,15 +3,22 @@ services:
   rabbitmq-main:
     container_name: rabbitmq-main
     image: rabbitmq:3.12.13
-      
+    networks:
+      - default
+
   rabbitmq-transaction:
+    container_name: rabbitmq-transaction
     image: rabbitmq:3.12.13
+    networks:
+      - default
 
   transaction-service:
     image: transaction-service
     environment:
       - spring.rabbitmq.host=rabbitmq-main
       - spring.rabbitmq.port=5672
+    networks:
+      - default
 
   transport-query-service:
     image: ricopsych/rsww-transport-query-service
@@ -20,6 +27,9 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
+    networks:
+      - db-network
+      - default
 
   transport-request-service:
     image: ricopsych/rsww-transport-request-service
@@ -28,6 +38,9 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
+    networks:
+      - db-network
+      - default
 
   order-service:
     image: ricopsych/rsww-order-service
@@ -36,4 +49,11 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
+    networks:
+      - db-network
+      - default
 
+networks:
+  db-network:
+    name: admin-postgres_default
+    external: true

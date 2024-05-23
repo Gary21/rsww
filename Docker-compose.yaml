@@ -29,6 +29,7 @@ services:
       - "15672:15672"  # management opt
       
   rabbitmq-transaction:
+    container_name: rabbitmq-transaction
     image: rabbitmq:3.12.13-management #later change to non management version
     ports:
       - "5673:5672"
@@ -110,3 +111,5 @@ services:
     #build: 
     #image:
   #   ports:
+
+    
