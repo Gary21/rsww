@@ -1,13 +1,10 @@
-using Microsoft.Extensions.Configuration;
-using Serilog;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using RabbitMQ.Client;
-using Microsoft.AspNetCore.Hosting;
-using RabbitUtilities.Configuration;
-using HotelsRequestService.QueryHandler;
 using HotelsRequestService.Data;
+using HotelsRequestService.QueryHandler;
+using HotelsRequestService.RequestHandler;
 using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
+using RabbitUtilities.Configuration;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +42,7 @@ while(true)
         await Task.Delay(1000);
     }
 }
+//builder.Services.AddSingleton<OutsideSimulation>();
 
 //builder.WebHost.UseUrls("http://*:7134");
 builder.Services.AddCors(options =>

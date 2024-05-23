@@ -25,6 +25,7 @@ namespace HotelsRequestService.QueryHandler
             : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!)
         {
             _contextFactory = repositoryFactory;
+            SimulateOutside();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
@@ -116,6 +117,101 @@ namespace HotelsRequestService.QueryHandler
                 }
                 success = true;
                 Reply(ea, MessagePackSerializer.Serialize<int>(result));
+            }
+        }
+
+
+        public async Task<int> ReserveMock(int hotelId, int roomNumber, DateTime start, DateTime end)
+        {
+            // with message
+            _logger.Information($"Received message with type RESERVE: {hotelId}, {roomNumber}, {start}, {end}");
+
+            List<DateTime> dateSeries = new List<DateTime>();
+            for (DateTime date = start; date <= end; date = date.AddDays(1))
+            {
+                dateSeries.Add(date.Date);
+            }
+
+            bool success = false;
+            int result = 0;
+            int tries = 0;
+            while (!success)
+            {
+                var repository = _contextFactory.CreateDbContext();
+
+                try
+                {
+                    var room = await repository.Rooms
+                        .Where(r => r.HotelId == hotelId)
+                        .Where(r => r.RoomNumber == roomNumber)
+                        .Where(r => !r.Occupancies.Any(o => dateSeries.Contains(o.Date.Date)))
+                        .FirstOrDefaultAsync();
+
+                    if (room == null)
+                    {
+                        _logger.Information($"Room not found.");
+                        return CODE_NOT_FOUND;
+                    }
+
+                    repository.Occupancies.AddRange(dateSeries.Select(date => new Occupancy
+                    {
+                        HotelId = hotelId,
+                        RoomNumber = roomNumber,
+                        Date = date,
+                        ReservationId = 0,
+                        Room = room
+                    }));
+                    result = await repository.SaveChangesAsync();
+                }
+                catch (Exception e)
+                {
+                    _logger.Information($"Failed to update database: {e.Message}");
+                    if (tries < 3)
+                    {
+                        tries++;
+                        continue;
+                    }
+                    else
+                    {
+                        _logger.Information($"Failed to reserve room.");
+                        return CODE_FAILED_UPDATE;
+                    }
+                }
+
+                success = true;
+                
+            }
+            return result;
+        }
+
+
+        private async void SimulateOutside()
+        {
+            while (true)
+            {
+                try
+                {
+                    using var repository = _contextFactory.CreateDbContext();
+                    var hotels = await repository.Hotels.ToListAsync();
+
+                    var random = new Random();
+                    var randomHotel = hotels[random.Next(hotels.Count)];
+
+                    var rooms = await repository.Rooms.Where(r => r.HotelId == randomHotel.Id).ToListAsync();
+                    var randomRoom = rooms[random.Next(rooms.Count)];
+
+                    var start = DateTime.Now.Date.AddDays(random.Next(1, 10));
+                    var end = start.AddDays(random.Next(2, 7));
+
+                    var result = ReserveMock(randomHotel.Id, randomRoom.RoomNumber, start, end);
+
+                    Task.Delay(5000).Wait();
+                }
+                catch (Exception e)
+                {
+                    _logger.Information($"Failed to reserve room.");
+                    Task.Delay(5000).Wait();
+                }
             }
         }
     }
