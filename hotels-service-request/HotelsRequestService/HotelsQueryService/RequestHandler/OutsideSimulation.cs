@@ -15,6 +15,9 @@ namespace HotelsRequestService.RequestHandler
             _hotelsRequestHandler = hotelsRequestHandler;
             _contextFactory = contextFactory;
             _logger = logger;
+
+            //using var context = _contextFactory.CreateDbContext();
+            //context.Database.EnsureCreated();
         }
 
         public async void Run()

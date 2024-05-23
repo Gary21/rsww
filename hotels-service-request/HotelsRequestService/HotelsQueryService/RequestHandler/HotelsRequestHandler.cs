@@ -21,11 +21,15 @@ namespace HotelsRequestService.QueryHandler
         private readonly int CODE_FAILED_UPDATE = -1;
         private readonly int CODE_NOT_FOUND = -2;
 
-        public HotelsRequestHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory) 
-            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!)
+        public HotelsRequestHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IHostApplicationLifetime applicationLifetime) 
+            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!, applicationLifetime)
         {
             _contextFactory = repositoryFactory;
-            SimulateOutside();
+
+
+            using var context = _contextFactory.CreateDbContext();
+            context.Database.EnsureCreated();
+            //SimulateOutside();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)

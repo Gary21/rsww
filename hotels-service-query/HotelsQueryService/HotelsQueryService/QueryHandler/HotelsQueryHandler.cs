@@ -20,8 +20,8 @@ namespace HotelsQueryService.QueryHandler
         private readonly IDbContextFactory<ApiDbContext> _contextFactory;
         private readonly IMapper _mapper;
 
-        public HotelsQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IMapper mapper) 
-            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!)
+        public HotelsQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IMapper mapper, IHostApplicationLifetime applicationLifetime) 
+            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!, applicationLifetime)
         {
             _contextFactory = repositoryFactory;
             _mapper = mapper;

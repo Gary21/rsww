@@ -28,55 +28,60 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     Password = "guest",
     AutomaticRecoveryEnabled = true
 });
+builder.Services.AddHostedService<HotelsRequestHandler>();
 
-while(true)
-{
-    try
-    {
-        builder.Services.AddHostedService<HotelsRequestHandler>();
-        break;
-    }
-    catch (Exception e)
-    {
-        logger.Error(e.Message);
-        await Task.Delay(1000);
-    }
-}
+
+
+//while (true)
+//{
+//    try
+//    {
+//        builder.Services.AddHostedService<HotelsRequestHandler>();
+//        break;
+//    }
+//    catch (Exception e)
+//    {
+//        logger.Error(e.Message);
+//        await Task.Delay(1000);
+//    }
+//}
+
+
 //builder.Services.AddSingleton<OutsideSimulation>();
 
-//builder.WebHost.UseUrls("http://*:7134");
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("*",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
+////builder.WebHost.UseUrls("http://*:7134");
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("*",
+//        policy =>
+//        {
+//            policy.AllowAnyOrigin()
+//                .AllowAnyHeader()
+//                .AllowAnyMethod();
+//        });
+//});
 
 
-builder.Services.AddAutoMapper(typeof(Program));
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddAutoMapper(typeof(Program));
+//builder.Services.AddControllers();
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
-app.UseAuthorization();
+//app.UseAuthorization();
 
-app.MapControllers();
+//app.MapControllers();
 
-app.UseCors("*");
+//app.UseCors("*");
 
 app.Run();

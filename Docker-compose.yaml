@@ -87,7 +87,7 @@ services:
   hotels-request-service:
     image: rsww-hotels-request-service
     environment:
-      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     - rabbitmq-main  
@@ -98,7 +98,7 @@ services:
   hotels-query-service:
     image: rsww-hotels-query-service
     environment:
-      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     - rabbitmq-main  

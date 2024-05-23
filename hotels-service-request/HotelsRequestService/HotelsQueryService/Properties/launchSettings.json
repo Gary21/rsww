@@ -1,5 +1,12 @@
 {
   "profiles": {
+    "CLI": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+
+    },
     "http": {
       "commandName": "Project",
       "launchBrowser": true,
