@@ -11,6 +11,8 @@ namespace CatalogRequestService.DTOs
         public List<int> TransportThereIds { get; set; }
         [Key(2)]
         public List<int> TransportBackIds { get; set; }
+        [Key(3)]
+        public decimal Price { get; set; }
 
         public TripDTO(int hotelId) 
         { 
