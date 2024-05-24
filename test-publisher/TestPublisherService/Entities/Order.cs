@@ -15,7 +15,7 @@ namespace TestPublisherService.Entities
         public int HotelId { get; set; }
 
         [MessagePack.Key(2)]
-        public int OccupationId { get; set; }
+        public int[] OccupationId { get; set; }
         
         [MessagePack.Key(3)]
         public int TransportId { get; set; }

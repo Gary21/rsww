@@ -26,10 +26,10 @@ namespace TransportRequestService.TransportServiceTests
             int i = 0;
             while (!stoppingToken.IsCancellationRequested) {
 
-                //await OrderTestsAsync(stoppingToken);
+                await OrderTestsAsync(stoppingToken);
                 //await TransportTestsAsync(stoppingToken);
                 //await PaymentTest(stoppingToken);
-                await HotelTests(stoppingToken);
+                //await HotelTests(stoppingToken);
 
                 i++;
                 await Task.Delay(1000);
@@ -138,8 +138,8 @@ namespace TransportRequestService.TransportServiceTests
             var body5 = MessagePackSerializer.Deserialize<IEnumerable<Order>>(await transportPublisherTest.GetReply(getnone, token));
             Console.WriteLine(MessagePackSerializer.SerializeToJson(body5));
 
-            transportPublisherTest.PublishRequestNoReply("order", "all", MessageType.ADD, new AddRequest { Order = new Order { HotelId = Random.Shared.Next(5), TransportId = Random.Shared.Next(10), OccupationId = Random.Shared.Next(20), UserId = Random.Shared.Next(3), Price = 10 } });
-            transportPublisherTest.PublishRequestNoReply("order", "all", MessageType.ADD, new AddRequest { Order = new Order { HotelId = Random.Shared.Next(5), TransportId = Random.Shared.Next(10), OccupationId = Random.Shared.Next(20), UserId = Random.Shared.Next(3), Price = 10 } });
+            transportPublisherTest.PublishRequestNoReply("order", "all", MessageType.ADD, new AddRequest { Order = new Order { HotelId = Random.Shared.Next(5), TransportId = Random.Shared.Next(10), OccupationId = new int[] { Random.Shared.Next(20), Random.Shared.Next(20) , Random.Shared.Next(20) }, UserId = Random.Shared.Next(3), Price = 10 } });
+            transportPublisherTest.PublishRequestNoReply("order", "all", MessageType.ADD, new AddRequest { Order = new Order { HotelId = Random.Shared.Next(5), TransportId = Random.Shared.Next(10), OccupationId = new int[] { Random.Shared.Next(20), Random.Shared.Next(20) , Random.Shared.Next(20) }, UserId = Random.Shared.Next(3), Price = 10 } });
 
 
             var getmsg = transportPublisherTest.PublishRequestWithReply("order", "all", MessageType.GET, new GetRequest { Filters = new TransportQueryService.Filters.OrderFilter { UserIds =  new List<int>() { Random.Shared.Next(3) } } });
@@ -152,8 +152,8 @@ namespace TransportRequestService.TransportServiceTests
             Console.WriteLine(MessagePackSerializer.SerializeToJson(body));
 
 
-
-            transportPublisherTest.PublishRequestNoReply("order", "all", MessageType.DELETE, new DeleteRequest { Id = body.OrderBy(order => order.Id).Last().Id });
+            if(body.Any())  
+            transportPublisherTest.PublishRequestNoReply("order", "all", MessageType.DELETE, new DeleteRequest { Id = body.OrderBy(order => order.Id).Last().Id   } );
             
             var getmsg2 = transportPublisherTest.PublishRequestWithReply("order", "all", MessageType.GET, new GetRequest { Filters = new TransportQueryService.Filters.OrderFilter { Ids = new List<int>() { body.OrderBy(order => order.Id).Last().Id } } });
             var body2 = MessagePackSerializer.Deserialize<IEnumerable<Order>>(await transportPublisherTest.GetReply(getmsg2, token));
