@@ -1,6 +1,9 @@
 using api_gateway.DTOs;
+using api_gateway.Publisher;
 using api_gateway.Queries;
+using MessagePack;
 using Microsoft.AspNetCore.Mvc;
+using RabbitUtilities;
 
 namespace api_gateway.Controllers;
 
@@ -10,82 +13,109 @@ public class OffersController : ControllerBase
 {
 
     private readonly ILogger<OffersController> _logger;
+    private readonly PublisherServiceBase _publisherService;
+    private readonly CancellationToken _token;
 
-    public OffersController(ILogger<OffersController> logger)
+    public OffersController(ILogger<OffersController> logger, GatewayPublisherService publisherService, IHostApplicationLifetime appLifetime)
     {
         _logger = logger;
+        _publisherService = publisherService;
+        _token = appLifetime.ApplicationStopping;
     }
 
     [HttpGet("GetDestinations")]
-    public IEnumerable<string> Get()
+    public async Task<IEnumerable<string>> GetDestinations()
     {
-        return new string[] { "Destination 1", "Destination 2", "Destination 3" };
+        var data = MessagePackSerializer.Serialize("");
+        var payload = new KeyValuePair<string, byte[]>("GetDestinations", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var destinations = MessagePackSerializer.Deserialize<IEnumerable<string>>(bytes);
+
+        return destinations;
     }
     
     [HttpGet("GetHotels")]
-    public IEnumerable<HotelDTO> GetHotels([FromQuery] HotelsQuery query)
+    public async Task<IEnumerable<HotelDTO>> GetHotels([FromQuery] HotelsQuery query)
     {
-        return new List<HotelDTO>
-        {
-            new HotelDTO
-            {
-                Id = 1,
-                Name = "Hotel 1",
-                Address = "Address 1",
-                Description = "Description 1",
-                Rating = 5,
-                CityName = "City 1"
-            },
-            new HotelDTO
-            {
-                Id = 2,
-                Name = "Hotel 2",
-                Address = "Address 2",
-                Description = "Description 2",
-                Rating = 4,
-                CityName = "City 2"
-            },
-            new HotelDTO
-            {
-                Id = 3,
-                Name = "Hotel 3",
-                Address = "Address 3",
-                Description = "Description 3",
-                Rating = 3,
-                CityName = "City 3"
-            }
-        };
+        var data = MessagePackSerializer.Serialize(query);
+        var payload = new KeyValuePair<string, byte[]>("GetHotels", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var hotels = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(bytes);
+
+        return hotels;
     }
     
     [HttpGet("GetHotel")]
-    public HotelDTO GetHotel(int id)
+    public async Task<HotelDTO> GetHotel(int id)
     {
-        return new HotelDTO
-        {
-            Id = id,
-            Name = "Hotel 1",
-            Address = "Address 1",
-            Description = "Description 1",
-            Rating = 5,
-            CityName = "City 1"
-        };
+        var data = MessagePackSerializer.Serialize(id);
+        var payload = new KeyValuePair<string, byte[]>("GetHotel", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var hotel = MessagePackSerializer.Deserialize<HotelDTO>(bytes);
+
+        return hotel;
     }
     
     [HttpGet("GetAvailability")]
-    public bool GetAvailability([FromQuery] string hotelId)
+    public async Task<bool> GetAvailability([FromQuery] int hotelId)
     {
-        return new Random().Next(0, 2) == 0;
+        var data = MessagePackSerializer.Serialize(hotelId);
+        var payload = new KeyValuePair<string, byte[]>("GetAvailability", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var availability = MessagePackSerializer.Deserialize<bool>(bytes);
+
+        return availability;
     }
     
     [HttpPost("MakeReservation")]
-    public string MakeReservation([FromQuery] ReservationQuery query)
+    public async Task<int> MakeReservation([FromQuery] ReservationQuery query)
     {
-        return "1111-2222-3333-4444";
+        var data = MessagePackSerializer.Serialize(query);
+        var payload = new KeyValuePair<string, byte[]>("MakeReservation", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.RESERVE, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var reservation = MessagePackSerializer.Deserialize<int>(bytes);
+
+        return reservation;
+    }
+    
+    [HttpGet("ValidateReservation")]
+    public async Task<bool> ValidateReservation([FromQuery] ReservationQuery query)
+    {
+        var data = MessagePackSerializer.Serialize(query);
+        var payload = new KeyValuePair<string, byte[]>("ValidateReservation", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var reservation = MessagePackSerializer.Deserialize<bool>(bytes);
+
+        return reservation;
     }
     
     [HttpPost("BuyReservation")]
-    public bool BuyReservation([FromQuery] string hotelId)
+    public async Task<bool> BuyReservation([FromQuery] int reservationId)
     {
-        return new Random().Next(0, 2) == 0;
+        var data = MessagePackSerializer.Serialize(reservationId);
+        var payload = new KeyValuePair<string, byte[]>("BuyReservation", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.ADD, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var purchase = MessagePackSerializer.Deserialize<bool>(bytes);
+
+        return purchase;
+    }
+    
+    [HttpGet("GetHotelRooms")]
+    public async Task<IEnumerable<string>> GetHotelRooms([FromQuery] int hotelId)
+    {
+        var data = MessagePackSerializer.Serialize(hotelId);
+        var payload = new KeyValuePair<string, byte[]>("GetHotelRooms", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.ADD, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var rooms = MessagePackSerializer.Deserialize<IEnumerable<string>>(bytes);
+
+        return rooms;
     }
 }

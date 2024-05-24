@@ -1,14 +1,14 @@
 <template>
     <li v-for="offer in offers">
         <div class="container">
-        <div class="photo"> <img :src="offer.ImgPaths[0]" alt="offer.destination" /> </div>
-        <div class="date"> {{ offer.Rating }} </div>
-        <div class="name"> {{ offer.Name }} </div>
-        <div class="destination"> {{ offer.CityName }} </div>
+        <div class="photo"> <img :src="offer.imgUrls[0]" alt="offer.destination" /> </div>
+        <div class="date"> Rating: {{ offer.rating }} </div>
+        <div class="name"> Name: {{ offer.name }} </div>
+        <div class="destination"> City name: {{ offer.cityName }} </div>
         <div class="price">
             {{ offer.CountryName }}
             <div class="button">
-                  <v-btn class="text-none mt-5" color="indigo-lighten-1" size="x-large" variant="flat" rounded="0" elevation="12" @click="goToOffer(offer.id)">
+                  <v-btn class="text-none mt-5" color="indigo-lighten-1" size="x-large" variant="flat" rounded="0" elevation="12" @click="goToOffer(offer.id, this.$route.query.departure, this.$route.query.date, this.$route.query.adult, this.$route.query.child18, this.$route.query.child10, this.$route.query.child3)">
                     Book Now
                   </v-btn>
             </div>
@@ -26,7 +26,7 @@
             destination: 'Paris',
             name: 'Parisian Getaway',
             price: 400,
-            image: 'https://letsenhance.io/static/73136da51c245e80edc6ccfe44888a99/1015f/MainBefore.jpg',
+            imgUrls: ['https://letsenhance.io/static/73136da51c245e80edc6ccfe44888a99/1015f/MainBefore.jpg'],
             date: '2024-09-01',
         },
         {
@@ -34,17 +34,23 @@
             destination: 'Rome',
             name: 'Roman Holiday',
             price: 600,
-            image: 'https://buffer.com/cdn-cgi/image/w=1000,fit=contain,q=90,f=auto/library/content/images/size/w1200/2023/10/free-images.jpg',
+            imgUrls: ['https://buffer.com/cdn-cgi/image/w=1000,fit=contain,q=90,f=auto/library/content/images/size/w1200/2023/10/free-images.jpg'],
             date: '2024-08-05',
         },
     ]
     }),
     methods: {
-        goToOffer(id) {
+      goToOffer(id, departure, date, adult, child18, child10, child3) {
         this.$router.push({
            name: 'Offer', 
            query: {
-             id: id
+            id: id,
+            departure: departure,
+            date: date,
+            adult: adult,
+            child18: child18,
+            child10: child10,
+            child3: child3,
           } 
         });
         },
