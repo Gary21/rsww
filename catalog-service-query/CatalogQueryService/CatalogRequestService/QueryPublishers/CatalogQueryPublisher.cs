@@ -15,8 +15,8 @@ namespace CatalogQueryService.QueryPublishers
         private readonly string _exchangeName = "resources/hotels";
         private readonly string _routingKey = "query";
 
-        public CatalogQueryPublisher(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory)
-            : base(logger, connectionFactory, config.GetSection("CatalogQueryPublisher").Get<ServiceConfig>()!)
+        public CatalogQueryPublisher(ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IHostApplicationLifetime appLifeTime)
+            : base(logger, connectionFactory, config.GetSection("CatalogQueryPublisher").Get<ServiceConfig>()!, appLifeTime)
         {
             //_exchangeName = config.GetSection("CatalogQueryPublisher").GetValue<string>("exchange");
             //_routingKey = config.GetSection("CatalogQueryPublisher").GetValue<string>("routing");
