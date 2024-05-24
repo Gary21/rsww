@@ -26,10 +26,10 @@ namespace TransportRequestService.TransportServiceTests
             int i = 0;
             while (!stoppingToken.IsCancellationRequested) {
 
-                await OrderTestsAsync(stoppingToken);
+                //await OrderTestsAsync(stoppingToken);
                 //await TransportTestsAsync(stoppingToken);
                 //await PaymentTest(stoppingToken);
-                //await HotelTests(stoppingToken);
+                await HotelTests(stoppingToken);
 
                 i++;
                 await Task.Delay(1000);

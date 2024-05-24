@@ -25,6 +25,8 @@ namespace HotelsQueryService.QueryHandler
         {
             _contextFactory = repositoryFactory;
             _mapper = mapper;
+            using var repo = repositoryFactory.CreateDbContext();
+            repo.Database.EnsureCreated();
         }
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
