@@ -19,8 +19,8 @@ namespace CatalogQueryService.QueryHandler
         private readonly CatalogQueryPublisher _catalogQueryPublisher;
         private readonly IMapper _mapper;
 
-        public CatalogQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase catalogQueryPublisher, IMapper mapper) 
-            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!)
+        public CatalogQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase catalogQueryPublisher, IMapper mapper, IHostApplicationLifetime appLifeTime) 
+            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!, appLifeTime)
         {
             _catalogQueryPublisher = (CatalogQueryPublisher)catalogQueryPublisher;
             _mapper = mapper;
