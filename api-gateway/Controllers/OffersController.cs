@@ -76,7 +76,7 @@ public class OffersController : ControllerBase
     {
         var data = MessagePackSerializer.Serialize(query);
         var payload = new KeyValuePair<string, byte[]>("MakeReservation", data);
-        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.RESERVE, payload);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.RESERVE, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var reservation = MessagePackSerializer.Deserialize<int>(bytes);
 
@@ -100,7 +100,7 @@ public class OffersController : ControllerBase
     {
         var data = MessagePackSerializer.Serialize(reservationId);
         var payload = new KeyValuePair<string, byte[]>("BuyReservation", data);
-        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.ADD, payload);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.ADD, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var purchase = MessagePackSerializer.Deserialize<bool>(bytes);
 

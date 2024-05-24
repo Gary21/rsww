@@ -20,7 +20,7 @@ namespace CatalogRequestService.RequestHandlers
         private readonly CancellationToken _cancellationToken;
 
         public CatalogRequestHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase catalogQueryPublisher, Publisher2Service transactionRequestPublisher, IHostApplicationLifetime appLifeTime)
-            : base(logger, connectionFactory, config.GetSection("CatalogRequestHandler").Get<ConsumerConfig>()!, appLifeTime)
+            : base(logger, connectionFactory, config.GetSection("CatalogQueryPublisher").Get<ConsumerConfig>()!, appLifeTime)
         {
             _catalogRequestPublisher = (CatalogRequestPublisher)catalogQueryPublisher;
             _transactionRequestPublisher = transactionRequestPublisher;
