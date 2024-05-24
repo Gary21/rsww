@@ -112,10 +112,35 @@ public class OffersController : ControllerBase
     {
         var data = MessagePackSerializer.Serialize(hotelId);
         var payload = new KeyValuePair<string, byte[]>("GetHotelRooms", data);
-        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.ADD, payload);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var rooms = MessagePackSerializer.Deserialize<IEnumerable<string>>(bytes);
 
         return rooms;
+    }
+    
+    [HttpPost("Login")]
+    public async Task<int> Login([FromQuery] string? username, [FromQuery] string? password)
+    {
+        if (username == null || password == null)
+        {
+            return -1;
+        }
+        var database = new Dictionary<string, KeyValuePair<string, int>>
+        {
+            { "user1", new KeyValuePair<string, int>("pass1", 11111111) },
+            { "user2", new KeyValuePair<string, int>("pass2", 22222222) },
+            { "user3", new KeyValuePair<string, int>("pass3", 33333333) },
+            { "user4", new KeyValuePair<string, int>("pass4", 44444444) },
+            { "user5", new KeyValuePair<string, int>("pass5", 55555555) },
+            { "user6", new KeyValuePair<string, int>("pass6", 66666666) },
+            { "user7", new KeyValuePair<string, int>("pass7", 77777777) }
+        };
+        
+        if (database.ContainsKey(username) && database[username].Key == password)
+        {
+            return database[username].Value;
+        }
+        return -1;
     }
 }

@@ -1,5 +1,6 @@
 <template>
   <HomeButton/>
+  <LoginButton/>
   <SearchBar/>
 </template>
 

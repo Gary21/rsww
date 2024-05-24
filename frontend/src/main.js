@@ -16,6 +16,8 @@ import { createApp } from 'vue'
 
 const app = createApp(App)
 
+app.config.globalProperties.userId = -1;
+
 app.component(VueCountdown.name, VueCountdown);
 registerPlugins(app)
 
