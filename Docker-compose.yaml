@@ -107,7 +107,8 @@ services:
       - default
 
   api-gateway:
-    build: api-gateway
+    image: rsww-gateway
+    #build: api-gateway
     container_name: api-gateway
     environment:
       - rabbitConfig__adress=rabbitmq-main
@@ -120,7 +121,7 @@ services:
     build: frontend
     container_name: frontend
     ports:
-      - 80:8080
+      - 8032:8080
     depends_on:
       - api-gateway
 

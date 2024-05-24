@@ -5,11 +5,12 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["api-gateway.csproj", "./"]
+COPY rabbit-utilities/RabbitUtilities/bin/Debug/net6.0/RabbitUtilities.dll RabbitUtilities.dll
+COPY ./api-gateway .
+#COPY ["api-gateway/api-gateway.csproj", "./"]
 RUN dotnet restore "api-gateway.csproj"
-COPY . .
 WORKDIR "/src/"
-RUN dotnet build "api-gateway.csproj" -c Release -o /app/build
+#RUN dotnet build "api-gateway.csproj" -c Release -o /app/build
 
 FROM build AS publish
 RUN dotnet publish "api-gateway.csproj" -c Release -o /app/publish
