@@ -36,7 +36,7 @@
 
   <ItemGroup>
     <Reference Include="RabbitUtilities">
-      <HintPath>..\..\..\catalog-service-request\CatalogQueryService\CatalogRequestService\RabbitUtilities.dll</HintPath>
+      <HintPath>..\..\..\rabbit-utilities\RabbitUtilities\bin\Debug\net6.0\RabbitUtilities.dll</HintPath>
     </Reference>
   </ItemGroup>
 
