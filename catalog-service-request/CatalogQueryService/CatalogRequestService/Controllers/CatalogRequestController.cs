@@ -1,4 +1,4 @@
-﻿using CatalogQueryService.Queries;
+﻿using CatalogRequestService.Queries;
 using CatalogRequestService.DTOs;
 using CatalogRequestService.QueryPublishers;
 using Microsoft.AspNetCore.Mvc;

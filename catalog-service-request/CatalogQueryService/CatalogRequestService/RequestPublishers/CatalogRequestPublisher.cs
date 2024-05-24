@@ -1,4 +1,4 @@
-﻿using CatalogQueryService.Queries;
+﻿using CatalogRequestService.Queries;
 using CatalogRequestService.DTOs;
 using MessagePack;
 using RabbitMQ.Client;
@@ -34,7 +34,7 @@ namespace CatalogRequestService.QueryPublishers
             return success;
         }
 
-        public async Task<bool> ReserveTransport(TransportReserveRequest query)
+        public async Task<int> ReserveTransport(TransportReserveRequest query)
         {
             Guid messageCorellationId = PublishRequestWithReply("resources/transport", _routingKey, MessageType.RESERVE, query);
 
@@ -42,7 +42,7 @@ namespace CatalogRequestService.QueryPublishers
 
             var result = await GetReply(messageCorellationId, cancellationToken);
 
-            var success = MessagePackSerializer.Deserialize<bool>(result);
+            var success = MessagePackSerializer.Deserialize<int>(result);
 
             return success;
         }

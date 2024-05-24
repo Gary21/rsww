@@ -1,13 +1,10 @@
 ﻿using CatalogQueryService.DTOs;
-using NuGet.Protocol.Core.Types;
+using CatalogQueryService.Queries;
+using MessagePack;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using RabbitUtilities.Configuration;
 using ILogger = Serilog.ILogger;
-using MessagePack;
-using CatalogQueryService.DTOs;
-using CatalogQueryService.Queries;
-using CatalogQueryService.Filters;
 
 
 

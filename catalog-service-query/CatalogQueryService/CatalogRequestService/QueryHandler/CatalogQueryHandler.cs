@@ -292,6 +292,7 @@ namespace CatalogQueryService.QueryHandler
                 }
 
                 hotelTransportMatches.Add(match);
+                
                 match.Price = mf.CheckOutDate.Value.Subtract(mf.CheckInDate.Value).Days * 1000 + mf.PeopleNumber * 100 + 
                     transports.FirstOrDefault().PricePerTicket * mf.PeopleNumber + hotel.Stars * 100;
                 match.Price = match.Price - DateTime.Now.Subtract(mf.CheckInDate.Value).Days * 5;

@@ -1,9 +1,9 @@
 ﻿using MessagePack;
 
-namespace CatalogRequestService.Queries
+namespace CatalogRequestService.Requests
 {
     [MessagePackObject]
-    public class RoomReserveRequest
+    public class TripReserveRequest
     {
         [Key(0)]
         public int HotelId { get; set; }
@@ -14,6 +14,11 @@ namespace CatalogRequestService.Queries
         [Key(3)]
         public DateTime CheckOutDate { get; set; }
         [Key(4)]
-        public int ReservationId { get; set; }
+        public int PeopleNumber { get; set; }
+        [Key(5)]
+        public int TransportId { get; set; }
+        [Key(6)]
+        public int ClientId { get; set; }
+        
     }
 }
