@@ -7,19 +7,14 @@ EXPOSE 8080
 EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["CatalogQueryService/CatalogQueryService.csproj", "CatalogQueryService/"]
-RUN dotnet restore "./CatalogQueryService/CatalogQueryService.csproj"
-COPY . .
-WORKDIR "/src/CatalogQueryService"
-RUN dotnet build "./CatalogQueryService.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR /App
+COPY ./catalog-service-query/CatalogQueryService/CatalogRequestService ./
+COPY rabbit-utilities/RabbitUtilities/bin/Debug/net6.0/RabbitUtilities.dll RabbitUtilities.dll
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./CatalogQueryService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet restore 
+RUN dotnet publish -c Release -o out
 
 FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+WORKDIR /App
+COPY --from=build /App/out .
 ENTRYPOINT ["dotnet", "CatalogQueryService.dll"]

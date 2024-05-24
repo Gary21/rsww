@@ -1,4 +1,5 @@
 ﻿using CatalogQueryService.QueryPublishers;
+using CatalogQueryService.QueryHandler;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using RabbitUtilities.Configuration;
@@ -7,7 +8,7 @@ using ILogger = Serilog.ILogger;
 
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 
 
@@ -31,12 +32,13 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
 builder.Services.AddSingleton<PublisherServiceBase, CatalogQueryPublisher>();
 builder.Services.AddHostedService<ReplyService>();
 
+builder.Services.AddHostedService<CatalogQueryHandler>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

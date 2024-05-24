@@ -4,10 +4,11 @@ using RabbitUtilities;
 using RabbitUtilities.Configuration;
 using Serilog;
 using ILogger = Serilog.ILogger;
-
+using CatalogRequestService.RequestHandlers;
+using CatalogRequestService.RequestPublishers;
 
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 var transactionRabbitConfig = config.GetSection("transactionRabbitConfig").Get<RabbitConfig>()!;
 
@@ -45,6 +46,9 @@ while (true)
     {
         builder.Services.AddSingleton<PublisherServiceBase, CatalogRequestPublisher>();
         builder.Services.AddHostedService<ReplyService>();
+        builder.Services.AddSingleton<Publisher2Service>();
+        builder.Services.AddHostedService<Reply2Service>();
+        builder.Services.AddHostedService<CatalogRequestHandler>();
         break;
     }
     catch (Exception e)
@@ -54,7 +58,7 @@ while (true)
     }
 }
 
-
+builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

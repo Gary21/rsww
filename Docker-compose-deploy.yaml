@@ -9,23 +9,30 @@ services:
     image: rabbitmq:3.12.13
 
   catalog-query-service:
-    image: ricopsych/rsww-catalog-query-service
+    image: ricopsych/rsww-catalog-service-query
     environment:
       - rabbitConfig__adress=rabbitmq-main
+      - CatalogQueryPublisher__exchange=catalog
+      - CatalogQueryPublisher__queue=gfdhgfdjhgffdgh
     depends_on:
       - rabbitmq-main
   
   catalog-request-service:
-    image: ricopsych/rsww-catalog-request-service
+    image: ricopsych/rsww-catalog-service-request 
     environment:
       - rabbitConfig__adress=rabbitmq-main
+      - transactionRabbitConfig__adress=rabbitmq-transaction
+      
+      - CatalogQueryPublisher__exchange=catalog
+      - CatalogQueryPublisher__queue=gfdhgfdjhgffdgfd
+      - CatalogQueryPublisher__routing=query
     depends_on:
       - rabbitmq-main
   
   transaction-service:
     image: ricopsych/rsww-transaction-service
     environment:
-      - spring.rabbitmq.host=rabbitmq-main
+      - spring.rabbitmq.host=rabbitmq-transaction
       - spring.rabbitmq.port=5672
 
   transport-query-service:
@@ -65,7 +72,7 @@ services:
   hotels-request-service:
     image: ricopsych/rsww-hotels-request-service
     environment:
-      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     - rabbitmq-main  
@@ -76,7 +83,7 @@ services:
   hotels-query-service:
     image: ricopsych/rsww-hotels-query-service
     environment:
-      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=user;Password=postgres;Pooling=true;
+      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     - rabbitmq-main  
@@ -84,7 +91,25 @@ services:
       - db-network
       - default
 
+  api-gateway:
+    image: ricopsych/rsww-gateway
+    container_name: api-gateway
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    ports:
+      - 8080:80
+    depends_on:
+      - rabbitmq-main
+
+  frontend:
+    image: ricopsych/rsww-frontend
+    container_name: frontend
+    ports:
+      - 18438:8080
+    depends_on:
+      - api-gateway
+
 networks:
   db-network:
     name: admin-postgres_default
-    external: true
+#    external: true
