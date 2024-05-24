@@ -49,6 +49,9 @@ namespace HotelsQueryService.QueryHandler
                     _logger.Information($"Received getlistof");
                     GetListOf(ea);
                     break;
+                case MessageType.EVENT:
+                    GetRoomTypesForHotelId(ea);
+                    break;
                 default:
                     _logger.Information($"Received message with unknown type.");
                     break;
@@ -84,6 +87,22 @@ namespace HotelsQueryService.QueryHandler
             {
                 _logger.Information($"Received message with unknown type.");
             }
+        }
+
+        private async void GetRoomTypesForHotelId(BasicDeliverEventArgs ea)
+        {
+            using var repository = _contextFactory.CreateDbContext();
+            var message = MessagePackSerializer.Deserialize<int>(ea.Body.ToArray());
+            var hotel = await repository.Hotels.Include(h => h.Rooms).ThenInclude(r => r.RoomType).FirstOrDefaultAsync(h => h.Id == message);
+            if (hotel == null)
+            {
+                Reply(ea, MessagePackSerializer.Serialize(new List<string>()));
+                return;
+            }
+            var roomTypes = hotel.Rooms.Select(r => r.RoomType.Name).Distinct().ToList();
+            var roomTypesDTO = _mapper.Map<List<RoomTypeDTO>>(roomTypes);
+            var serialized = MessagePackSerializer.Serialize(roomTypesDTO);
+            Reply(ea, serialized);
         }
 
         private async void Get(BasicDeliverEventArgs ea)
