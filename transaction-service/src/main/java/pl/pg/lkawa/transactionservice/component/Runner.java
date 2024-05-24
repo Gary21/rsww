@@ -37,12 +37,12 @@ public class Runner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        MessageProperties properties = new MessageProperties();
-        byte[] body = new byte[] {(byte) 1};
-        properties.setReplyTo(incomingRoutingKey);
-        properties.setCorrelationId("1");
-        Message message = new Message(body, properties);
-        rabbitTemplate.convertAndSend(queueName, message);
+//        MessageProperties properties = new MessageProperties();
+//        byte[] body = new byte[] {(byte) 1};
+//        properties.setReplyTo(incomingRoutingKey);
+//        properties.setCorrelationId("1");
+//        Message message = new Message(body, properties);
+//        rabbitTemplate.convertAndSend(queueName, message);
     }
 
 }
