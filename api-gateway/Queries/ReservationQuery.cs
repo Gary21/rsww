@@ -20,4 +20,6 @@ public class ReservationQuery
     public int Children10 { get; set; }
     [Key(7)]
     public int Children3 { get; set; }
+    [Key(8)]
+    public int? userId { get; set; }
 }

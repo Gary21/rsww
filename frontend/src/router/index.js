@@ -32,6 +32,12 @@ const routes = [
     name: 'Reservation',
     component: () => import('@/pages/reservation.vue'),
     props: true,
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/pages/login.vue'),
+    props: true,
   }
 ]
 
