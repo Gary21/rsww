@@ -1,33 +1,78 @@
-﻿using MP = MessagePack;
+﻿using MessagePack;
 
 namespace CatalogQueryService.DTOs
 {
-    [MP.MessagePackObject]
+    [MessagePackObject]
     public class HotelDTO
     {
-        [MP.Key(0)]
+        [Key(0)]
         public int Id { get; set; }
-        [MP.Key(1)]
+        [Key(1)]
         public string Name { get; set; }
-        [MP.Key(2)]
+        [Key(2)]
         public string Address { get; set; }
-        [MP.Key(3)]
+        [Key(3)]
         public string Description { get; set; }
-        [MP.Key(4)]
+        [Key(4)]
         public decimal Rating { get; set; }
-        [MP.Key(5)]
+        [Key(5)]
         public int Stars { get; set; }
-        [MP.Key(6)]
+        [Key(6)]
         public bool HasFood { get; set; }
-        [MP.Key(7)]
+        [Key(7)]
         public int? CityId { get; set; }
-        [MP.Key(8)]
+        [Key(8)]
         public string? CityName { get; set; }
-        [MP.Key(9)]
+        [Key(9)]
         public int? CountryId { get; set; }
-        [MP.Key(10)]
+        [Key(10)]
         public string? CountryName { get; set; }
-        [MP.Key(11)]
+        [Key(11)]
         public string ImgPaths { get; set; }
+    }
+
+    [MessagePackObject]
+    public class GatewayHotelDTO
+    {
+        [Key(0)]
+        public int Id { get; set; }
+        [Key(1)]
+        public string Name { get; set; }
+        [Key(2)]
+        public string[] ImgUrls { get; set; }
+        [Key(3)]
+        public string Address { get; set; }
+        [Key(4)]
+        public string Description { get; set; }
+        [Key(5)]
+        public int Rating { get; set; }
+        [Key(6)]
+        public string? CityName { get; set; }
+        [Key(7)]
+        public string? CountryName { get; set; }
+        [Key(8)]
+        public int Stars { get; set; }
+        [Key(9)]
+        public bool HasFood { get; set; }
+    }
+
+    public class DTOAdapterHotelToGatewayHotel
+    {
+        public static GatewayHotelDTO Adapt(HotelDTO hotelDTO)
+        {
+            return new GatewayHotelDTO
+            {
+                Id = hotelDTO.Id,
+                Name = hotelDTO.Name,
+                ImgUrls = hotelDTO.ImgPaths.Split(","),
+                Address = hotelDTO.Address,
+                Description = hotelDTO.Description,
+                Rating = (int)hotelDTO.Rating,
+                CityName = hotelDTO.CityName,
+                CountryName = hotelDTO.CountryName,
+                Stars = hotelDTO.Stars,
+                HasFood = hotelDTO.HasFood
+            };
+        }
     }
 }
