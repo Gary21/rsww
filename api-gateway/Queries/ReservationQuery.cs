@@ -1,7 +1,7 @@
 ﻿using MessagePack;
 
 namespace api_gateway.Queries;
-
+[MessagePackObject]
 public class ReservationQuery
 {
     [Key(0)]

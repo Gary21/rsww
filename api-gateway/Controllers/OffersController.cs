@@ -16,7 +16,7 @@ public class OffersController : ControllerBase
     private readonly PublisherServiceBase _publisherService;
     private readonly CancellationToken _token;
 
-    public OffersController(ILogger<OffersController> logger, GatewayPublisherService publisherService, IHostApplicationLifetime appLifetime)
+    public OffersController(ILogger<OffersController> logger, PublisherServiceBase publisherService, IHostApplicationLifetime appLifetime)
     {
         _logger = logger;
         _publisherService = publisherService;
