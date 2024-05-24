@@ -11,6 +11,7 @@ using System.Text;
 using ConsumerConfig = RabbitUtilities.Configuration.ConsumerConfig;
 using System.Collections.Generic;
 using HotelsRequestService.Entities;
+using HotelsRequestService.Requests;
 
 
 namespace HotelsRequestService.QueryHandler
@@ -50,9 +51,8 @@ namespace HotelsRequestService.QueryHandler
                 case MessageType.RESERVE:
                     Reserve(ea);
                     break;
-                case MessageType.ADD:
-                    _logger.Information($"Received message with type POST.");
-                    //Reserve(ea);
+                case MessageType.RELEASE:
+                    Release(ea); 
                     break;
                 default:
                     _logger.Information($"Received message with unknown type.");
@@ -89,7 +89,7 @@ namespace HotelsRequestService.QueryHandler
                 if (room == null)
                 {
                     _logger.Information($"Room not found.");
-                    Reply(ea, MessagePackSerializer.Serialize<int>(CODE_NOT_FOUND));
+                    Reply(ea, MessagePackSerializer.Serialize<int>(-1));
                     return;
                 }
                 try
@@ -103,7 +103,7 @@ namespace HotelsRequestService.QueryHandler
                         Room = room
                     }));
                     result = await repository.SaveChangesAsync();
-
+                    _logger.Information($"Successfuly Reserved Room:{room.RoomNumber} for {dateSeries.Count()} days.");
                 } catch (DbUpdateException e)
                 {
                     _logger.Information($"Failed to update database: {e.Message}");
@@ -115,7 +115,76 @@ namespace HotelsRequestService.QueryHandler
                     else
                     {
                         _logger.Information($"Failed to reserve room.");
-                        Reply(ea, MessagePackSerializer.Serialize<int>(CODE_FAILED_UPDATE));
+                        Reply(ea, MessagePackSerializer.Serialize<int>(-2));
+                        return;
+                    }
+                }
+                success = true;
+                Reply(ea, MessagePackSerializer.Serialize<int>(room.RoomNumber));
+            }
+        }
+
+
+        private async void Release(BasicDeliverEventArgs ea)
+        {
+            var body = ea.Body.ToArray();
+            var message = MessagePackSerializer.Deserialize<RoomReleaseRequest>(body);
+            bool success = false;
+
+            // with message
+            _logger.Information($"Received message with type RELEASE: {message.HotelId}, {message.RoomNumber}, {message.CheckInDate}, {message.CheckOutDate}");
+
+            List<DateTime> dateSeries = new List<DateTime>();
+            for (DateTime date = message.CheckInDate; date <= message.CheckOutDate; date = date.AddDays(1))
+            {
+                dateSeries.Add(date.Date);
+            }
+
+            int result = 0;
+            int tries = 0;
+            while (!success)
+            {
+                var repository = _contextFactory.CreateDbContext();
+                //var room = await repository.Rooms
+                //    .Where(r => r.HotelId == message.HotelId)
+                //    .Where(r => r.RoomNumber == message.RoomNumber)
+                //    .FirstOrDefaultAsync();
+                
+
+                var occupancies = await repository.Occupancies
+                    .Where(o => o.HotelId == message.HotelId)
+                    .Where(o => o.RoomNumber == message.RoomNumber)
+                    .Where(o => dateSeries.Contains(o.Date)).ToListAsync();
+
+
+                if (!occupancies?.Any() ?? true)
+                {
+                    _logger.Information($"Occupancies not found.");
+                    Reply(ea, MessagePackSerializer.Serialize<int>(-1));
+                    return;
+                }
+                try
+                {
+            
+                    foreach(var occupancy in occupancies) /*int i = 0; i < occupancies.Count(); i++*/
+                    {
+                        repository.Occupancies.Remove(occupancy);
+                    }
+                    result = await repository.SaveChangesAsync();
+                    _logger.Information($"Successfuly RolledBack Reservation for Room:{message.RoomNumber} for {dateSeries.Count()} days.");
+                }
+                catch (DbUpdateException e)
+                {
+                    _logger.Information($"Failed to update database: {e.Message}");
+                    if (tries < 3)
+                    {
+                        tries++;
+                        continue;
+                    }
+                    else
+                    {
+                        _logger.Information($"Failed to reserve room.");
+                        Reply(ea, MessagePackSerializer.Serialize<int>(-2));
                         return;
                     }
                 }
@@ -123,7 +192,6 @@ namespace HotelsRequestService.QueryHandler
                 Reply(ea, MessagePackSerializer.Serialize<int>(result));
             }
         }
-
 
         public async Task<int> ReserveMock(int hotelId, int roomNumber, DateTime start, DateTime end)
         {
