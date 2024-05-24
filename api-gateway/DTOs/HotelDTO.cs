@@ -1,7 +1,7 @@
 ﻿using MessagePack;
 
 namespace api_gateway.DTOs;
-
+[MessagePackObject]
 public class HotelDTO
 {
     [Key(0)]
