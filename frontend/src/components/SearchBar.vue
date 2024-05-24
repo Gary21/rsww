@@ -2,7 +2,7 @@
     <v-container fluid>
             <v-row align="center" justify="center">
               <v-col cols="12" sm="2">
-                <div class="text-subtile-1 text-medium-emphasis">Your Destination</div>
+                <div class="text-subtile-1 text-medium-emphasis">Destination</div>
                 <v-autocomplete v-model="destination" placeholder="Destination"  :items=destinations
                           variant="outlined"></v-autocomplete>
               </v-col>
@@ -91,14 +91,14 @@ import { VNumberInput } from 'vuetify/labs/VNumberInput'
     export default {
     data: () => ({
         destinations: ['Nowy Jork', 'Madryt', 'Pekin', 'Kapsztad'],
-        departures: ['Gdańsk', 'Sopot', 'Gdynia', 'Lębork'],
+        departures: ['Gdańsk', 'Warszawa', 'Kraków', 'Wrocław', 'Poznań', 'Katowice', 'Łódź', 'Szczecin'],
         destination: undefined,
         departure: undefined,
         date: undefined,
-        adult: undefined,
-        child18: undefined,
-        child10: undefined,
-        child3: undefined,
+        adult: 1,
+        child18: 0,
+        child10: 0,
+        child3: 0,
     }),
     methods:
     {
