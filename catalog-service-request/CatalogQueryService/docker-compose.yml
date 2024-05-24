@@ -6,9 +6,9 @@ networks:
       name: rsww-network
 
 services:
-  catalogqueryservice:
+  CatalogRequestService:
     container_name: catalog-request
-    image: ${DOCKER_REGISTRY-}catalogqueryservice
+    image: ${DOCKER_REGISTRY-}CatalogRequestService
     build:
       context: .
       dockerfile: CatalogRequestService/Dockerfile

@@ -1,13 +1,10 @@
 ﻿using CatalogQueryService.DTOs;
-using NuGet.Protocol.Core.Types;
+using CatalogQueryService.Queries;
+using MessagePack;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using RabbitUtilities.Configuration;
 using ILogger = Serilog.ILogger;
-using MessagePack;
-using CatalogQueryService.DTOs;
-using CatalogQueryService.Queries;
-using CatalogQueryService.Filters;
 
 
 
@@ -55,6 +52,19 @@ namespace CatalogQueryService.QueryPublishers
         public async Task<ICollection<RoomTypeDTO>> GetRoomTypes()
         {
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.UPDATE, "roomtypes");
+
+            CancellationToken cancellationToken = new CancellationToken(false);
+
+            var roomTypesBytes = await GetReply(messageCorellationId, cancellationToken);
+
+            var roomTypes = MessagePackSerializer.Deserialize<ICollection<RoomTypeDTO>>(roomTypesBytes);
+
+            return roomTypes;
+        }
+
+        public async Task<ICollection<RoomTypeDTO>> GetRoomTypesForHotelId(int hotelId)
+        {
+            Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.EVENT, hotelId);
 
             CancellationToken cancellationToken = new CancellationToken(false);
 

@@ -1,6 +1,6 @@
 ﻿using MessagePack;
 
-namespace CatalogQueryService.Queries
+namespace CatalogRequestService.Queries
 {
     [MessagePackObject]
     public class RoomReserveRequest

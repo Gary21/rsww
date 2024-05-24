@@ -7,7 +7,7 @@
     <ProjectGuid>649eea67-8afd-4ac5-8cf2-c03c4e654c59</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
-    <DockerServiceName>catalogqueryservice</DockerServiceName>
+    <DockerServiceName>CatalogRequestService</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.override.yml">

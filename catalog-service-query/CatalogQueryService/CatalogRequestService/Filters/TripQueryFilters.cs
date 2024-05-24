@@ -33,4 +33,58 @@ namespace CatalogQueryService.Filters
 
         public TripQueryFilters() { }
     }
+
+    [MessagePackObject]
+    public class ReservationQuery
+    {
+        [Key(0)]
+        public int HotelId { get; set; }
+        [Key(1)]
+        public string DepartureCity { get; set; }
+        [Key(2)]
+        public string RoomType { get; set; }
+        [Key(3)]
+        public string Date { get; set; }
+        [Key(4)]
+        public int Adults { get; set; }
+        [Key(5)]
+        public int Children18 { get; set; }
+        [Key(6)]
+        public int Children10 { get; set; }
+        [Key(7)]
+        public int Children3 { get; set; }
+    }
+
+    public class TripQueryFiltersAdapter
+    {
+        public static TripQueryFilters AdaptHotelQueryToTripQuery(HotelQueryFilters hotelQueryFilters)
+        {
+            return new TripQueryFilters
+            {
+                HotelIds = hotelQueryFilters.HotelIds,
+                CityIds = hotelQueryFilters.CityIds,
+                CountryIds = hotelQueryFilters.CountryIds,
+                RoomTypes = hotelQueryFilters.RoomTypes,
+                CheckInDate = hotelQueryFilters.CheckInDate,
+                CheckOutDate = hotelQueryFilters.CheckOutDate,
+                MinPrice = hotelQueryFilters.MinPrice,
+                MaxPrice = hotelQueryFilters.MaxPrice,
+                PeopleNumber = 1
+            };
+        }
+
+        public static TripQueryFilters AdaptReservationQueryToTripQuery(ReservationQuery reservationQuery)
+        {
+            return new TripQueryFilters
+            {
+                HotelIds = new List<int> { reservationQuery.HotelId },
+                RoomTypes = new List<string> { reservationQuery.RoomType },
+                CheckInDate = DateTime.Parse(reservationQuery.Date),
+                CheckOutDate = DateTime.Parse(reservationQuery.Date),
+                PeopleNumber = reservationQuery.Adults + reservationQuery.Children18 + reservationQuery.Children10 + reservationQuery.Children3,
+                DepartureCityIds = null,
+                TransportTypes = null
+            };
+        }
+    }
 }
