@@ -47,31 +47,31 @@ namespace CatalogRequestService.Controllers
         }
 
 
-        [HttpPost("transports")]
-        public async Task<ActionResult> Reserve(
-            [FromQuery] int transportId,
-            [FromQuery] int numberOfPassengers
-            )
-        {
-            if (transportId == null || numberOfPassengers == null)
-            {
-                return BadRequest("Invalid request parameters");
-            }
+        //[HttpPost("transports")]
+        //public async Task<ActionResult> Reserve(
+        //    [FromQuery] int transportId,
+        //    [FromQuery] int numberOfPassengers
+        //    )
+        //{
+        //    if (transportId == null || numberOfPassengers == null)
+        //    {
+        //        return BadRequest("Invalid request parameters");
+        //    }
 
-            TransportReserveRequest request = new TransportReserveRequest();
-            request.transportId = transportId;
-            request.numberOfPassengers = numberOfPassengers;
+        //    TransportReserveRequest request = new TransportReserveRequest();
+        //    request.transportId = transportId;
+        //    request.numberOfPassengers = numberOfPassengers;
 
-            var success = await _catalogQueryPublisher.ReserveTransport(request);
-            if (success)
-            {
-                return Ok();
-            }
-            else
-            {
-                return BadRequest();
-            }
-        }
+        //    var success = await _catalogQueryPublisher.ReserveTransport(request);
+        //    if (success)
+        //    {
+        //        return Ok();
+        //    }
+        //    else
+        //    {
+        //        return BadRequest();
+        //    }
+        //}
 
 
     }

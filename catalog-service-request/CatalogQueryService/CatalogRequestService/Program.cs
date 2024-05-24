@@ -9,6 +9,8 @@ using ILogger = Serilog.ILogger;
 ILogger logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
+var transactionRabbitConfig = config.GetSection("transactionRabbitConfig").Get<RabbitConfig>()!;
+
 var connectionString = config.GetSection("postgresConfig").GetValue<string>("connectionString");
 
 
@@ -26,6 +28,15 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     Password = "guest",
     AutomaticRecoveryEnabled = true
 });
+builder.Services.AddKeyedSingleton<IConnectionFactory>("Transaction", new ConnectionFactory
+{
+    HostName = transactionRabbitConfig.adress,
+    Port = transactionRabbitConfig.port,
+    UserName = "guest",
+    Password = "guest",
+    AutomaticRecoveryEnabled = true
+});
+
 
 // Add services to the container.
 while (true)

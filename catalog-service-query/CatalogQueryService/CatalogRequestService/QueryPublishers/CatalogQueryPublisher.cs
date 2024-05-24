@@ -62,6 +62,19 @@ namespace CatalogQueryService.QueryPublishers
             return roomTypes;
         }
 
+        public async Task<ICollection<RoomTypeDTO>> GetRoomTypesForHotelId(int hotelId)
+        {
+            Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.EVENT, hotelId);
+
+            CancellationToken cancellationToken = new CancellationToken(false);
+
+            var roomTypesBytes = await GetReply(messageCorellationId, cancellationToken);
+
+            var roomTypes = MessagePackSerializer.Deserialize<ICollection<RoomTypeDTO>>(roomTypesBytes);
+
+            return roomTypes;
+        }
+
         public async Task<ICollection<HotelDTO>> GetHotels(HotelsGetQuery query)
         {
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.GET, query);
