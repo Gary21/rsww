@@ -33,6 +33,7 @@ builder.Services.AddSingleton<PublisherServiceBase, CatalogQueryPublisher>();
 builder.Services.AddHostedService<ReplyService>();
 
 builder.Services.AddHostedService<CatalogQueryHandler>();
+builder.Services.AddSingleton<ConsumerServiceBase, CatalogQueryHandler>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

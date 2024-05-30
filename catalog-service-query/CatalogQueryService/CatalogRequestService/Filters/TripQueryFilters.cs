@@ -75,12 +75,23 @@ namespace CatalogQueryService.Filters
 
         public static TripQueryFilters AdaptReservationQueryToTripQuery(ReservationQuery reservationQuery)
         {
+            DateTime tmp1, tmp2;
+            if (!DateTime.TryParseExact(reservationQuery.Date, "MM/dd/yyyy", null, System.Globalization.DateTimeStyles.None, out tmp1))
+            {
+                tmp1 = DateTime.Now;
+            }
+
+            if (!DateTime.TryParseExact(reservationQuery.Date, "MM/dd/yyyy", null, System.Globalization.DateTimeStyles.None, out tmp2))
+            {
+                tmp2 = DateTime.Now.AddDays(7);
+            }
+
             return new TripQueryFilters
             {
                 HotelIds = new List<int> { reservationQuery.HotelId },
                 RoomTypes = new List<string> { reservationQuery.RoomType },
-                CheckInDate = DateTime.Parse(reservationQuery.Date),
-                CheckOutDate = DateTime.Parse(reservationQuery.Date),
+                CheckInDate = tmp1,
+                CheckOutDate = tmp2,
                 PeopleNumber = reservationQuery.Adults + reservationQuery.Children18 + reservationQuery.Children10 + reservationQuery.Children3,
                 DepartureCityIds = null,
                 TransportTypes = null

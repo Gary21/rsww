@@ -19,7 +19,7 @@ namespace CatalogQueryService.QueryHandler
         private readonly CatalogQueryPublisher _catalogQueryPublisher;
         private readonly IMapper _mapper;
 
-        public CatalogQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase catalogQueryPublisher, IMapper mapper, IHostApplicationLifetime appLifeTime) 
+        public CatalogQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase catalogQueryPublisher, IMapper mapper, IHostApplicationLifetime appLifeTime)
             : base(logger, connectionFactory, config.GetSection("CatalogQueryPublisher").Get<ConsumerConfig>()!, appLifeTime)
         {
             _catalogQueryPublisher = (CatalogQueryPublisher)catalogQueryPublisher;
@@ -29,7 +29,7 @@ namespace CatalogQueryService.QueryHandler
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
         {
             var headers = ea.BasicProperties.Headers;
-            
+
             if (!headers.TryGetValue("Type", out object? typeObj))
                 return;
             var type = (MessageType)Enum.Parse(typeof(MessageType), ASCIIEncoding.ASCII.GetString((byte[])typeObj));
@@ -58,6 +58,8 @@ namespace CatalogQueryService.QueryHandler
         public async void GetListOf(BasicDeliverEventArgs ea)
         {
             var message = MessagePackSerializer.Deserialize<string>(ea.Body.ToArray());
+            if (message is null) { _logger.Information($"Received message null."); }
+
             if (message == "countries")
             {
                 var countries = await _catalogQueryPublisher.GetCountries();
@@ -89,12 +91,14 @@ namespace CatalogQueryService.QueryHandler
         {
             var message = MessagePackSerializer.Deserialize<KeyValuePair<string, byte[]>>(ea.Body.ToArray());
             var callCode = message.Key;
+            if (callCode is null) { _logger.Information($"Received message null."); return; }
+
             switch (callCode)
             {
                 case "GetDestinations":
                     var cities = await _catalogQueryPublisher.GetCities();
-                    var citiesDTO = _mapper.Map<List<CityDTO>>(cities);
-                    var serialized = MessagePackSerializer.Serialize(citiesDTO);
+                    var cityNames = cities.Select(c => c.Name).ToList();
+                    var serialized = MessagePackSerializer.Serialize(cityNames);
                     Reply(ea, serialized);
                     break;
 
@@ -102,13 +106,18 @@ namespace CatalogQueryService.QueryHandler
                 case "GetHotels":
                     var HotelsQueyFiltersGateway = MessagePackSerializer.Deserialize<HotelsQueryFiltersGatway>(message.Value);
 
-                    var hotelGetQuery = new HotelsGetQuery { filters = FilterAdapterHotelToHotelsGateway.AdaptGatewayToMe(HotelsQueyFiltersGateway) };
+                    var hotelGetQuery = new HotelsGetQuery { filters = HotelsFiltersAdapter.GatewayHotelToHotel(HotelsQueyFiltersGateway) };
 
                     var tripGetQuery = new TripGetQuery();
                     tripGetQuery.filters = TripQueryFiltersAdapter.AdaptHotelQueryToTripQuery(hotelGetQuery.filters);
 
+                    var citiesTwo = await _catalogQueryPublisher.GetCities();
+                    var cityId = citiesTwo.FirstOrDefault(c => c.Name == HotelsQueyFiltersGateway.Destination)?.Id;
+                    tripGetQuery.filters.CityIds = new List<int> { cityId.Value };
+
                     var hotels = await Get(tripGetQuery);
                     var serializedHotels = MessagePackSerializer.Serialize(hotels);
+                    _logger.Information($"Hotels count: {hotels.Count}");
                     Reply(ea, serializedHotels);
                     break;
 
@@ -139,18 +148,12 @@ namespace CatalogQueryService.QueryHandler
                     tripGetQueryThree.filters = TripQueryFiltersAdapter.AdaptReservationQueryToTripQuery(reservationQuery);
 
                     var trips = await Get(tripGetQueryThree);
-                    var serializedTrips = MessagePackSerializer.Serialize(trips);
-                    if (trips.Count == 0)
-                    {
-                        Reply(ea, MessagePackSerializer.Serialize(false));
-                    }
-                    else
-                    {
-                        Reply(ea, MessagePackSerializer.Serialize(true));
-                        
-                    }
+
+                    if (trips.Count == 0) { Reply(ea, MessagePackSerializer.Serialize(false)); }
+                    else { Reply(ea, MessagePackSerializer.Serialize(true)); }
+
                     break;
-                    
+
 
                 case "GetHotelRooms":
                     var hotelIdForRooms = MessagePackSerializer.Deserialize<int>(message.Value);
@@ -185,8 +188,9 @@ namespace CatalogQueryService.QueryHandler
             }
 
             var listOfCapacities = new List<int> { mf.PeopleNumber };
-            
-            var hotelGetQuery = new HotelsGetQuery { 
+
+            var hotelGetQuery = new HotelsGetQuery
+            {
                 filters = new HotelQueryFilters
                 {
                     HotelIds = mf.HotelIds,
@@ -202,7 +206,7 @@ namespace CatalogQueryService.QueryHandler
             };
 
             var hotels = await _catalogQueryPublisher.GetHotels(hotelGetQuery);
-            
+
             if (hotels.Count == 0)
             {
                 Reply(ea, MessagePackSerializer.Serialize(hotelTransportMatches));
@@ -223,10 +227,10 @@ namespace CatalogQueryService.QueryHandler
                 {
                     filters = new TransportQueryFilters
                     {
-                        DepartureCityIds = departureCityNames,
-                        TransportTypes = mf.TransportTypes,
-                        DestinationCity = hotelCityName,
-                        NumberOfPassengers = mf.PeopleNumber
+                        CityOrigins = departureCityNames,
+                        Types = mf.TransportTypes,
+                        CityDestinations = new List<string> { hotelCityName },
+                        AvailableSeats = mf.PeopleNumber
                     }
                 };
 
@@ -246,10 +250,10 @@ namespace CatalogQueryService.QueryHandler
                 {
                     filters = new TransportQueryFilters
                     {
-                        DepartureCityIds = new List<string> { hotelCityName },
-                        TransportTypes = mf.TransportTypes,
-                        DestinationCity = departureCityNames.FirstOrDefault(),
-                        NumberOfPassengers = mf.PeopleNumber
+                        CityOrigins = new List<string> { hotelCityName },
+                        Types = mf.TransportTypes,
+                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() },
+                        AvailableSeats = mf.PeopleNumber
                     }
                 };
 
@@ -331,10 +335,10 @@ namespace CatalogQueryService.QueryHandler
                 {
                     filters = new TransportQueryFilters
                     {
-                        DepartureCityIds = departureCityNames,
-                        TransportTypes = mf.TransportTypes,
-                        DestinationCity = hotelCityName,
-                        NumberOfPassengers = mf.PeopleNumber
+                        CityOrigins = departureCityNames,
+                        Types = mf.TransportTypes,
+                        CityDestinations = new List<string> { hotelCityName },
+                        AvailableSeats = mf.PeopleNumber
                     }
                 };
 
@@ -354,10 +358,10 @@ namespace CatalogQueryService.QueryHandler
                 {
                     filters = new TransportQueryFilters
                     {
-                        DepartureCityIds = new List<string> { hotelCityName },
-                        TransportTypes = mf.TransportTypes,
-                        DestinationCity = departureCityNames.FirstOrDefault(),
-                        NumberOfPassengers = mf.PeopleNumber
+                        CityOrigins = new List<string> { hotelCityName },
+                        Types = mf.TransportTypes,
+                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() },
+                        AvailableSeats = mf.PeopleNumber
                     }
                 };
 
@@ -389,7 +393,7 @@ namespace CatalogQueryService.QueryHandler
             var hotelTransportMatches = new List<TripDTO>();
             var allCities = await _catalogQueryPublisher.GetCities();
 
-            
+
             if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
             if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
             if (mf.CheckInDate == null || mf.CheckOutDate == null)
@@ -437,10 +441,10 @@ namespace CatalogQueryService.QueryHandler
                 {
                     filters = new TransportQueryFilters
                     {
-                        DepartureCityIds = departureCityNames,
-                        TransportTypes = mf.TransportTypes,
-                        DestinationCity = hotelCityName,
-                        NumberOfPassengers = mf.PeopleNumber
+                        CityOrigins = departureCityNames,
+                        Types = mf.TransportTypes,
+                        CityDestinations = new List<string> { hotelCityName },
+                        AvailableSeats = mf.PeopleNumber
                     }
                 };
 
@@ -460,10 +464,10 @@ namespace CatalogQueryService.QueryHandler
                 {
                     filters = new TransportQueryFilters
                     {
-                        DepartureCityIds = new List<string> { hotelCityName },
-                        TransportTypes = mf.TransportTypes,
-                        DestinationCity = departureCityNames.FirstOrDefault(),
-                        NumberOfPassengers = mf.PeopleNumber
+                        CityOrigins = new List<string> { hotelCityName },
+                        Types = mf.TransportTypes,
+                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() },
+                        AvailableSeats = mf.PeopleNumber
                     }
                 };
 
@@ -480,11 +484,11 @@ namespace CatalogQueryService.QueryHandler
                 }
 
                 hotelTransportMatches.Add(match);
-                
-                match.Price = mf.CheckOutDate.Value.Subtract(mf.CheckInDate.Value).Days * 1000 + mf.PeopleNumber * 100 + 
+
+                match.Price = mf.CheckOutDate.Value.Subtract(mf.CheckInDate.Value).Days * 1000 + mf.PeopleNumber * 100 +
                     transports.FirstOrDefault().PricePerTicket * mf.PeopleNumber + hotel.Stars * 100;
                 match.Price = match.Price - DateTime.Now.Subtract(mf.CheckInDate.Value).Days * 5;
-                
+
             }
 
             return hotelTransportMatches;
@@ -505,9 +509,9 @@ namespace CatalogQueryService.QueryHandler
 
                 foreach (var transport in transportsThere)
                 {
-                    
 
-                    
+
+
                 }
             }
 

@@ -20,8 +20,8 @@ namespace HotelsQueryService.QueryHandler
         private readonly IDbContextFactory<ApiDbContext> _contextFactory;
         private readonly IMapper _mapper;
 
-        public HotelsQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IMapper mapper, IHostApplicationLifetime applicationLifetime) 
-            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!, applicationLifetime)
+        public HotelsQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IMapper mapper, IHostApplicationLifetime applicationLifetime)
+            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!)
         {
             _contextFactory = repositoryFactory;
             _mapper = mapper;
@@ -32,7 +32,7 @@ namespace HotelsQueryService.QueryHandler
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
         {
             var headers = ea.BasicProperties.Headers;
-            
+
             if (!headers.TryGetValue("Type", out object? typeObj))
                 return;
             var type = (MessageType)Enum.Parse(typeof(MessageType), ASCIIEncoding.ASCII.GetString((byte[])typeObj));
@@ -122,20 +122,20 @@ namespace HotelsQueryService.QueryHandler
                 mf.CheckInDate = null;
                 mf.CheckOutDate = null;
             }
-            
+
 
             var query = from h in repository.Hotels
                             //join room in repository.Rooms on h.Id equals room.HotelId
                             //join occupancy in repository.Occupancies on room equals occupancy.Room
-                            join city in repository.Cities on h.City equals city
-                            join country in repository.Countries on city.Country equals country
+                        join city in repository.Cities on h.City equals city
+                        join country in repository.Countries on city.Country equals country
 
-                        where mf.HotelIds   == null || mf.HotelIds.Count()      == 0 || mf.HotelIds.Contains(h.Id)
-                        where mf.CountryIds == null || mf.CountryIds.Count()    == 0 || mf.CountryIds.Contains(country.Id)
-                        where mf.CityIds    == null || mf.CityIds.Count()       == 0 || mf.CityIds.Contains(city.Id)
+                        where mf.HotelIds == null || mf.HotelIds.Count() == 0 || mf.HotelIds.Contains(h.Id)
+                        where mf.CountryIds == null || mf.CountryIds.Count() == 0 || mf.CountryIds.Contains(country.Id)
+                        where mf.CityIds == null || mf.CityIds.Count() == 0 || mf.CityIds.Contains(city.Id)
 
-                        where   
-                                h.Rooms.Any(r => 
+                        where
+                                h.Rooms.Any(r =>
                                     (
                                         mf.RoomTypes == null || mf.RoomTypes.Count() == 0 ||
                                         mf.RoomTypes.Contains(r.RoomType.Name)

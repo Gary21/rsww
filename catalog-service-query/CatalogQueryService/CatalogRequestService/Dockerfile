@@ -8,8 +8,8 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /App
-COPY ./catalog-service-query/CatalogQueryService/CatalogRequestService ./
-COPY rabbit-utilities/RabbitUtilities/bin/Debug/net6.0/RabbitUtilities.dll RabbitUtilities.dll
+COPY ../ ./
+#COPY ../../../../../rabbit-utilities/RabbitUtilities/bin/Debug/net6.0/RabbitUtilities.dll ./
 
 RUN dotnet restore 
 RUN dotnet publish -c Release -o out

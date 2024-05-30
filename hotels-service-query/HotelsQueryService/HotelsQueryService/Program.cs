@@ -23,48 +23,48 @@ builder.Services.AddDbContextFactory<ApiDbContext>(options => options.UseNpgsql(
 
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddSingleton(logger);
-builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
-{
-    HostName = rabbitConfig.adress,
-    Port = rabbitConfig.port,
-    UserName = "guest",
-    Password = "guest",
-    AutomaticRecoveryEnabled = true
-});
-builder.Services.AddHostedService<HotelsQueryHandler>();
-////builder.WebHost.UseUrls("http://*:7134");
-//builder.Services.AddCors(options =>
+//builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
 //{
-//    options.AddPolicy("*",
-//        policy =>
-//        {
-//            policy.AllowAnyOrigin()
-//                .AllowAnyHeader()
-//                .AllowAnyMethod();
-//        });
+//    HostName = rabbitConfig.adress,
+//    Port = rabbitConfig.port,
+//    UserName = "guest",
+//    Password = "guest",
+//    AutomaticRecoveryEnabled = true
 //});
+//builder.Services.AddHostedService<HotelsQueryHandler>();
+//builder.WebHost.UseUrls("http://*:7134");
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("*",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 
 
 builder.Services.AddAutoMapper(typeof(Program));
-//builder.Services.AddControllers();
-//builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
-//app.UseAuthorization();
+app.UseAuthorization();
 
-//app.MapControllers();
+app.MapControllers();
 
-//app.UseCors("*");
+app.UseCors("*");
 
 app.Run();

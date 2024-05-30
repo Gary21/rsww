@@ -4,16 +4,24 @@ services:
   rabbitmq-main:
     container_name: rabbitmq-main
     image: rabbitmq:3.12.13
+    ports:
+      - 5672:5672
   rabbitmq-transaction:
     container_name: rabbitmq-transaction
     image: rabbitmq:3.12.13
 
   catalog-query-service:
-    image: ricopsych/rsww-catalog-service-query
+    #image: ricopsych/rsww-catalog-service-query
+    image: woobin000/rsww-catalog-query-service:1.0
+    # build: 
+    #   context: .
+    #   dockerfile: .\catalog-service-query\CatalogQueryService\CatalogRequestService\Dockerfile
     environment:
       - rabbitConfig__adress=rabbitmq-main
       - CatalogQueryPublisher__exchange=catalog
       - CatalogQueryPublisher__queue=gfdhgfdjhgffdgh
+    ports:
+      - 5000:8080
     depends_on:
       - rabbitmq-main
   
@@ -38,7 +46,7 @@ services:
   transport-query-service:
     image: ricopsych/rsww-transport-query-service
     environment:
-      - postgresConfig__connectionString=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Transports;Username=postgres;Password=student;Pooling=true;
+      - postgresConfig__connectionString=Server=${POSTGRES_SERVER};Port=${POSTGRES_PORT};Database=RSWW_184387_Transports;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
@@ -49,7 +57,7 @@ services:
   transport-request-service:
     image: ricopsych/rsww-transport-request-service
     environment:
-      - postgresConfig__connectionString=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Transports;Username=postgres;Password=student;Pooling=true;
+      - postgresConfig__connectionString=Server=${POSTGRES_SERVER};Port=${POSTGRES_PORT};Database=RSWW_184387_Transports;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
@@ -60,7 +68,7 @@ services:
   order-service:
     image: ricopsych/rsww-order-service
     environment:
-      - postgresConfig__connectionString=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Orders;Username=postgres;Password=student;Pooling=true;
+      - postgresConfig__connectionString=Server=${POSTGRES_SERVER};Port=${POSTGRES_PORT};Database=RSWW_184387_Orders;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
@@ -72,7 +80,7 @@ services:
   hotels-request-service:
     image: ricopsych/rsww-hotels-request-service
     environment:
-      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
+      - ConnectionStrings__DefaultConnection=Server=${POSTGRES_SERVER};Port=${POSTGRES_PORT};Database=RSWW_184387_Hotels;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     - rabbitmq-main  
@@ -83,7 +91,7 @@ services:
   hotels-query-service:
     image: ricopsych/rsww-hotels-query-service
     environment:
-      - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
+      - ConnectionStrings__DefaultConnection=Server=${POSTGRES_SERVER};Port=${POSTGRES_PORT};Database=RSWW_184387_Hotels;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
     - rabbitmq-main  

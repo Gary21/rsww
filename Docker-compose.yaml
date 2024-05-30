@@ -32,7 +32,7 @@ services:
       - "15673:15672"
 
   transaction-service:
-    image: transaction-service
+    image: ricopsych/transaction-service
     environment:
       - spring.rabbitmq.host=rabbitmq-transaction
       - spring.rabbitmq.port=5672
@@ -71,21 +71,21 @@ services:
       - default
 
   catalog-query-service:
-    image: rsww-catalog-query-service
+    image: ricopsych/rsww-catalog-query-service
     environment:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
   
   catalog-request-service:
-    image: rsww-catalog-request-service
+    image: ricopsych/rsww-catalog-request-service
     environment:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
   
   hotels-request-service:
-    image: rsww-hotels-request-service
+    image: ricopsych/rsww-hotels-request-service
     environment:
       - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
@@ -96,7 +96,7 @@ services:
       - default
       
   hotels-query-service:
-    image: rsww-hotels-query-service
+    image: ricopsych/rsww-hotels-query-service
     environment:
       - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
@@ -107,7 +107,7 @@ services:
       - default
 
   api-gateway:
-    image: rsww-gateway
+    image: ricopsych/rsww-gateway
     #build: api-gateway
     container_name: api-gateway
     environment:
