@@ -38,6 +38,7 @@ namespace CatalogQueryService.QueryPublishers
 
         public async Task<ICollection<CityDTO>> GetCities()
         {
+            _logger.Information("|=> UPDATE :: GetCities");
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.UPDATE, "cities");
 
             CancellationToken cancellationToken = new CancellationToken(false);
@@ -51,6 +52,7 @@ namespace CatalogQueryService.QueryPublishers
 
         public async Task<ICollection<RoomTypeDTO>> GetRoomTypes()
         {
+            _logger.Information("|=> UPDATE :: GetRoomTypes");
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.UPDATE, "roomtypes");
 
             CancellationToken cancellationToken = new CancellationToken(false);
@@ -64,6 +66,7 @@ namespace CatalogQueryService.QueryPublishers
 
         public async Task<ICollection<RoomTypeDTO>> GetRoomTypesForHotelId(int hotelId)
         {
+            _logger.Information("|=> GET :: GetRoomTypesForHotelId");
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.EVENT, hotelId);
 
             CancellationToken cancellationToken = new CancellationToken(false);
@@ -77,6 +80,7 @@ namespace CatalogQueryService.QueryPublishers
 
         public async Task<ICollection<HotelDTO>> GetHotels(HotelsGetQuery query)
         {
+            _logger.Information("|=> GET :: GetHotels");
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.GET, query);
 
             CancellationToken cancellationToken = new CancellationToken(false);
@@ -84,12 +88,15 @@ namespace CatalogQueryService.QueryPublishers
             var hotelsBytes = await GetReply(messageCorellationId, cancellationToken);
 
             var hotels = MessagePackSerializer.Deserialize<ICollection<HotelDTO>>(hotelsBytes);
+            var hotelNames = hotels.Select(h => h.Name).ToList();
+            _logger.Information($"|<= GET :: GetHotels - hotels count {hotels.Count},\n hotels: {string.Join(", ", hotelNames)}");
 
             return hotels;
         }
 
         public async Task<ICollection<TransportDTO>> GetTransports(TransportGetQuery query)
         {
+            //_logger.Information("|=> GET :: GetTransports");
             Guid messageCorellationId = PublishRequestWithReply("resources/transport", _routingKey, MessageType.GET, query);
 
             CancellationToken cancellationToken = new CancellationToken(false);

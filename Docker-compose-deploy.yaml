@@ -89,7 +89,7 @@ services:
       - default
       
   hotels-query-service:
-    image: ricopsych/rsww-hotels-query-service
+    image: woobin000/rsww-hotel-query-service:1.0
     environment:
       - ConnectionStrings__DefaultConnection=Server=${POSTGRES_SERVER};Port=${POSTGRES_PORT};Database=RSWW_184387_Hotels;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;
       - rabbitConfig__adress=rabbitmq-main

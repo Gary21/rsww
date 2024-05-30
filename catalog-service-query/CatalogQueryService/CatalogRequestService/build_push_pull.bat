@@ -19,8 +19,8 @@ docker push %DOCKER_HUB_USERNAME%/%IMAGE_NAME%:%IMAGE_TAG%
 echo Pushed!
 
 REM update local image
-echo Updating local image in 5 seconds ...
-timeout /t 5
+echo Updating local image in 10 seconds ...
+timeout /t 10
 docker pull %DOCKER_HUB_USERNAME%/%IMAGE_NAME%:%IMAGE_TAG%
 
 echo Done!

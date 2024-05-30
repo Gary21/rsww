@@ -21,7 +21,7 @@ namespace HotelsQueryService.QueryHandler
         private readonly IMapper _mapper;
 
         public HotelsQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IMapper mapper, IHostApplicationLifetime applicationLifetime)
-            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!)
+            : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!, applicationLifetime)
         {
             _contextFactory = repositoryFactory;
             _mapper = mapper;
@@ -66,28 +66,35 @@ namespace HotelsQueryService.QueryHandler
             var message = MessagePackSerializer.Deserialize<string>(ea.Body.ToArray());
             if (message == "countries")
             {
+                _logger.Information($"=> GET - Countries");
                 var countries = await repository.Countries.ToListAsync();
                 var countriesDTO = _mapper.Map<List<CountryDTO>>(countries);
                 var serialized = MessagePackSerializer.Serialize(countriesDTO);
+                _logger.Information($"<= GET - Countries :: countries count {countriesDTO.Count}");
                 Reply(ea, serialized);
             }
             else if (message == "cities")
             {
+                _logger.Information($"=> GET - Cities");
                 var cities = await repository.Cities.ToListAsync();
                 var citiesDTO = _mapper.Map<List<CityDTO>>(cities);
                 var serialized = MessagePackSerializer.Serialize(citiesDTO);
+                _logger.Information($"<= GET - Cities :: cities count {citiesDTO.Count}");
                 Reply(ea, serialized);
             }
             else if (message == "roomtypes")
             {
+                _logger.Information($"=> GET - RoomTypes");
                 var roomTypes = await repository.RoomTypes.ToListAsync();
                 var roomTypeNames = roomTypes.Select(rt => rt.Name).ToList();
                 var serialized = MessagePackSerializer.Serialize(roomTypeNames);
+                _logger.Information($"<= GET - RoomTypes :: room types count {roomTypeNames.Count}");
                 Reply(ea, serialized);
             }
             else
             {
-                _logger.Information($"Received message with unknown type.");
+                _logger.Information($"=> GET - Received message with unknown type.");
+                Reply(ea, MessagePackSerializer.Serialize(true));
             }
         }
 
@@ -112,16 +119,17 @@ namespace HotelsQueryService.QueryHandler
             using var repository = _contextFactory.CreateDbContext();
             var message = MessagePackSerializer.Deserialize<HotelsGetQuery>(ea.Body.ToArray());
             var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
-            _logger.Information($"GET Hotels {filt_ser}");
+            _logger.Information($"=> GET - Hotels {filt_ser}");
 
             var mf = message.filters ?? new HotelQueryFilters();
-            if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
-            if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
-            if (mf.CheckInDate == null || mf.CheckOutDate == null)
-            {
-                mf.CheckInDate = null;
-                mf.CheckOutDate = null;
-            }
+            if (mf.RoomCapacities.Count() == 1 && mf.RoomCapacities.FirstOrDefault() == 1) { mf.RoomCapacities = null; }
+            //if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
+            //if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
+            //if (mf.CheckInDate == null || mf.CheckOutDate == null)
+            //{
+            //    mf.CheckInDate = null;
+            //    mf.CheckOutDate = null;
+            //}
 
 
             var query = from h in repository.Hotels
@@ -175,14 +183,17 @@ namespace HotelsQueryService.QueryHandler
                     CountryName = r.country.Name,
                     ImgPaths = r.h.ImgPaths
                 }).ToList();
-                var serialized = MessagePackSerializer.Serialize(hotelsDTO);
-                Reply(ea, serialized);
+
+                var hotelNames = hotelsDTO.Select(h => h.Name).ToList();
+                _logger.Information($"<= GET - Hotels :: hotels count {hotelsDTO.Count},\n hotels: {string.Join(", ", hotelNames)}");
+
+                Reply(ea, MessagePackSerializer.Serialize(hotelsDTO));
                 return;
 
             }
             catch (Exception e)
             {
-                _logger.Information(e.Message);
+                _logger.Information($"<= GET - Hotels :: Exception 1 :: {e.Message}");
                 Reply(ea, MessagePackSerializer.Serialize(new List<HotelDTO>()));
                 return;
             }

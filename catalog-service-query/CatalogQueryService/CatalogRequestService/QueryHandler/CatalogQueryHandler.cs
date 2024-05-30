@@ -96,9 +96,11 @@ namespace CatalogQueryService.QueryHandler
             switch (callCode)
             {
                 case "GetDestinations":
+                    _logger.Information($"=>| GET :: Destinations");
                     var cities = await _catalogQueryPublisher.GetCities();
                     var cityNames = cities.Select(c => c.Name).ToList();
                     var serialized = MessagePackSerializer.Serialize(cityNames);
+                    _logger.Information($"<=| GET :: Destinations - cities count {cityNames.Count}");
                     Reply(ea, serialized);
                     break;
 
@@ -110,14 +112,20 @@ namespace CatalogQueryService.QueryHandler
 
                     var tripGetQuery = new TripGetQuery();
                     tripGetQuery.filters = TripQueryFiltersAdapter.AdaptHotelQueryToTripQuery(hotelGetQuery.filters);
+                    var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(tripGetQuery.filters));
+                    _logger.Information($"=>| GET :: Hotels - {filt_ser}");
 
                     var citiesTwo = await _catalogQueryPublisher.GetCities();
                     var cityId = citiesTwo.FirstOrDefault(c => c.Name == HotelsQueyFiltersGateway.Destination)?.Id;
-                    tripGetQuery.filters.CityIds = new List<int> { cityId.Value };
+                    if (cityId != null)
+                    {
+                        tripGetQuery.filters.CityIds = new List<int> { cityId.Value };
+                    }
+
 
                     var hotels = await Get(tripGetQuery);
                     var serializedHotels = MessagePackSerializer.Serialize(hotels);
-                    _logger.Information($"Hotels count: {hotels.Count}");
+                    _logger.Information($"<=| GET :: Hotels - hotels count: {hotels.Count}");
                     Reply(ea, serializedHotels);
                     break;
 
@@ -173,7 +181,7 @@ namespace CatalogQueryService.QueryHandler
         {
             var message = MessagePackSerializer.Deserialize<TripGetQuery>(ea.Body.ToArray());
             var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
-            _logger.Information($"GET Trips {filt_ser}");
+            _logger.Information($">|< Get() :: Trips {filt_ser}");
 
             var hotelTransportMatches = new List<TripDTO>();
             var allCities = await _catalogQueryPublisher.GetCities();
@@ -215,7 +223,7 @@ namespace CatalogQueryService.QueryHandler
 
             foreach (var hotel in hotels)
             {
-                _logger.Information($"Hotel: {hotel.Name}");
+                _logger.Information($">|< for(hotels) :: hotel found: {hotel.Name}");
 
                 var hotelCityName = allCities.FirstOrDefault(c => c.Id == hotel.CityId)?.Name;
 
@@ -282,7 +290,7 @@ namespace CatalogQueryService.QueryHandler
             var message = tripGetQuery;
 
             var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
-            _logger.Information($"GET Trips {filt_ser}");
+            _logger.Information($">|< Get() :: Trips {filt_ser}");
 
             var hotelTransportMatches = new List<TripDTO>();
             var allCities = await _catalogQueryPublisher.GetCities();
@@ -321,14 +329,23 @@ namespace CatalogQueryService.QueryHandler
                 return hotels.Select(h => DTOAdapterHotelToGatewayHotel.Adapt(h)).ToList();
             }
 
+
             foreach (var hotel in hotels)
             {
-                _logger.Information($"Hotel: {hotel.Name}");
+                _logger.Information($">|< for(hotels) :: Hotels {hotel.Name}");
 
                 var hotelCityName = allCities.FirstOrDefault(c => c.Id == hotel.CityId)?.Name;
 
                 var match = new TripDTO(hotel.Id);
-                var departureCityNames = mf.DepartureCityIds.Select(dc => allCities.FirstOrDefault(c => c.Id == dc)?.Name).ToList();
+
+
+                List<string> departureCityNames = new List<string>();
+                if (mf.DepartureCityIds != null)
+                {
+                    departureCityNames = mf.DepartureCityIds.Select(dc => allCities.FirstOrDefault(c => c.Id == dc)?.Name).ToList();
+                }
+
+
 
 
                 var transportThereGetQuery = new TransportGetQuery
@@ -360,7 +377,7 @@ namespace CatalogQueryService.QueryHandler
                     {
                         CityOrigins = new List<string> { hotelCityName },
                         Types = mf.TransportTypes,
-                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() },
+                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() ?? null },
                         AvailableSeats = mf.PeopleNumber
                     }
                 };
@@ -429,7 +446,7 @@ namespace CatalogQueryService.QueryHandler
 
             foreach (var hotel in hotels)
             {
-                _logger.Information($"Hotel: {hotel.Name}");
+                _logger.Information($">|< GetTripsTest() :: Hotel: {hotel.Name}");
 
                 var hotelCityName = allCities.FirstOrDefault(c => c.Id == hotel.CityId)?.Name;
 

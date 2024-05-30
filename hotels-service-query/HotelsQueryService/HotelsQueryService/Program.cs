@@ -18,21 +18,21 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 // Add services to the container.
 
-//builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(connectionString), ServiceLifetime.Singleton);
+builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(connectionString), ServiceLifetime.Singleton);
 builder.Services.AddDbContextFactory<ApiDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.Configure<IConfiguration>(config);
 builder.Services.AddSingleton(logger);
-//builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
-//{
-//    HostName = rabbitConfig.adress,
-//    Port = rabbitConfig.port,
-//    UserName = "guest",
-//    Password = "guest",
-//    AutomaticRecoveryEnabled = true
-//});
-//builder.Services.AddHostedService<HotelsQueryHandler>();
-//builder.WebHost.UseUrls("http://*:7134");
+builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
+{
+    HostName = rabbitConfig.adress,
+    Port = rabbitConfig.port,
+    UserName = "guest",
+    Password = "guest",
+    AutomaticRecoveryEnabled = true
+});
+builder.Services.AddHostedService<HotelsQueryHandler>();
+builder.WebHost.UseUrls("http://*:7134");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("*",

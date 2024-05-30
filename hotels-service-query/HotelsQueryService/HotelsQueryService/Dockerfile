@@ -2,9 +2,9 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /App
 
 # Copy everything
-COPY ./hotels-service-query/HotelsQueryService/HotelsQueryService ./
+COPY ../ ./
 # Restore as distinct layers
-COPY rabbit-utilities/RabbitUtilities/bin/Debug/net6.0/RabbitUtilities.dll RabbitUtilities.dll
+#COPY rabbit-utilities/RabbitUtilities/bin/Debug/net6.0/RabbitUtilities.dll RabbitUtilities.dll
 
 RUN dotnet restore
 # Build and publish a release
