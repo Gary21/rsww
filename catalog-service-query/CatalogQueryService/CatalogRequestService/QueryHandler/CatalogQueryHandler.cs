@@ -9,6 +9,8 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitUtilities;
 using System.Text;
+using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using ConsumerConfig = RabbitUtilities.Configuration.ConsumerConfig;
 
 
@@ -89,7 +91,12 @@ namespace CatalogQueryService.QueryHandler
 
         public async void GetCall(BasicDeliverEventArgs ea)
         {
+            //var hotelGetQueryTest = MessagePackSerializer.Deserialize<string>(ea.Body.ToArray());
+            //var hotelGetQueryJson = JsonSerializer.Serialize(hotelGetQueryTest);
+            _logger.Information($"=>| GET :: Call");
             var message = MessagePackSerializer.Deserialize<KeyValuePair<string, byte[]>>(ea.Body.ToArray());
+            _logger.Information($"=>| GET :: Call - {message.Key}");
+            //var message = KeyValuePair.Create("GetHotels", ea.Body.ToArray());
             var callCode = message.Key;
             if (callCode is null) { _logger.Information($"Received message null."); return; }
 
@@ -107,16 +114,23 @@ namespace CatalogQueryService.QueryHandler
 
                 case "GetHotels":
                     var HotelsQueyFiltersGateway = MessagePackSerializer.Deserialize<HotelsQueryFiltersGatway>(message.Value);
+                    var hqfgJson = JsonSerializer.Serialize(HotelsQueyFiltersGateway);
+                    _logger.Information($"=>| GET :: Hotels - {hqfgJson}");
 
                     var hotelGetQuery = new HotelsGetQuery { filters = HotelsFiltersAdapter.GatewayHotelToHotel(HotelsQueyFiltersGateway) };
+                    var citiesTwo = await _catalogQueryPublisher.GetCities();
+                    var cityId = citiesTwo.FirstOrDefault(c => c.Name == HotelsQueyFiltersGateway.Destination)?.Id;
+                    if (cityId != null)
+                    {
+                        hotelGetQuery.filters.CityIds = new List<int> { cityId.Value };
+                    }
 
                     var tripGetQuery = new TripGetQuery();
                     tripGetQuery.filters = TripQueryFiltersAdapter.AdaptHotelQueryToTripQuery(hotelGetQuery.filters);
                     var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(tripGetQuery.filters));
-                    _logger.Information($"=>| GET :: Hotels - {filt_ser}");
+                    _logger.Information($">|< GET :: Trips - {filt_ser}");
 
-                    var citiesTwo = await _catalogQueryPublisher.GetCities();
-                    var cityId = citiesTwo.FirstOrDefault(c => c.Name == HotelsQueyFiltersGateway.Destination)?.Id;
+                    cityId = citiesTwo.FirstOrDefault(c => c.Name == HotelsQueyFiltersGateway.Destination)?.Id;
                     if (cityId != null)
                     {
                         tripGetQuery.filters.CityIds = new List<int> { cityId.Value };
@@ -132,12 +146,18 @@ namespace CatalogQueryService.QueryHandler
 
                 case "GetHotel":
                     var hotelId = MessagePackSerializer.Deserialize<int>(message.Value);
+                    _logger.Information($"=>| GET :: Hotel - {hotelId}");
 
-                    var tripGetQueryTwo = new TripGetQuery();
-                    tripGetQueryTwo.filters = new TripQueryFilters { HotelIds = new List<int> { hotelId } };
+                    var hotelGetQueryTwo = new HotelsGetQuery();
+                    hotelGetQueryTwo.filters = new HotelQueryFilters { HotelIds = new List<int> { hotelId } };
 
-                    var hotel = await Get(tripGetQueryTwo);
-                    var serializedHotel = MessagePackSerializer.Serialize(hotel);
+                    var hotel = await _catalogQueryPublisher.GetHotels(hotelGetQueryTwo);
+                    var gatewayHotel = DTOAdapterHotelToGatewayHotel.Adapt(hotel.FirstOrDefault());
+
+                    var gatewayHotelJson = JsonSerializer.Serialize(gatewayHotel);
+                    _logger.Information($"<=| GET :: Hotel - {gatewayHotelJson}");
+
+                    var serializedHotel = MessagePackSerializer.Serialize(gatewayHotel);
                     Reply(ea, serializedHotel);
                     break;
 
@@ -165,8 +185,14 @@ namespace CatalogQueryService.QueryHandler
 
                 case "GetHotelRooms":
                     var hotelIdForRooms = MessagePackSerializer.Deserialize<int>(message.Value);
+                    _logger.Information($"=>| GET :: HotelRooms - {hotelIdForRooms}");
+
                     var rooms = await _catalogQueryPublisher.GetRoomTypesForHotelId(hotelIdForRooms);
                     var serializedRooms = MessagePackSerializer.Serialize(rooms);
+
+                    var roomsJson = JsonSerializer.Serialize(rooms);
+                    _logger.Information($"<=| GET :: HotelRooms - rooms count: {rooms.Count},\n rooms: {roomsJson}");
+
                     Reply(ea, serializedRooms);
                     break;
 
@@ -399,7 +425,10 @@ namespace CatalogQueryService.QueryHandler
 
             }
 
-            return hotels.Select(h => DTOAdapterHotelToGatewayHotel.Adapt(h)).ToList();
+            var gatewayHotels = hotels.Select(DTOAdapterHotelToGatewayHotel.Adapt).ToList();
+            var gatewayHotelsJson = JsonSerializer.Serialize(gatewayHotels);
+            _logger.Information($">|< Get() :: GatewayHotels {gatewayHotelsJson}");
+            return gatewayHotels;
         }
 
 

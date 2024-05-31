@@ -4,6 +4,7 @@ using api_gateway.Queries;
 using MessagePack;
 using Microsoft.AspNetCore.Mvc;
 using RabbitUtilities;
+using System.Text.Json;
 
 namespace api_gateway.Controllers;
 
@@ -34,31 +35,43 @@ public class OffersController : ControllerBase
 
         return destinations;
     }
-    
+
     [HttpGet("GetHotels")]
     public async Task<IEnumerable<HotelDTO>> GetHotels([FromQuery] HotelsQuery query)
     {
+        var queryJson = JsonSerializer.Serialize(query);
+        _logger.LogInformation($"=>| GET :: Hotels - {queryJson}");
+
         var data = MessagePackSerializer.Serialize(query);
         var payload = new KeyValuePair<string, byte[]>("GetHotels", data);
+        //var hotelQueryPayload = MessagePackSerializer.Serialize(query);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var hotels = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(bytes);
 
+        var hotelsJson = JsonSerializer.Serialize(hotels);
+        _logger.LogInformation($"<=| GET :: Hotels - {hotelsJson}");
+
         return hotels;
     }
-    
+
     [HttpGet("GetHotel")]
     public async Task<HotelDTO> GetHotel(int id)
     {
+        _logger.LogInformation($"=>| GET :: Hotel - {id}");
+
         var data = MessagePackSerializer.Serialize(id);
         var payload = new KeyValuePair<string, byte[]>("GetHotel", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var hotel = MessagePackSerializer.Deserialize<HotelDTO>(bytes);
 
+        var hotelJson = JsonSerializer.Serialize(hotel);
+        _logger.LogInformation($"<=| GET :: Hotel - {hotelJson}");
+
         return hotel;
     }
-    
+
     [HttpGet("GetAvailability")]
     public async Task<bool> GetAvailability([FromQuery] int hotelId)
     {
@@ -70,7 +83,7 @@ public class OffersController : ControllerBase
 
         return availability;
     }
-    
+
     [HttpPost("MakeReservation")]
     public async Task<int> MakeReservation([FromQuery] ReservationQuery query)
     {
@@ -82,7 +95,7 @@ public class OffersController : ControllerBase
 
         return reservation;
     }
-    
+
     [HttpGet("ValidateReservation")]
     public async Task<bool> ValidateReservation([FromQuery] ReservationQuery query)
     {
@@ -94,7 +107,7 @@ public class OffersController : ControllerBase
 
         return reservation;
     }
-    
+
     [HttpPost("BuyReservation")]
     public async Task<bool> BuyReservation([FromQuery] int reservationId)
     {
@@ -106,11 +119,11 @@ public class OffersController : ControllerBase
 
         return purchase;
     }
-    
+
     [HttpGet("GetHotelRooms")]
-    public async Task<IEnumerable<string>> GetHotelRooms([FromQuery] int hotelId)
+    public async Task<IEnumerable<string>> GetHotelRooms([FromQuery] int id)
     {
-        var data = MessagePackSerializer.Serialize(hotelId);
+        var data = MessagePackSerializer.Serialize(id);
         var payload = new KeyValuePair<string, byte[]>("GetHotelRooms", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
@@ -118,7 +131,7 @@ public class OffersController : ControllerBase
 
         return rooms;
     }
-    
+
     [HttpPost("Login")]
     public async Task<int> Login([FromQuery] string? username, [FromQuery] string? password)
     {
@@ -136,7 +149,7 @@ public class OffersController : ControllerBase
             { "user6", new KeyValuePair<string, int>("pass6", 66666666) },
             { "user7", new KeyValuePair<string, int>("pass7", 77777777) }
         };
-        
+
         if (database.ContainsKey(username) && database[username].Key == password)
         {
             return database[username].Value;

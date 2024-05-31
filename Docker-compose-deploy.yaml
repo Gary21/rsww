@@ -12,7 +12,7 @@ services:
 
   catalog-query-service:
     #image: ricopsych/rsww-catalog-service-query
-    image: woobin000/rsww-catalog-query-service:1.0
+    image: woobin000/rsww-catalog-query-service
     # build: 
     #   context: .
     #   dockerfile: .\catalog-service-query\CatalogQueryService\CatalogRequestService\Dockerfile
@@ -33,7 +33,7 @@ services:
       
       - CatalogQueryPublisher__exchange=catalog
       - CatalogQueryPublisher__queue=gfdhgfdjhgffdgfd
-      - CatalogQueryPublisher__routing=query
+      - CatalogQueryPublisher__routing=request
     depends_on:
       - rabbitmq-main
   
@@ -89,7 +89,7 @@ services:
       - default
       
   hotels-query-service:
-    image: woobin000/rsww-hotel-query-service:1.0
+    image: woobin000/rsww-hotel-query-service
     environment:
       - ConnectionStrings__DefaultConnection=Server=${POSTGRES_SERVER};Port=${POSTGRES_PORT};Database=RSWW_184387_Hotels;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
@@ -100,7 +100,7 @@ services:
       - default
 
   api-gateway:
-    image: ricopsych/rsww-gateway
+    image: woobin000/rsww-gateway
     container_name: api-gateway
     environment:
       - rabbitConfig__adress=rabbitmq-main
@@ -110,7 +110,7 @@ services:
       - rabbitmq-main
 
   frontend:
-    image: ricopsych/rsww-frontend
+    image: woobin000/rsww-frontend
     container_name: frontend
     ports:
       - 18438:8080

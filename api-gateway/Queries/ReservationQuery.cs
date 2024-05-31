@@ -22,4 +22,6 @@ public class ReservationQuery
     public int Children3 { get; set; }
     [Key(8)]
     public int? userId { get; set; }
+    [Key(9)]
+    public string? Destination { get; set; }
 }

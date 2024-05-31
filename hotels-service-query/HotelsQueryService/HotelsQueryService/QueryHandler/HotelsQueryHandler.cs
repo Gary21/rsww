@@ -10,6 +10,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitUtilities;
 using System.Text;
+using System.Text.Json;
 using ConsumerConfig = RabbitUtilities.Configuration.ConsumerConfig;
 
 
@@ -100,17 +101,22 @@ namespace HotelsQueryService.QueryHandler
 
         private async void GetRoomTypesForHotelId(BasicDeliverEventArgs ea)
         {
-            using var repository = _contextFactory.CreateDbContext();
             var message = MessagePackSerializer.Deserialize<int>(ea.Body.ToArray());
+            _logger.Information($"=>| GET - RoomTypes for HotelId {message}");
+
+            using var repository = _contextFactory.CreateDbContext();
             var hotel = await repository.Hotels.Include(h => h.Rooms).ThenInclude(r => r.RoomType).FirstOrDefaultAsync(h => h.Id == message);
             if (hotel == null)
             {
                 Reply(ea, MessagePackSerializer.Serialize(new List<string>()));
                 return;
             }
-            var roomTypes = hotel.Rooms.Select(r => r.RoomType.Name).Distinct().ToList();
-            var roomTypesDTO = _mapper.Map<List<RoomTypeDTO>>(roomTypes);
-            var serialized = MessagePackSerializer.Serialize(roomTypesDTO);
+            var roomTypes = hotel.Rooms.Select(r => r.RoomType.Name + " (" + r.RoomType.Capacity + ")").Distinct().ToList();
+            //var roomTypesDTO = _mapper.Map<List<RoomTypeDTO>>(roomTypes);
+            var roomTypesJson = JsonSerializer.Serialize(roomTypes);
+            _logger.Information($"<=| GET - RoomTypes for HotelId {message} :: room types count {roomTypes.Count},\n room types: {roomTypesJson}");
+
+            var serialized = MessagePackSerializer.Serialize(roomTypes);
             Reply(ea, serialized);
         }
 
@@ -119,10 +125,10 @@ namespace HotelsQueryService.QueryHandler
             using var repository = _contextFactory.CreateDbContext();
             var message = MessagePackSerializer.Deserialize<HotelsGetQuery>(ea.Body.ToArray());
             var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
-            _logger.Information($"=> GET - Hotels {filt_ser}");
+            _logger.Information($"=>| GET - Hotels {filt_ser}");
 
             var mf = message.filters ?? new HotelQueryFilters();
-            if (mf.RoomCapacities.Count() == 1 && mf.RoomCapacities.FirstOrDefault() == 1) { mf.RoomCapacities = null; }
+            if (mf.RoomCapacities != null && mf.RoomCapacities.Count() == 1 && mf.RoomCapacities.FirstOrDefault() == 1) { mf.RoomCapacities = null; }
             //if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
             //if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
             //if (mf.CheckInDate == null || mf.CheckOutDate == null)
@@ -176,6 +182,8 @@ namespace HotelsQueryService.QueryHandler
                     Id = r.h.Id,
                     Name = r.h.Name,
                     Description = r.h.Description,
+                    Rating = r.h.Rating,
+                    Stars = r.h.Stars,
                     Address = r.h.Address,
                     CityId = r.city.Id,
                     CityName = r.city.Name,

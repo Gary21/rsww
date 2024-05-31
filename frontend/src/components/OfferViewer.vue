@@ -22,7 +22,7 @@
     <br>
     Address: {{ address }}
     <br>
-    City: {{ city }}
+    City: {{ destination }}
     <br>
     Country: {{ country }}
     <br>
@@ -135,6 +135,7 @@ export default {
             hasFood: true,
             rooms: undefined,
             room: undefined,
+            destination: 'Borak',
             departures: ['Gdańsk', 'Warszawa', 'Kraków', 'Wrocław', 'Poznań', 'Katowice', 'Łódź', 'Szczecin'],
             departure: undefined,
             date: undefined,

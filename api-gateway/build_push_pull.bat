@@ -1,6 +1,6 @@
-@echo off
+﻿@echo off
 REM Set variables
-set IMAGE_NAME=rsww-catalog-query-service
+set IMAGE_NAME=rsww-gateway
 set IMAGE_TAG=latest
 set DOCKER_HUB_USERNAME=woobin000
 

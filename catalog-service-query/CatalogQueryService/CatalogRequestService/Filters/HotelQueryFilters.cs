@@ -32,19 +32,19 @@ namespace CatalogQueryService.Filters
         [Key(0)]
         public string? HotelId { get; set; }
         [Key(1)]
-        public string? Destination { get; set; }
-        [Key(2)]
         public string? Departure { get; set; }
-        [Key(3)]
+        [Key(2)]
         public string? DepartureDate { get; set; }
-        [Key(4)]
+        [Key(3)]
         public int? Adults { get; set; }
-        [Key(5)]
+        [Key(4)]
         public int? Children18 { get; set; }
-        [Key(6)]
+        [Key(5)]
         public int? Children10 { get; set; }
-        [Key(7)]
+        [Key(6)]
         public int? Children3 { get; set; }
+        [Key(7)]
+        public string? Destination { get; set; }
     }
 
     public class HotelsFiltersAdapter

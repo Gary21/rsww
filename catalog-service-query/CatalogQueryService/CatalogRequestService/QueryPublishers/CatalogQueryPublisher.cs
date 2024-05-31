@@ -4,6 +4,7 @@ using MessagePack;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using RabbitUtilities.Configuration;
+using System.Text.Json;
 using ILogger = Serilog.ILogger;
 
 
@@ -64,7 +65,7 @@ namespace CatalogQueryService.QueryPublishers
             return roomTypes;
         }
 
-        public async Task<ICollection<RoomTypeDTO>> GetRoomTypesForHotelId(int hotelId)
+        public async Task<ICollection<string>> GetRoomTypesForHotelId(int hotelId)
         {
             _logger.Information("|=> GET :: GetRoomTypesForHotelId");
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.EVENT, hotelId);
@@ -73,7 +74,9 @@ namespace CatalogQueryService.QueryPublishers
 
             var roomTypesBytes = await GetReply(messageCorellationId, cancellationToken);
 
-            var roomTypes = MessagePackSerializer.Deserialize<ICollection<RoomTypeDTO>>(roomTypesBytes);
+            var roomTypes = MessagePackSerializer.Deserialize<ICollection<string>>(roomTypesBytes);
+            var roomTypesJson = JsonSerializer.Serialize(roomTypes);
+            _logger.Information($"|<= GET :: GetRoomTypesForHotelId - roomTypes count {roomTypes.Count},\n roomTypes: {roomTypesJson}");
 
             return roomTypes;
         }
