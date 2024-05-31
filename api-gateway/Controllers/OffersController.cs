@@ -75,11 +75,15 @@ public class OffersController : ControllerBase
     [HttpGet("GetAvailability")]
     public async Task<bool> GetAvailability([FromQuery] int hotelId)
     {
+        _logger.LogInformation($"=>| GET :: Availability - {hotelId}");
+
         var data = MessagePackSerializer.Serialize(hotelId);
         var payload = new KeyValuePair<string, byte[]>("GetAvailability", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var availability = MessagePackSerializer.Deserialize<bool>(bytes);
+
+        _logger.LogInformation($"<=| GET :: Availability - {availability}");
 
         return availability;
     }
@@ -87,11 +91,15 @@ public class OffersController : ControllerBase
     [HttpPost("MakeReservation")]
     public async Task<int> MakeReservation([FromQuery] ReservationQuery query)
     {
+        _logger.LogInformation($"=>| POST :: MakeReservation - {JsonSerializer.Serialize(query)}");
+
         var data = MessagePackSerializer.Serialize(query);
         var payload = new KeyValuePair<string, byte[]>("MakeReservation", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.RESERVE, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var reservation = MessagePackSerializer.Deserialize<int>(bytes);
+
+        _logger.LogInformation($"<=| POST :: MakeReservation - {reservation}");
 
         return reservation;
     }
@@ -99,11 +107,15 @@ public class OffersController : ControllerBase
     [HttpGet("ValidateReservation")]
     public async Task<bool> ValidateReservation([FromQuery] ReservationQuery query)
     {
+        _logger.LogInformation($"=>| GET :: ValidateReservation - {JsonSerializer.Serialize(query)}");
+
         var data = MessagePackSerializer.Serialize(query);
         var payload = new KeyValuePair<string, byte[]>("ValidateReservation", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var reservation = MessagePackSerializer.Deserialize<bool>(bytes);
+
+        _logger.LogInformation($"<=| GET :: ValidateReservation - {reservation}");
 
         return reservation;
     }
@@ -111,11 +123,15 @@ public class OffersController : ControllerBase
     [HttpPost("BuyReservation")]
     public async Task<bool> BuyReservation([FromQuery] int reservationId)
     {
+        _logger.LogInformation($"=>| POST :: BuyReservation - {reservationId}");
+
         var data = MessagePackSerializer.Serialize(reservationId);
         var payload = new KeyValuePair<string, byte[]>("BuyReservation", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.ADD, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var purchase = MessagePackSerializer.Deserialize<bool>(bytes);
+
+        _logger.LogInformation($"<=| POST :: BuyReservation - {purchase}");
 
         return purchase;
     }
@@ -123,11 +139,15 @@ public class OffersController : ControllerBase
     [HttpGet("GetHotelRooms")]
     public async Task<IEnumerable<string>> GetHotelRooms([FromQuery] int id)
     {
+        _logger.LogInformation($"=>| GET :: HotelRooms - {id}");
+
         var data = MessagePackSerializer.Serialize(id);
         var payload = new KeyValuePair<string, byte[]>("GetHotelRooms", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
         var rooms = MessagePackSerializer.Deserialize<IEnumerable<string>>(bytes);
+
+        _logger.LogInformation($"<=| GET :: HotelRooms - {JsonSerializer.Serialize(rooms)}");
 
         return rooms;
     }

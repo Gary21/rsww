@@ -26,7 +26,7 @@ services:
       - rabbitmq-main
   
   catalog-request-service:
-    image: ricopsych/rsww-catalog-service-request 
+    image: woobin000/rsww-catalog-request-service
     environment:
       - rabbitConfig__adress=rabbitmq-main
       - transactionRabbitConfig__adress=rabbitmq-transaction

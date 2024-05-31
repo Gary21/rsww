@@ -78,18 +78,21 @@ namespace CatalogQueryService.Filters
             DateTime tmp1, tmp2;
             if (!DateTime.TryParseExact(reservationQuery.Date, "MM/dd/yyyy", null, System.Globalization.DateTimeStyles.None, out tmp1))
             {
-                tmp1 = DateTime.Now;
+                tmp1 = DateTime.Now.Date;
             }
 
             if (!DateTime.TryParseExact(reservationQuery.Date, "MM/dd/yyyy", null, System.Globalization.DateTimeStyles.None, out tmp2))
             {
-                tmp2 = DateTime.Now.AddDays(7);
+                tmp2 = DateTime.Now.Date.AddDays(7);
             }
+
+            // string : roomTypeName (Capacity)
+            var roomType = reservationQuery.RoomType.Split(" ")[0] ?? null;
 
             return new TripQueryFilters
             {
                 HotelIds = new List<int> { reservationQuery.HotelId },
-                RoomTypes = new List<string> { reservationQuery.RoomType },
+                RoomTypes = new List<string> { roomType },
                 CheckInDate = tmp1,
                 CheckOutDate = tmp2,
                 PeopleNumber = reservationQuery.Adults + reservationQuery.Children18 + reservationQuery.Children10 + reservationQuery.Children3,

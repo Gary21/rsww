@@ -163,19 +163,24 @@ namespace CatalogQueryService.QueryHandler
 
 
                 case "GetAvailability":
+                    _logger.Information($"=>| GET :: Availability");
                     //var availabilityQuery = MessagePackSerializer.Deserialize<AvailabilityQuery>(message.Value);
                     //var availability = await _catalogQueryPublisher.GetAvailability(availabilityQuery);
                     var serializedAvailability = MessagePackSerializer.Serialize(true);
+                    _logger.Information($"<=| GET :: Availability - {true}");
                     Reply(ea, serializedAvailability);
                     break;
 
 
                 case "ValidateReservation":
                     var reservationQuery = MessagePackSerializer.Deserialize<ReservationQuery>(message.Value);
+                    _logger.Information($"=>| GET :: ValidateReservation - reservationQuery: {JsonSerializer.Serialize(reservationQuery)}");
                     var tripGetQueryThree = new TripGetQuery();
                     tripGetQueryThree.filters = TripQueryFiltersAdapter.AdaptReservationQueryToTripQuery(reservationQuery);
-
+                    _logger.Information($">|< GET :: ValidateReservation - tripQuery: {JsonSerializer.Serialize(tripGetQueryThree)}");
                     var trips = await Get(tripGetQueryThree);
+
+                    _logger.Information($"<=| GET :: ValidateReservation - trips count: {trips.Count}");
 
                     if (trips.Count == 0) { Reply(ea, MessagePackSerializer.Serialize(false)); }
                     else { Reply(ea, MessagePackSerializer.Serialize(true)); }
@@ -420,6 +425,7 @@ namespace CatalogQueryService.QueryHandler
                     match.TransportBackIds.Add(transport.Id);
                 }
 
+                _logger.Information($">|< Get() :: Match {JsonSerializer.Serialize(match)}");
                 hotelTransportMatches.Add(match);
 
 

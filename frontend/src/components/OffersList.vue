@@ -40,12 +40,11 @@
     ]
     }),
     methods: {
-      goToOffer(id, destination, departure, date, adult, child18, child10, child3) {
+      goToOffer(id, departure, date, adult, child18, child10, child3) {
         this.$router.push({
            name: 'Offer', 
            query: {
             id: id,
-            destination: destination,
             departure: departure,
             date: date,
             adult: adult,
