@@ -43,24 +43,45 @@ namespace CatalogQueryService.Filters
         public int? Children10 { get; set; }
         [Key(6)]
         public int? Children3 { get; set; }
+        [Key(7)]
+        public string? Destination { get; set; }
     }
 
-    public class FilterAdapterHotelToHotelsGateway
+    public class HotelsFiltersAdapter
     {
-        public static HotelQueryFilters AdaptGatewayToMe(HotelsQueryFiltersGatway hotelsQueryFiltersGatway)
+        public static HotelQueryFilters GatewayHotelToHotel(HotelsQueryFiltersGatway hqfg)
         {
-            return new HotelQueryFilters
+            var hotelQueryFilters = new HotelQueryFilters();
+
+            if (hqfg.HotelId != null)
             {
-                HotelIds = new List<int> { int.Parse(hotelsQueryFiltersGatway.HotelId) },
-                CityIds = null,
-                CountryIds = null,
-                RoomTypes = null,
-                RoomCapacities = new List<int> { hotelsQueryFiltersGatway.Adults.Value + hotelsQueryFiltersGatway.Children18.Value + hotelsQueryFiltersGatway.Children10.Value + hotelsQueryFiltersGatway.Children3.Value },
-                CheckInDate = DateTime.Parse(hotelsQueryFiltersGatway.DepartureDate),
-                CheckOutDate = DateTime.Parse(hotelsQueryFiltersGatway.DepartureDate).AddDays(7),
-                MinPrice = null,
-                MaxPrice = null
-            };
+                hotelQueryFilters.HotelIds = new List<int> { int.Parse(hqfg.HotelId) };
+            }
+
+            //if (hqfg.Destination != null)
+            //{
+            //    hotelQueryFilters.CityIds = new List<int> { int.Parse(hqfg.Destination) };
+            //}
+
+            int peopleNumber = 0;
+            if (hqfg.Children3 != null) { peopleNumber += hqfg.Children3.Value; }
+            if (hqfg.Children10 != null) { peopleNumber += hqfg.Children10.Value; }
+            if (hqfg.Children18 != null) { peopleNumber += hqfg.Children18.Value; }
+            if (hqfg.Adults != null) { peopleNumber += hqfg.Adults.Value; }
+            if (peopleNumber > 0) { hotelQueryFilters.RoomCapacities = new List<int> { peopleNumber }; }
+
+            try
+            {
+                if (hqfg.DepartureDate == null) { throw new Exception(); }
+                DateTime checkInDate = DateTime.Parse(hqfg.DepartureDate);
+                DateTime checkOutDate = checkInDate.AddDays(7);
+
+                hotelQueryFilters.CheckInDate = checkInDate;
+                hotelQueryFilters.CheckOutDate = checkOutDate;
+            }
+            catch (Exception) { }
+
+            return hotelQueryFilters;
         }
     }
 }

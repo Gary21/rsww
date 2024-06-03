@@ -18,4 +18,6 @@ public class HotelsQuery
     public int? Children10 { get; set; }
     [Key(6)]
     public int? Children3 { get; set; }
+    [Key(7)]
+    public string? Destination { get; set; }
 }

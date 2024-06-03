@@ -25,17 +25,17 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.3" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
       </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="RabbitUtilities">
+        <HintPath>RabbitUtilities.dll</HintPath>
+      </Reference>
+    </ItemGroup>
     
       <ItemGroup>
         <None Update="appsettings.json">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-      </ItemGroup>
-    
-      <ItemGroup>
-        <Reference Include="RabbitUtilities">
-          <HintPath>..\rabbit-utilities\RabbitUtilities\bin\Debug\net6.0\RabbitUtilities.dll</HintPath>
-        </Reference>
       </ItemGroup>
 
 </Project>

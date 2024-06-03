@@ -67,7 +67,7 @@ namespace CatalogQueryService.DTOs
                 ImgUrls = hotelDTO.ImgPaths.Split(","),
                 Address = hotelDTO.Address,
                 Description = hotelDTO.Description,
-                Rating = (int)hotelDTO.Rating,
+                Rating = (int)(hotelDTO.Rating + 1),
                 CityName = hotelDTO.CityName,
                 CountryName = hotelDTO.CountryName,
                 Stars = hotelDTO.Stars,

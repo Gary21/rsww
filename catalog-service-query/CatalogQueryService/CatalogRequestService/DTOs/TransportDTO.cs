@@ -10,22 +10,26 @@ namespace CatalogQueryService.DTOs
         [Key(1)]
         public string Type { get; set; }
         [Key(2)]
-        public DateTime DepartureTime { get; set; }
+        public DateTime DepartureDate { get; set; }
         [Key(3)]
-        public DateTime ArrivalTime { get; set; }
+        public TimeSpan DepartureTime { get; set; }
         [Key(4)]
-        public string DestinationCity { get; set; }
+        public DateTime ArrivalDate { get; set; }
         [Key(5)]
-        public string DestinationCountry { get; set; }
+        public TimeSpan ArrivalTime { get; set; }
         [Key(6)]
-        public string OriginCity { get; set; }
+        public string DestinationCity { get; set; }
         [Key(7)]
-        public string OriginCountry { get; set; }
+        public string DestinationCountry { get; set; }
         [Key(8)]
-        public int SeatsNumber { get; set; }
+        public string OriginCity { get; set; }
         [Key(9)]
-        public int SeatsTaken { get; set; }
+        public string OriginCountry { get; set; }
         [Key(10)]
+        public int SeatsNumber { get; set; }
+        [Key(11)]
+        public int SeatsTaken { get; set; }
+        [Key(12)]
         public decimal PricePerTicket { get; set; }
     }
 }

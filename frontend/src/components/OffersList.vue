@@ -55,7 +55,8 @@
         });
         },
         async fetchData() {
-            const response = await fetch('http://localhost:8080/Offers/GetHotels');
+            const response = await fetch('http://localhost:8080/Offers/GetHotels?Destination=' + this.$route.query.destination + '&Departure=' + this.$route.query.departure + '&Date=' + this.$route.query.date + '&Adults=' + this.$route.query.adult + '&Children18=' + this.$route.query.child18 + '&Children10=' + this.$route.query.child10 + '&Children3=' + this.$route.query.child3);
+            //const response = await fetch('http://localhost:8080/Offers/GetHotels');
             this.offers = await response.json();
         }
     },

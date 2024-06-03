@@ -11,7 +11,7 @@
 
                 <v-btn
                 text="Close"
-                @click="isActive.value = false"
+                @click="GoHome()"
                 ></v-btn>
             </v-card-actions>
             </v-card>
@@ -48,6 +48,7 @@
             </div>
 </template>
 <script>
+
 export default {
     data: () => ({
         isModalYes: false,
@@ -67,6 +68,9 @@ export default {
                 this.isModalNo = true;
             }
         },
+        GoHome() {
+            this.$router.push('/');
+        }
     },
 };
 //

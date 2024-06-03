@@ -22,7 +22,7 @@
     <br>
     Address: {{ address }}
     <br>
-    City: {{ city }}
+    City: {{ address }}
     <br>
     Country: {{ country }}
     <br>
@@ -135,6 +135,7 @@ export default {
             hasFood: true,
             rooms: undefined,
             room: undefined,
+            destination: 'Borak',
             departures: ['Gdańsk', 'Warszawa', 'Kraków', 'Wrocław', 'Poznań', 'Katowice', 'Łódź', 'Szczecin'],
             departure: undefined,
             date: undefined,
@@ -147,29 +148,40 @@ export default {
     },
     methods: {
         async goToReservation(id, departure, date, adult, child18, child10, child3, room) {
-        var response = await fetch('http://localhost:8080/Offers/ValidateReservation?hotelId=' + id + '&departureCity=' + departure + '&date=' + date + '&adults=' + adult + '&children18=' + child18 + '&children10=' + child10 + '&children3=' + child3 + '&roomType=' + room);
-        var valid = await response.json();
-        if(valid == false)
-        {
-            this.isModal = true;
-        }
-        else
-        {
-            var response2 = await fetch('http://localhost:8080/Offers/MakeReservation?hotelId=' + id + '&departureCity=' + departure + '&date=' + date + '&adults=' + adult + '&children18=' + child18 + '&children10=' + child10 + '&children3=' + child3 + '&roomType=' + room, {method: "POST"});
-            var reservationId = await response2.json();
-            this.$router.push({
-                name: 'Reservation', 
-                query: {
-                    id: reservationId,
-                } 
-            });
+          var response = await fetch('http://localhost:8080/Offers/ValidateReservation?hotelId=' + id + '&departureCity=' + departure + '&date=' + date + '&adults=' + adult + '&children18=' + child18 + '&children10=' + child10 + '&children3=' + child3 + '&roomType=' + room);
+          var valid = await response.json();
+          if(valid == false)
+          {
+              this.isModal = true;
+          }
+          else
+          {
+              var response2 = await fetch('http://localhost:8080/Offers/MakeReservation?hotelId=' + id + 
+                //'&roomType=' + valid["roomType"] + 
+                '&date=' + date + 
+                '&adults=' + adult + 
+                '&children18=' + child18 + 
+                '&children10=' + child10 + 
+                '&children3=' + child3 + 
+                '&roomType=' + room +
+                '&departureCity=' + departure
+                //'&transportid=' + valid["transportId"] +
+                //'&ClientId=1'
+                , {method: "POST"});
+              var reservationId = await response2.json();
+              this.$router.push({
+                  name: 'Reservation', 
+                  query: {
+                      id: reservationId,
+                  } 
+              });
         }},
         async fetchData() {
             const response = await fetch('http://localhost:8080/Offers/GetHotel?id=' + this.$route.query.id);
             var offer = await response.json();
             this.name = offer.name;
             this.address = offer.address;
-            this.city = offer.cityName;
+            this.city = offer.address;
             this.country = offer.countryName;
             this.description = offer.description;
             this.rating = offer.rating;
