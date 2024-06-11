@@ -39,24 +39,43 @@ public class OffersController : ControllerBase
         return destinations;
     }
 
-    [HttpGet("GetHotels")]
-    public async Task<IEnumerable<HotelDTO>> GetHotels([FromQuery] HotelsQuery query)
+    [HttpGet("GetTrips")]
+    public async Task<IEnumerable<TripDTO>> GetTrips([FromQuery] TripDTO query)
     {
         var queryJson = JsonSerializer.Serialize(query);
-        _logger.LogInformation($"=>| GET :: Hotels - {queryJson}");
+        _logger.LogInformation($"=>| GET :: Trips - {queryJson}");
 
         var data = MessagePackSerializer.Serialize(query);
-        var payload = new KeyValuePair<string, byte[]>("GetHotels", data);
+        var payload = new KeyValuePair<string, byte[]>("GetTrips", data);
         //var hotelQueryPayload = MessagePackSerializer.Serialize(query);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
-        var hotels = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(bytes);
+        var hotels = MessagePackSerializer.Deserialize<IEnumerable<TripDTO>>(bytes);
 
         var hotelsJson = JsonSerializer.Serialize(hotels);
-        _logger.LogInformation($"<=| GET :: Hotels - {hotelsJson}");
+        _logger.LogInformation($"<=| GET :: Trips - {hotelsJson}");
 
         return hotels;
     }
+
+    //[HttpGet("GetHotels")]
+    //public async Task<IEnumerable<HotelDTO>> GetHotels([FromQuery] HotelsQuery query)
+    //{
+    //    var queryJson = JsonSerializer.Serialize(query);
+    //    _logger.LogInformation($"=>| GET :: Hotels - {queryJson}");
+
+    //    var data = MessagePackSerializer.Serialize(query);
+    //    var payload = new KeyValuePair<string, byte[]>("GetHotels", data);
+    //    //var hotelQueryPayload = MessagePackSerializer.Serialize(query);
+    //    var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+    //    var bytes = await _publisherService.GetReply(messageId, _token);
+    //    var hotels = MessagePackSerializer.Deserialize<IEnumerable<HotelDTO>>(bytes);
+
+    //    var hotelsJson = JsonSerializer.Serialize(hotels);
+    //    _logger.LogInformation($"<=| GET :: Hotels - {hotelsJson}");
+
+    //    return hotels;
+    //}
 
     //[HttpGet("AddSocket")]
     //public async Task AddSocket(int id)
@@ -83,11 +102,16 @@ public class OffersController : ControllerBase
         var hotelJson = JsonSerializer.Serialize(hotel);
         _logger.LogInformation($"<=| GET :: Hotel - {hotelJson}");
 
-        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-        _webSocketService.AddHotelSocket(id.ToString(), webSocket);
-
         return hotel;
     }
+
+    [HttpGet("HotelWebsocket")]
+    public async void HotelWebsocket(int id)
+    {
+        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+        _webSocketService.AddHotelSocket(id.ToString(), webSocket);
+    }
+
 
     [HttpGet("GetAvailability")]
     public async Task<bool> GetAvailability([FromQuery] int hotelId)
@@ -106,7 +130,7 @@ public class OffersController : ControllerBase
     }
 
     [HttpPost("MakeReservation")]
-    public async Task<int> MakeReservation([FromQuery] ReservationQuery query)
+    public async Task<int> MakeReservation([FromQuery] TripDTO query)
     {
         _logger.LogInformation($"=>| POST :: MakeReservation - {JsonSerializer.Serialize(query)}");
 
@@ -122,7 +146,7 @@ public class OffersController : ControllerBase
     }
 
     [HttpGet("ValidateReservation")]
-    public async Task<bool> ValidateReservation([FromQuery] ReservationQuery query)
+    public async Task<bool> ValidateReservation([FromQuery] TripDTO query)
     {
         _logger.LogInformation($"=>| GET :: ValidateReservation - {JsonSerializer.Serialize(query)}");
 
@@ -154,7 +178,7 @@ public class OffersController : ControllerBase
     }
 
     [HttpGet("GetHotelRooms")]
-    public async Task<IEnumerable<string>> GetHotelRooms([FromQuery] int id)
+    public async Task<IEnumerable<RoomTypeDTO>> GetHotelRooms([FromQuery] int id)
     {
         _logger.LogInformation($"=>| GET :: HotelRooms - {id}");
 
@@ -162,12 +186,49 @@ public class OffersController : ControllerBase
         var payload = new KeyValuePair<string, byte[]>("GetHotelRooms", data);
         var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
         var bytes = await _publisherService.GetReply(messageId, _token);
-        var rooms = MessagePackSerializer.Deserialize<IEnumerable<string>>(bytes);
+        var rooms = MessagePackSerializer.Deserialize<IEnumerable<RoomTypeDTO>>(bytes);
 
         _logger.LogInformation($"<=| GET :: HotelRooms - {JsonSerializer.Serialize(rooms)}");
 
         return rooms;
     }
+
+
+    [HttpGet("GetRoomType")]
+    public async Task<RoomTypeDTO> GetRoomType([FromQuery] int id)
+    {
+        _logger.LogInformation($"=>| GET :: RoomType - {id}");
+
+        var data = MessagePackSerializer.Serialize(id);
+        var payload = new KeyValuePair<string, byte[]>("GetRoomType", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var rooms = MessagePackSerializer.Deserialize<RoomTypeDTO>(bytes);
+
+        _logger.LogInformation($"<=| GET :: RoomType  - {JsonSerializer.Serialize(rooms)}");
+
+        return rooms;
+    }
+
+
+    [HttpGet("FindTransports")]
+    public async Task<IEnumerable<TransportDTO>> FindTransports([FromQuery] TransportDTO query)
+    {
+        _logger.LogInformation($"=>| GET :: FindTransports - {query}");
+
+        var data = MessagePackSerializer.Serialize(query);
+        var payload = new KeyValuePair<string, byte[]>("FindTransports", data);
+        var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+        var bytes = await _publisherService.GetReply(messageId, _token);
+        var rooms = MessagePackSerializer.Deserialize<IEnumerable<TransportDTO>>(bytes);
+
+        _logger.LogInformation($"<=| GET :: FindTransports  - {JsonSerializer.Serialize(rooms)}");
+
+        return rooms;
+    }
+
+
+
 
     [HttpPost("Login")]
     public async Task<int> Login([FromQuery] string? username, [FromQuery] string? password)
