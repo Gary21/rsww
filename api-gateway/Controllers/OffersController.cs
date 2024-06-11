@@ -1,9 +1,11 @@
 using api_gateway.DTOs;
+using api_gateway.EventConsumer;
 using api_gateway.Publisher;
 using api_gateway.Queries;
 using MessagePack;
 using Microsoft.AspNetCore.Mvc;
 using RabbitUtilities;
+using System.Net.WebSockets;
 using System.Text.Json;
 
 namespace api_gateway.Controllers;
@@ -12,16 +14,17 @@ namespace api_gateway.Controllers;
 [Route("[controller]")]
 public class OffersController : ControllerBase
 {
-
     private readonly ILogger<OffersController> _logger;
     private readonly PublisherServiceBase _publisherService;
     private readonly CancellationToken _token;
+    private readonly WebSocketService _webSocketService;
 
-    public OffersController(ILogger<OffersController> logger, PublisherServiceBase publisherService, IHostApplicationLifetime appLifetime)
+    public OffersController(ILogger<OffersController> logger, PublisherServiceBase publisherService, WebSocketService webSocketService , IHostApplicationLifetime appLifetime)
     {
         _logger = logger;
         _publisherService = publisherService;
         _token = appLifetime.ApplicationStopping;
+        _webSocketService = webSocketService;
     }
 
     [HttpGet("GetDestinations")]
@@ -55,6 +58,17 @@ public class OffersController : ControllerBase
         return hotels;
     }
 
+    //[HttpGet("AddSocket")]
+    //public async Task AddSocket(int id)
+    //{
+    //    _logger.LogInformation($"Add Socket {id}");
+
+    //    WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+    //    _webSocketService.AddHotelSocket(id.ToString(), webSocket);
+    //    _webSocketService.AddPreferencesSocket(webSocket);
+    //    _webSocketService.AddChangesSocket(webSocket);
+    //}
+
     [HttpGet("GetHotel")]
     public async Task<HotelDTO> GetHotel(int id)
     {
@@ -68,6 +82,9 @@ public class OffersController : ControllerBase
 
         var hotelJson = JsonSerializer.Serialize(hotel);
         _logger.LogInformation($"<=| GET :: Hotel - {hotelJson}");
+
+        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+        _webSocketService.AddHotelSocket(id.ToString(), webSocket);
 
         return hotel;
     }

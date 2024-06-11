@@ -1,3 +1,5 @@
+using api_gateway.Controllers;
+using api_gateway.EventConsumer;
 using api_gateway.Publisher;
 using RabbitMQ.Client;
 using RabbitUtilities;
@@ -24,6 +26,10 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
 builder.Services.AddSingleton<PublisherServiceBase, GatewayPublisherService>();
 builder.Services.AddHostedService<ReplyService>();
 
+builder.Services.AddSingleton<WebSocketService>();
+builder.Services.AddHostedService<PreferencesEventConsumer>();
+builder.Services.AddHostedService<ResourceEventConsumer>();
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -43,6 +49,10 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+var webSocketOptions = new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromMinutes(2)
+};
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -52,7 +62,7 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
-
+app.UseWebSockets(webSocketOptions);
 app.UseAuthorization();
 
 app.UseCors("*");
