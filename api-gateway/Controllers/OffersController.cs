@@ -259,50 +259,64 @@ public class OffersController : ControllerBase
 
 
     [HttpGet("GetPreferences")]
-    public async Task<IEnumerable<PreferencesEvents>> GetPreferences()
+    public async Task<IDictionary<string,IDictionary<string,Preference>>> GetPreferences()
     {
         _logger.LogInformation($"=>| GET :: Preferences");
-
-        var payload = new KeyValuePair<string, int>("GetPreferences",0);
+        var payload = "GetPreferences";
+//        var payload = new KeyValuePair<string, int>("GetPreferences",0);
         var messageId = _publisherService.PublishRequestWithReply("preferences", "query", MessageType.GET, payload);
         
         var bytes = await _publisherService.GetReply(messageId, _token);
-        var rooms = MessagePackSerializer.Deserialize<IEnumerable<PreferencesEvents>>(bytes);
-
+        var rooms = MessagePackSerializer.Deserialize<IDictionary<string, IDictionary<string, Preference>>>(bytes);
+        
         _logger.LogInformation($"<=| GET :: Preferences - {JsonSerializer.Serialize(rooms)}");
 
         return rooms;
     }
 
-    [HttpGet("PreferencesWebsocket")]
+    [Route("PreferencesWebsocket")]
     public async void PreferencesWebsocket()
     {
-        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-        _webSocketService.AddPreferencesSocket(webSocket);
+        if (HttpContext.WebSockets.IsWebSocketRequest)
+        {
+            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            _webSocketService.AddPreferencesSocket(webSocket);
+        }
+        else
+        {
+            Ok();
+        }
     }
 
 
 
     [HttpGet("GetLastChanges")]
-    public async Task<IEnumerable<ChangesEvents>> GetLastChanges()
+    public async Task<IEnumerable<Changes>> GetLastChanges()
     {
         _logger.LogInformation($"=>| GET :: Changes");
-
-        var payload = new KeyValuePair<string, int>("GetLastChanges", 0);
+        var payload = "GetLastChanges";
+        //var payload = new KeyValuePair<string, int>("GetLastChanges", 0);
         var messageId = _publisherService.PublishRequestWithReply("preferences", "query", MessageType.GET, payload);
 
         var bytes = await _publisherService.GetReply(messageId, _token);
-        var rooms = MessagePackSerializer.Deserialize<IEnumerable<ChangesEvents>>(bytes);
+        var rooms = MessagePackSerializer.Deserialize<IEnumerable<Changes>>(bytes);
 
         _logger.LogInformation($"<=| GET :: Changes - {JsonSerializer.Serialize(rooms)}");
 
         return rooms;
     }
 
-    [HttpGet("ChangesWebsocket")]
+    [Route("ChangesWebsocket")]
     public async void ChangesWebsocket()
     {
-        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-        _webSocketService.AddChangesSocket(webSocket);
+        if (HttpContext.WebSockets.IsWebSocketRequest)
+        {
+            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            _webSocketService.AddChangesSocket(webSocket);
+        }
+        else
+        {
+            Ok();
+        }
     }
 }

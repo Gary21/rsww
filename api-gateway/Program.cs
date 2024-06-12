@@ -28,7 +28,7 @@ builder.Services.AddHostedService<ReplyService>();
 
 builder.Services.AddSingleton<WebSocketService>();
 builder.Services.AddHostedService<PreferencesEventConsumer>();
-builder.Services.AddHostedService<ResourceEventConsumer>();
+//builder.Services.AddHostedService<ResourceEventConsumer>();
 
 // Add services to the container.
 

@@ -1,4 +1,5 @@
 ﻿using api_gateway.Controllers;
+using api_gateway.E;
 using api_gateway.Events;
 using MessagePack;
 using RabbitMQ.Client;
@@ -37,11 +38,14 @@ namespace api_gateway.EventConsumer
 
             switch (type)
             {
-                case MessageType.RESERVE:
-                    UpdatePreferences(ea);
+                case MessageType.GET:
+                    UpdatePreferences(ea);  //updated preferences
+                    break;
+                case MessageType.RESERVE:   //offer reserved or bought
+                    InformOfferBought(ea);
                     break;
                 case MessageType.UPDATE:
-                    UpdateTourChanges(ea);
+                    UpdateTourChanges(ea);  //new changes in offer
                     break;
 
                 default:
@@ -55,8 +59,8 @@ namespace api_gateway.EventConsumer
         private void UpdateTourChanges(BasicDeliverEventArgs ea)
         {
             var body = ea.Body;
-            var row = MessagePackSerializer.Deserialize<ChangesEvents>(body);
-            var json = MessagePackSerializer.SerializeToJson(row);
+            var change = MessagePackSerializer.Deserialize<Changes>(body);
+            var json = MessagePackSerializer.SerializeToJson(change);
             foreach(var socket in _webSocketService.ChangesSockets) {
                 socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json),WebSocketMessageType.Text,true, cancellationToken); //end of message = true?
             }
@@ -65,13 +69,54 @@ namespace api_gateway.EventConsumer
         private void UpdatePreferences(BasicDeliverEventArgs ea)
         {
             var body = ea.Body;
-            var row = MessagePackSerializer.Deserialize<PreferencesEvents>(body);
-            var json = MessagePackSerializer.SerializeToJson(row);
+            var preferences = MessagePackSerializer.Deserialize<List<PreferenceUpdate>>(body);
+            var json = MessagePackSerializer.SerializeToJson(preferences);
             foreach (var socket in _webSocketService.PreferencesSockets)
             {
                 socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
             }
             
+        }
+
+        private void InformOfferBought(BasicDeliverEventArgs ea)
+        {
+            var body = ea.Body;
+            var hotelPreference = MessagePackSerializer.Deserialize<PreferenceUpdate>(body);
+            var hotelId = hotelPreference.PreferenceName;
+
+
+            if (hotelPreference.Preference.PurchaseCount > 0)
+            {
+                //hotel room bought
+            }
+            else if (hotelPreference.Preference.ReservationCount > 0)
+            {
+                //hotel reserved
+            }
+            var json = MessagePackSerializer.SerializeToJson(hotelPreference);
+
+            List<Guid> socketsToClose = new();
+            if (_webSocketService.HotelsSockets.TryGetValue(hotelId, out var sockets))
+            {
+                foreach (var socketPair in sockets)
+                {
+                    var socket = socketPair.Value;
+                    if (socket.State == WebSocketState.Open || socket.State == WebSocketState.Connecting)
+                    {
+                        socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                    }
+                    else
+                    {
+                        socketsToClose.Add(socketPair.Key);
+                    }
+                }
+
+                foreach (var socketGuid in socketsToClose)
+                {
+                    _webSocketService.HotelsSockets[hotelId].Remove(socketGuid, out var _);
+                }
+            }
+
         }
     }
 }
