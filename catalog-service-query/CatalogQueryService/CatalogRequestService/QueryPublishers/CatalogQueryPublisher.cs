@@ -65,16 +65,15 @@ namespace CatalogQueryService.QueryPublishers
             return roomTypes;
         }
 
-        public async Task<ICollection<string>> GetRoomTypesForHotelId(int hotelId)
+        public async Task<ICollection<RoomTypeDTO>> GetRoomTypesForHotelId(int hotelId)
         {
             _logger.Information("|=> GET :: GetRoomTypesForHotelId");
             Guid messageCorellationId = PublishRequestWithReply("resources/hotels", _routingKey, MessageType.EVENT, hotelId);
 
-            CancellationToken cancellationToken = new CancellationToken(false);
+            var roomTypesBytes = await GetReply(messageCorellationId, new CancellationToken(false));
 
-            var roomTypesBytes = await GetReply(messageCorellationId, cancellationToken);
+            var roomTypes = MessagePackSerializer.Deserialize<ICollection<RoomTypeDTO>>(roomTypesBytes);
 
-            var roomTypes = MessagePackSerializer.Deserialize<ICollection<string>>(roomTypesBytes);
             var roomTypesJson = JsonSerializer.Serialize(roomTypes);
             _logger.Information($"|<= GET :: GetRoomTypesForHotelId - roomTypes count {roomTypes.Count},\n roomTypes: {roomTypesJson}");
 

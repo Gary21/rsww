@@ -1,15 +1,12 @@
-﻿using MP = MessagePack;
+﻿using MessagePack;
 
 namespace CatalogQueryService.DTOs
 {
-    [MP.MessagePackObject]
+    [MessagePackObject]
     public class CityDTO
     {
-        [MP.Key(0)]
-        public int Id { get; set; }
-        [MP.Key(1)]
-        public string Name { get; set; }
-        [MP.Key(2)]
-        public string CountryName { get; set; }
+        [Key(0)] public int Id { get; set; }
+        [Key(1)] public string Name { get; set; }
+        [Key(2)] public string CountryName { get; set; }
     }
 }

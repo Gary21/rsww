@@ -4,15 +4,13 @@ using CatalogQueryService.Filters;
 using CatalogQueryService.Queries;
 using CatalogQueryService.QueryPublishers;
 using CatalogRequestService.DTOs;
-using MessagePack;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitUtilities;
 using System.Text;
-using System.Text.Json;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using ConsumerConfig = RabbitUtilities.Configuration.ConsumerConfig;
-
+using JS = System.Text.Json.JsonSerializer;
+using MPS = MessagePack.MessagePackSerializer;
 
 namespace CatalogQueryService.QueryHandler
 {
@@ -20,6 +18,8 @@ namespace CatalogQueryService.QueryHandler
     {
         private readonly CatalogQueryPublisher _catalogQueryPublisher;
         private readonly IMapper _mapper;
+        private ICollection<CityDTO> _cityList;
+        private ICollection<RoomTypeDTO> _roomTypesList;
 
         public CatalogQueryHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, PublisherServiceBase catalogQueryPublisher, IMapper mapper, IHostApplicationLifetime appLifeTime)
             : base(logger, connectionFactory, config.GetSection("CatalogQueryPublisher").Get<ConsumerConfig>()!, appLifeTime)
@@ -31,516 +31,220 @@ namespace CatalogQueryService.QueryHandler
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
         {
             var headers = ea.BasicProperties.Headers;
-
-            if (!headers.TryGetValue("Type", out object? typeObj))
-                return;
+            if (!headers.TryGetValue("Type", out object? typeObj)) { return; }
             var type = (MessageType)Enum.Parse(typeof(MessageType), ASCIIEncoding.ASCII.GetString((byte[])typeObj));
-
-            if (!headers.TryGetValue("Date", out object? dateObj))
-                return;
+            if (!headers.TryGetValue("Date", out object? dateObj)) { return; }
             DateTime.TryParse(ASCIIEncoding.ASCII.GetString((byte[])dateObj), out var date);
 
-
-            switch (type)
-            {
-                case MessageType.GET:
-                    GetCall(ea);
-                    break;
-                case MessageType.UPDATE:
-                    _logger.Information($"Received getlistof");
-                    GetListOf(ea);
-                    break;
-                default:
-                    _logger.Information($"Received message with unknown type.");
-                    GetCall(ea);
-                    break;
-            }
-        }
-
-        public async void GetListOf(BasicDeliverEventArgs ea)
-        {
-            var message = MessagePackSerializer.Deserialize<string>(ea.Body.ToArray());
-            if (message is null) { _logger.Information($"Received message null."); }
-
-            if (message == "countries")
-            {
-                var countries = await _catalogQueryPublisher.GetCountries();
-                var countriesDTO = _mapper.Map<List<CountryDTO>>(countries);
-                var serialized = MessagePackSerializer.Serialize(countriesDTO);
-                Reply(ea, serialized);
-            }
-            else if (message == "cities")
-            {
-                var cities = await _catalogQueryPublisher.GetCities();
-                var citiesDTO = _mapper.Map<List<CityDTO>>(cities);
-                var serialized = MessagePackSerializer.Serialize(citiesDTO);
-                Reply(ea, serialized);
-            }
-            else if (message == "roomtypes")
-            {
-                var roomTypes = await _catalogQueryPublisher.GetRoomTypes();
-                var roomTypeNames = roomTypes.Select(rt => rt.Name).ToList();
-                var serialized = MessagePackSerializer.Serialize(roomTypeNames);
-                Reply(ea, serialized);
-            }
-            else
-            {
-                _logger.Information($"Received message with unknown type.");
-            }
+            GetCall(ea);
         }
 
         public async void GetCall(BasicDeliverEventArgs ea)
         {
-            //var hotelGetQueryTest = MessagePackSerializer.Deserialize<string>(ea.Body.ToArray());
-            //var hotelGetQueryJson = JsonSerializer.Serialize(hotelGetQueryTest);
-            _logger.Information($"=>| GET :: Call");
-            var message = MessagePackSerializer.Deserialize<KeyValuePair<string, byte[]>>(ea.Body.ToArray());
-            _logger.Information($"=>| GET :: Call - {message.Key}");
-            //var message = KeyValuePair.Create("GetHotels", ea.Body.ToArray());
+            var message = MPS.Deserialize<KeyValuePair<string, byte[]>>(ea.Body.ToArray());
             var callCode = message.Key;
-            if (callCode is null) { _logger.Information($"Received message null."); return; }
+
+            _logger.Information($"=>| GET :: Call - {callCode}");
 
             switch (callCode)
             {
                 case "GetDestinations":
+
                     _logger.Information($"=>| GET :: Destinations");
+
                     var cities = await _catalogQueryPublisher.GetCities();
                     var cityNames = cities.Select(c => c.Name).ToList();
-                    var serialized = MessagePackSerializer.Serialize(cityNames);
+                    var serialized = MPS.Serialize(cityNames);
+
                     _logger.Information($"<=| GET :: Destinations - cities count {cityNames.Count}");
+
                     Reply(ea, serialized);
                     break;
 
+                case "GetTrips":
 
-                case "GetHotels":
-                    var HotelsQueyFiltersGateway = MessagePackSerializer.Deserialize<HotelsQueryFiltersGatway>(message.Value);
-                    var hqfgJson = JsonSerializer.Serialize(HotelsQueyFiltersGateway);
-                    _logger.Information($"=>| GET :: Hotels - {hqfgJson}");
+                    var tripsQueryDTO = MPS.Deserialize<TripDTO>(message.Value);
 
-                    var hotelGetQuery = new HotelsGetQuery { filters = HotelsFiltersAdapter.GatewayHotelToHotel(HotelsQueyFiltersGateway) };
-                    var citiesTwo = await _catalogQueryPublisher.GetCities();
-                    var cityId = citiesTwo.FirstOrDefault(c => c.Name == HotelsQueyFiltersGateway.Destination)?.Id;
-                    if (cityId != null)
-                    {
-                        hotelGetQuery.filters.CityIds = new List<int> { cityId.Value };
-                    }
+                    _logger.Information($"=>| GET :: Trips - {JS.Serialize(tripsQueryDTO)}");
 
-                    var tripGetQuery = new TripGetQuery();
-                    tripGetQuery.filters = TripQueryFiltersAdapter.AdaptHotelQueryToTripQuery(hotelGetQuery.filters);
-                    var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(tripGetQuery.filters));
-                    _logger.Information($">|< GET :: Trips - {filt_ser}");
+                    var validTrips = await GetTrips(tripsQueryDTO);
 
-                    cityId = citiesTwo.FirstOrDefault(c => c.Name == HotelsQueyFiltersGateway.Destination)?.Id;
-                    if (cityId != null)
-                    {
-                        tripGetQuery.filters.CityIds = new List<int> { cityId.Value };
-                    }
+                    _logger.Information($"<=| GET :: Trips - trips count {validTrips.Count}");
 
+                    var tripsSerialized = MPS.Serialize(validTrips);
+                    Reply(ea, tripsSerialized);
 
-                    var hotels = await Get(tripGetQuery);
-                    var serializedHotels = MessagePackSerializer.Serialize(hotels);
-                    _logger.Information($"<=| GET :: Hotels - hotels count: {hotels.Count}");
-                    Reply(ea, serializedHotels);
                     break;
 
 
                 case "GetHotel":
-                    var hotelId = MessagePackSerializer.Deserialize<int>(message.Value);
+                    var hotelId = MPS.Deserialize<int>(message.Value);
+
                     _logger.Information($"=>| GET :: Hotel - {hotelId}");
 
-                    var hotelGetQueryTwo = new HotelsGetQuery();
-                    hotelGetQueryTwo.filters = new HotelQueryFilters { HotelIds = new List<int> { hotelId } };
+                    var hotelGetQueryTwo = new HotelsGetQuery
+                    {
+                        filters = new HotelQueryFilters
+                        {
+                            HotelIds = new List<int> { hotelId }
+                        }
+                    };
 
                     var hotel = await _catalogQueryPublisher.GetHotels(hotelGetQueryTwo);
-                    var gatewayHotel = DTOAdapterHotelToGatewayHotel.Adapt(hotel.FirstOrDefault());
 
-                    var gatewayHotelJson = JsonSerializer.Serialize(gatewayHotel);
-                    _logger.Information($"<=| GET :: Hotel - {gatewayHotelJson}");
+                    _logger.Information($"<=| GET :: Hotel - {JS.Serialize(hotel)}");
 
-                    var serializedHotel = MessagePackSerializer.Serialize(gatewayHotel);
-                    Reply(ea, serializedHotel);
+                    Reply(ea, MPS.Serialize(hotel));
                     break;
 
 
                 case "GetAvailability":
                     _logger.Information($"=>| GET :: Availability");
-                    //var availabilityQuery = MessagePackSerializer.Deserialize<AvailabilityQuery>(message.Value);
-                    //var availability = await _catalogQueryPublisher.GetAvailability(availabilityQuery);
-                    var serializedAvailability = MessagePackSerializer.Serialize(true);
                     _logger.Information($"<=| GET :: Availability - {true}");
-                    Reply(ea, serializedAvailability);
+                    Reply(ea, MPS.Serialize(true));
                     break;
 
 
                 case "ValidateReservation":
-                    var reservationQuery = MessagePackSerializer.Deserialize<ReservationQuery>(message.Value);
-                    _logger.Information($"=>| GET :: ValidateReservation - reservationQuery: {JsonSerializer.Serialize(reservationQuery)}");
-                    var tripGetQueryThree = new TripGetQuery();
-                    tripGetQueryThree.filters = TripQueryFiltersAdapter.AdaptReservationQueryToTripQuery(reservationQuery);
-                    _logger.Information($">|< GET :: ValidateReservation - tripQuery: {JsonSerializer.Serialize(tripGetQueryThree)}");
-                    var trips = await Get(tripGetQueryThree);
 
-                    _logger.Information($"<=| GET :: ValidateReservation - trips count: {trips.Count}");
+                    var tripReservation = MPS.Deserialize<TripDTO>(message.Value);
 
-                    if (trips.Count == 0) { Reply(ea, MessagePackSerializer.Serialize(false)); }
-                    else { Reply(ea, MessagePackSerializer.Serialize(true)); }
+                    _logger.Information($"=>| GET :: ValidateReservation - reservationQuery: {JS.Serialize(tripReservation)}");
+
+                    var validReservations = await GetTrips(tripReservation);
+
+                    _logger.Information($"<=| GET :: ValidateReservation - trips count: {validReservations.Count}");
+
+                    if (validReservations.Count == 0) { Reply(ea, MPS.Serialize(false)); }
+                    else { Reply(ea, MPS.Serialize(true)); }
 
                     break;
 
 
                 case "GetHotelRooms":
-                    var hotelIdForRooms = MessagePackSerializer.Deserialize<int>(message.Value);
+
+                    var hotelIdForRooms = MPS.Deserialize<int>(message.Value);
+
                     _logger.Information($"=>| GET :: HotelRooms - {hotelIdForRooms}");
 
                     var rooms = await _catalogQueryPublisher.GetRoomTypesForHotelId(hotelIdForRooms);
-                    var serializedRooms = MessagePackSerializer.Serialize(rooms);
 
-                    var roomsJson = JsonSerializer.Serialize(rooms);
-                    _logger.Information($"<=| GET :: HotelRooms - rooms count: {rooms.Count},\n rooms: {roomsJson}");
+                    _logger.Information($"<=| GET :: HotelRooms - rooms count: {rooms.Count},\n rooms: {JS.Serialize(rooms)}");
 
-                    Reply(ea, serializedRooms);
+                    Reply(ea, MPS.Serialize(rooms));
                     break;
 
 
                 default:
-                    _logger.Information($"Received message with unknown type.");
+                    _logger.Information($"Received message null or with unknown.");
                     break;
             }
         }
 
-        public async void Get(BasicDeliverEventArgs ea)
+
+
+        private async Task<List<TripDTO>> GetTrips(TripDTO tripsQueryDTO)
         {
-            var message = MessagePackSerializer.Deserialize<TripGetQuery>(ea.Body.ToArray());
-            var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
-            _logger.Information($">|< Get() :: Trips {filt_ser}");
+            // Getting cities and room types for conversion (name <-> id)
+            _cityList = await _catalogQueryPublisher.GetCities();
+            var destinationCityId = _cityList.FirstOrDefault(c => c.Name == tripsQueryDTO.DestinationCity)?.Id;
+            var originCityId = _cityList.FirstOrDefault(c => c.Name == tripsQueryDTO.OriginCity)?.Id;
+
+            _roomTypesList = await _catalogQueryPublisher.GetRoomTypes();
+            var roomTypeName = _roomTypesList.FirstOrDefault(rt => rt.Id == tripsQueryDTO.RoomTypeId)?.Name;
+            //
+
+            // Handling filters
+            var hotelGetQuery = new HotelsGetQuery { filters = new HotelQueryFilters() };
+            if (destinationCityId != null) { hotelGetQuery.filters.CityIds = new List<int> { destinationCityId.Value }; }
+            if (originCityId != null) { hotelGetQuery.filters.CityIds = new List<int> { originCityId.Value }; }
+            if (roomTypeName != null) { hotelGetQuery.filters.RoomTypes = new List<string> { roomTypeName }; }
+            if (tripsQueryDTO.DateStart != null) { hotelGetQuery.filters.CheckInDate = DateTime.Parse(tripsQueryDTO.DateStart); }
+            if (tripsQueryDTO.DateEnd != null) { hotelGetQuery.filters.CheckOutDate = DateTime.Parse(tripsQueryDTO.DateEnd); }
+            if (tripsQueryDTO.PeopleNumber > 0) { hotelGetQuery.filters.RoomCapacities = new List<int> { tripsQueryDTO.PeopleNumber }; }
+            var serializedQuery = MPS.Serialize(hotelGetQuery);
+            //
 
             var hotelTransportMatches = new List<TripDTO>();
-            var allCities = await _catalogQueryPublisher.GetCities();
 
-            var mf = message.filters ?? new TripQueryFilters();
-            if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
-            if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
-            if (mf.CheckInDate == null || mf.CheckOutDate == null)
-            {
-                mf.CheckInDate = null;
-                mf.CheckOutDate = null;
-            }
-
-            var listOfCapacities = new List<int> { mf.PeopleNumber };
-
-            var hotelGetQuery = new HotelsGetQuery
-            {
-                filters = new HotelQueryFilters
-                {
-                    HotelIds = mf.HotelIds,
-                    CityIds = mf.CityIds,
-                    CountryIds = mf.CountryIds,
-                    RoomTypes = mf.RoomTypes,
-                    RoomCapacities = listOfCapacities,
-                    CheckInDate = mf.CheckInDate,
-                    CheckOutDate = mf.CheckOutDate,
-                    MinPrice = mf.MinPrice,
-                    MaxPrice = mf.MaxPrice
-                }
-            };
-
+            // Get hotels
             var hotels = await _catalogQueryPublisher.GetHotels(hotelGetQuery);
+            if (hotels.Count == 0) { return hotelTransportMatches; }
+            //
 
-            if (hotels.Count == 0)
+            // Parse valid hotels
+            foreach (var hotelResponse in hotels)
             {
-                Reply(ea, MessagePackSerializer.Serialize(hotelTransportMatches));
-                return;
-            }
-
-            foreach (var hotel in hotels)
-            {
-                _logger.Information($">|< for(hotels) :: hotel found: {hotel.Name}");
-
-                var hotelCityName = allCities.FirstOrDefault(c => c.Id == hotel.CityId)?.Name;
-
-                var match = new TripDTO(hotel.Id);
-                var departureCityNames = mf.DepartureCityIds.Select(dc => allCities.FirstOrDefault(c => c.Id == dc)?.Name).ToList();
+                // check for valid room type
+                var roomTypes = await _catalogQueryPublisher.GetRoomTypesForHotelId(hotelResponse.Id);
+                var validRoomType = roomTypes.FirstOrDefault(rt => rt.Capacity >= tripsQueryDTO.PeopleNumber);
+                if (validRoomType == null) { continue; }
+                //
 
 
-                var transportThereGetQuery = new TransportGetQuery
+                // check for valid transport there
+                var transThereQuery = new TransportGetQuery
                 {
                     filters = new TransportQueryFilters
                     {
-                        CityOrigins = departureCityNames,
-                        Types = mf.TransportTypes,
-                        CityDestinations = new List<string> { hotelCityName },
-                        AvailableSeats = mf.PeopleNumber
+                        CityOrigins = new List<string> { tripsQueryDTO.OriginCity },
+                        CityDestinations = new List<string> { tripsQueryDTO.DestinationCity },
+                        AvailableSeats = tripsQueryDTO.PeopleNumber,
+                        DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) },
+                        ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) }
                     }
                 };
 
-                var transports = await _catalogQueryPublisher.GetTransports(transportThereGetQuery);
+                var transportsThere = await _catalogQueryPublisher.GetTransports(transThereQuery);
+                if (transportsThere.Count == 0) { continue; }
+                var transportThere = transportsThere.FirstOrDefault();
+                //
 
-                if (transports.Count == 0)
-                {
-                    continue;
-                }
 
-                foreach (var transport in transports)
-                {
-                    match.TransportThereIds.Add(transport.Id);
-                }
-
-                var transportBackGetQuery = new TransportGetQuery
+                // check for valid transport back
+                var transBackQuery = new TransportGetQuery
                 {
                     filters = new TransportQueryFilters
                     {
-                        CityOrigins = new List<string> { hotelCityName },
-                        Types = mf.TransportTypes,
-                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() },
-                        AvailableSeats = mf.PeopleNumber
+                        CityOrigins = new List<string> { tripsQueryDTO.DestinationCity },
+                        CityDestinations = new List<string> { tripsQueryDTO.OriginCity },
+                        AvailableSeats = tripsQueryDTO.PeopleNumber,
+                        DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) },
+                        ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) }
                     }
                 };
 
-                transports = await _catalogQueryPublisher.GetTransports(transportBackGetQuery);
+                var transportsBack = await _catalogQueryPublisher.GetTransports(transBackQuery);
+                if (transportsBack.Count == 0) { continue; }
+                var transportBack = transportsBack.FirstOrDefault();
 
-                if (transports.Count == 0)
+
+                // Calculate Price
+                var tripLength = DateTime.Parse(tripsQueryDTO.DateEnd).Subtract(DateTime.Parse(tripsQueryDTO.DateStart)).Days;
+                var price =
+                    tripLength * validRoomType.PricePerNight +
+                    tripsQueryDTO.PeopleNumber * 100 +
+                    int.Parse(transportThere.PricePerTicket) * tripsQueryDTO.PeopleNumber +
+                    int.Parse(transportBack.PricePerTicket) * tripsQueryDTO.PeopleNumber;
+
+
+                var tripDTO = new TripDTO
                 {
-                    continue;
-                }
-
-                foreach (var transport in transports)
-                {
-                    match.TransportBackIds.Add(transport.Id);
-                }
-
-                hotelTransportMatches.Add(match);
-
-
-            }
-
-            Reply(ea, MessagePackSerializer.Serialize(hotelTransportMatches));
-        }
-
-        public async Task<ICollection<GatewayHotelDTO>> Get(TripGetQuery tripGetQuery)
-        {
-            var message = tripGetQuery;
-
-            var filt_ser = MessagePackSerializer.ConvertToJson(MessagePackSerializer.Serialize(message.filters));
-            _logger.Information($">|< Get() :: Trips {filt_ser}");
-
-            var hotelTransportMatches = new List<TripDTO>();
-            var allCities = await _catalogQueryPublisher.GetCities();
-
-            var mf = message.filters ?? new TripQueryFilters();
-            if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
-            if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
-            if (mf.CheckInDate == null || mf.CheckOutDate == null)
-            {
-                mf.CheckInDate = null;
-                mf.CheckOutDate = null;
-            }
-
-            var listOfCapacities = new List<int> { mf.PeopleNumber };
-
-            var hotelGetQuery = new HotelsGetQuery
-            {
-                filters = new HotelQueryFilters
-                {
-                    HotelIds = mf.HotelIds,
-                    CityIds = mf.CityIds,
-                    CountryIds = mf.CountryIds,
-                    RoomTypes = mf.RoomTypes,
-                    RoomCapacities = listOfCapacities,
-                    CheckInDate = mf.CheckInDate,
-                    CheckOutDate = mf.CheckOutDate,
-                    MinPrice = mf.MinPrice,
-                    MaxPrice = mf.MaxPrice
-                }
-            };
-
-            var hotels = await _catalogQueryPublisher.GetHotels(hotelGetQuery);
-
-            if (hotels.Count == 0)
-            {
-                return hotels.Select(h => DTOAdapterHotelToGatewayHotel.Adapt(h)).ToList();
-            }
-
-
-            foreach (var hotel in hotels)
-            {
-                _logger.Information($">|< for(hotels) :: Hotels {hotel.Name}");
-
-                var hotelCityName = allCities.FirstOrDefault(c => c.Id == hotel.CityId)?.Name;
-
-                var match = new TripDTO(hotel.Id);
-
-
-                List<string> departureCityNames = new List<string>();
-                if (mf.DepartureCityIds != null)
-                {
-                    departureCityNames = mf.DepartureCityIds.Select(dc => allCities.FirstOrDefault(c => c.Id == dc)?.Name).ToList();
-                }
-
-
-
-
-                var transportThereGetQuery = new TransportGetQuery
-                {
-                    filters = new TransportQueryFilters
-                    {
-                        CityOrigins = departureCityNames,
-                        Types = mf.TransportTypes,
-                        CityDestinations = new List<string> { hotelCityName },
-                        AvailableSeats = mf.PeopleNumber
-                    }
+                    HotelId = hotelResponse.Id,
+                    RoomTypeId = validRoomType.Id,
+                    TransportThereId = transportsThere.FirstOrDefault().Id,
+                    TransportBackId = transportsBack.FirstOrDefault().Id,
+                    DestinationCity = tripsQueryDTO.DestinationCity,
+                    OriginCity = tripsQueryDTO.OriginCity,
+                    DateStart = tripsQueryDTO.DateStart,
+                    DateEnd = tripsQueryDTO.DateEnd,
+                    Price = price.ToString(),
+                    PeopleNumber = tripsQueryDTO.PeopleNumber
                 };
 
-                var transports = await _catalogQueryPublisher.GetTransports(transportThereGetQuery);
-
-                if (transports.Count == 0)
-                {
-                    continue;
-                }
-
-                foreach (var transport in transports)
-                {
-                    match.TransportThereIds.Add(transport.Id);
-                }
-
-                var transportBackGetQuery = new TransportGetQuery
-                {
-                    filters = new TransportQueryFilters
-                    {
-                        CityOrigins = new List<string> { hotelCityName },
-                        Types = mf.TransportTypes,
-                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() ?? null },
-                        AvailableSeats = mf.PeopleNumber
-                    }
-                };
-
-                transports = await _catalogQueryPublisher.GetTransports(transportBackGetQuery);
-
-                if (transports.Count == 0)
-                {
-                    continue;
-                }
-
-                foreach (var transport in transports)
-                {
-                    match.TransportBackIds.Add(transport.Id);
-                }
-
-                _logger.Information($">|< Get() :: Match {JsonSerializer.Serialize(match)}");
-                hotelTransportMatches.Add(match);
-
-
-            }
-
-            var gatewayHotels = hotels.Select(DTOAdapterHotelToGatewayHotel.Adapt).ToList();
-            var gatewayHotelsJson = JsonSerializer.Serialize(gatewayHotels);
-            _logger.Information($">|< Get() :: GatewayHotels {gatewayHotelsJson}");
-            return gatewayHotels;
-        }
-
-
-        public async Task<List<TripDTO>> GetTripsTest(TripGetQuery tripGetQuery)
-        {
-            var mf = tripGetQuery.filters ?? new TripQueryFilters();
-
-            var hotelTransportMatches = new List<TripDTO>();
-            var allCities = await _catalogQueryPublisher.GetCities();
-
-
-            if (mf.CheckInDate != null) { mf.CheckInDate = mf.CheckInDate.Value.Date; }
-            if (mf.CheckOutDate != null) { mf.CheckOutDate = mf.CheckOutDate.Value.Date; }
-            if (mf.CheckInDate == null || mf.CheckOutDate == null)
-            {
-                mf.CheckInDate = null;
-                mf.CheckOutDate = null;
-            }
-
-            var listOfCapacities = new List<int> { mf.PeopleNumber };
-
-            var hotelGetQuery = new HotelsGetQuery
-            {
-                filters = new HotelQueryFilters
-                {
-                    HotelIds = mf.HotelIds,
-                    CityIds = mf.CityIds,
-                    CountryIds = mf.CountryIds,
-                    RoomTypes = mf.RoomTypes,
-                    RoomCapacities = listOfCapacities,
-                    CheckInDate = mf.CheckInDate,
-                    CheckOutDate = mf.CheckOutDate,
-                    MinPrice = mf.MinPrice,
-                    MaxPrice = mf.MaxPrice
-                }
-            };
-
-            var hotels = await _catalogQueryPublisher.GetHotels(hotelGetQuery);
-
-            if (hotels.Count == 0)
-            {
-                return null;
-            }
-
-            foreach (var hotel in hotels)
-            {
-                _logger.Information($">|< GetTripsTest() :: Hotel: {hotel.Name}");
-
-                var hotelCityName = allCities.FirstOrDefault(c => c.Id == hotel.CityId)?.Name;
-
-                var match = new TripDTO(hotel.Id);
-                var departureCityNames = mf.DepartureCityIds.Select(dc => allCities.FirstOrDefault(c => c.Id == dc)?.Name).ToList();
-
-
-                var transportThereGetQuery = new TransportGetQuery
-                {
-                    filters = new TransportQueryFilters
-                    {
-                        CityOrigins = departureCityNames,
-                        Types = mf.TransportTypes,
-                        CityDestinations = new List<string> { hotelCityName },
-                        AvailableSeats = mf.PeopleNumber
-                    }
-                };
-
-                var transports = await _catalogQueryPublisher.GetTransports(transportThereGetQuery);
-
-                if (transports.Count == 0)
-                {
-                    continue;
-                }
-
-                foreach (var transport in transports)
-                {
-                    match.TransportThereIds.Add(transport.Id);
-                }
-
-                var transportBackGetQuery = new TransportGetQuery
-                {
-                    filters = new TransportQueryFilters
-                    {
-                        CityOrigins = new List<string> { hotelCityName },
-                        Types = mf.TransportTypes,
-                        CityDestinations = new List<string> { departureCityNames.FirstOrDefault() },
-                        AvailableSeats = mf.PeopleNumber
-                    }
-                };
-
-                transports = await _catalogQueryPublisher.GetTransports(transportBackGetQuery);
-
-                if (transports.Count == 0)
-                {
-                    continue;
-                }
-
-                foreach (var transport in transports)
-                {
-                    match.TransportBackIds.Add(transport.Id);
-                }
-
-                hotelTransportMatches.Add(match);
-
-                match.Price = mf.CheckOutDate.Value.Subtract(mf.CheckInDate.Value).Days * 1000 + mf.PeopleNumber * 100 +
-                    transports.FirstOrDefault().PricePerTicket * mf.PeopleNumber + hotel.Stars * 100;
-                match.Price = match.Price - DateTime.Now.Subtract(mf.CheckInDate.Value).Days * 5;
-
+                hotelTransportMatches.Add(tripDTO);
+                var tripDTOJson = JS.Serialize(tripDTO);
+                _logger.Information($">|< Get() :: TripDTO {tripDTOJson}");
             }
 
             return hotelTransportMatches;
@@ -548,26 +252,5 @@ namespace CatalogQueryService.QueryHandler
 
 
 
-        private async Task<List<TripDTO>> MatchTrips(ICollection<HotelDTO> hotels, ICollection<TransportDTO> transportsThere, ICollection<TransportDTO> transportsBack, TripQueryFilters tripQueryFilters)
-        {
-            var cities = await _catalogQueryPublisher.GetCities();
-
-            List<TripDTO> hotelTransportMatches = new List<TripDTO>();
-
-            foreach (var hotel in hotels)
-            {
-                var hotelCityName = cities.FirstOrDefault(c => c.Id == hotel.CityId)?.Name;
-                var match = new TripDTO(hotel.Id);
-
-                foreach (var transport in transportsThere)
-                {
-
-
-
-                }
-            }
-
-            return hotelTransportMatches;
-        }
     }
 }
