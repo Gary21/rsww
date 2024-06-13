@@ -83,16 +83,18 @@ namespace HotelsRequestService.QueryHandler
             {
                 var repository = _contextFactory.CreateDbContext();
 
-                var hotel = await repository.Hotels.Where(h => h.Id == message.HotelId).FirstOrDefaultAsync();
+                var hotel = await repository.Hotels.Where(h => h.Id == message.HotelId)
+                    .Include(h => h.City)
+                    .Include(h => h.City.Country)
+                    .FirstOrDefaultAsync();
                 var hotelEvents = await repository.HotelEvents
                     .Where(r => r.HotelId == message.HotelId)
-                    .Where(r => r.RoomTypeId == message.RoomTypeId)
                     .OrderBy(t => t.SequenceNumber)
                     .ToListAsync();
 
                 //var roomPrice = (await repository.Rooms.Where(r => r.HotelId == message.HotelId).Where(r=>r.RoomType.Id == message.RoomTypeId).FirstOrDefaultAsync()).BasePrice;
                 //bool availability = true;
-                //foreach(var hotelEvent in hotelEvents) {
+                //foreach(var hotelEvent in hotelEvents.Where(r => r.RoomTypeId == message.RoomTypeId)) {
                 //    roomPrice += hotelEvent.PriceChange;
                 //    availability = hotelEvent.AvailabilityChange ? !availability : availability;
                 //}
@@ -109,7 +111,7 @@ namespace HotelsRequestService.QueryHandler
                 tries += 1;
                 try
                 {
-                    if (repository.HotelEvents.Any(e => e.HotelId== hotel.Id && e.SequenceNumber == lastInSequence + 1))
+                    if (repository.HotelEvents.Any(e => e.HotelId == hotel.Id && e.SequenceNumber == lastInSequence + 1))
                     {
                         success = false;
                         _logger.Warning($"Event for hotel {message.HotelId} with same sequence number {lastInSequence + 1} already exists, trying again [tryNum:{tries}]");
@@ -156,7 +158,8 @@ namespace HotelsRequestService.QueryHandler
                 }
                 success = true;
 
-                var roomReservationEvent = new HotelChangeEvent()
+                var hotelChangeEvent = new KeyValuePair<string, byte[]>("hotel",
+                    MessagePackSerializer.Serialize(new HotelChangeEvent()
                 {
 
                     Id = message.HotelId,
@@ -167,8 +170,8 @@ namespace HotelsRequestService.QueryHandler
                     Availability = message.AvailabilityChange.ToString(),
                     Price = message.PriceChange
                     
-                };
-                _publisherService.PublishToFanoutNoReply("event", MessageType.UPDATE, roomReservationEvent);
+                }));
+                _publisherService.PublishToFanoutNoReply("event", MessageType.UPDATE, hotelChangeEvent);
 
                 Reply(ea, MessagePackSerializer.Serialize<bool>(true));
             }
@@ -197,8 +200,12 @@ namespace HotelsRequestService.QueryHandler
                     .Where(r => r.HotelId == message.HotelId)
                     .Where(r => r.RoomType.Id == message.RoomTypeId)
                     .Where(r => r.Occupancies.All(o => !dateSeries.Contains(o.Date.Date)))
+                    .Include(r=>r.Hotel)
+                    .Include(r => r.Hotel.City)
+                    .Include(r => r.Hotel.City.Country)
+                    .Include(r=>r.RoomType)
                     .FirstOrDefaultAsync();
-
+                
                 if (room == null)
                 {
                     _logger.Information($"Room not found.");
@@ -233,7 +240,8 @@ namespace HotelsRequestService.QueryHandler
                     }
                 }
                 success = true;
-                var roomReservationEvent = new HotelReservationEvent()
+                var roomReservationEvent = new KeyValuePair<string, byte[]>("hotel",
+                    MessagePackSerializer.Serialize(new HotelReservationEvent()
                 {
                     Id = room.HotelId,
                     RoomType = room.RoomType.Name,
@@ -241,7 +249,7 @@ namespace HotelsRequestService.QueryHandler
                     DestinationCity = room.Hotel.City.Name,
                     DestinationCountry = room.Hotel.City.Country.Name,
                     RoomCount = 1
-                };
+                }));
                 _publisherService.PublishToFanoutNoReply("event",MessageType.RESERVE, roomReservationEvent);
 
                 Reply(ea, MessagePackSerializer.Serialize<int>(room.RoomNumber));

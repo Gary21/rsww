@@ -52,7 +52,7 @@ builder.Services.AddHostedService<HotelsRequestHandler>();
 
 //builder.Services.AddSingleton<OutsideSimulation>();
 
-////builder.WebHost.UseUrls("http://*:7134");
+builder.WebHost.UseUrls("http://*:7134");
 //builder.Services.AddCors(options =>
 //{
 //    options.AddPolicy("*",

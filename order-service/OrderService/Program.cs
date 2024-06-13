@@ -36,7 +36,7 @@ builder.Services.AddHostedService<OrderRequestHandler>();
 
 
 
-//builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
+builder.WebHost.UseUrls($"http://*:{Random.Shared.Next(15000)}");
 
 builder.Services.AddCors(options =>
 {
