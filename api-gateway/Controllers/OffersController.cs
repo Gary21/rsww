@@ -274,19 +274,19 @@ public class OffersController : ControllerBase
         return rooms;
     }
 
-    [Route("PreferencesWebsocket")]
-    public async void PreferencesWebsocket()
-    {
-        if (HttpContext.WebSockets.IsWebSocketRequest)
-        {
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            _webSocketService.AddPreferencesSocket(webSocket);
-        }
-        else
-        {
-            Ok();
-        }
-    }
+    //[Route("PreferencesWebsocket")]
+    //public async void PreferencesWebsocket()
+    //{
+    //    if (HttpContext.WebSockets.IsWebSocketRequest)
+    //    {
+    //        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+    //        _webSocketService.AddPreferencesSocket(webSocket);
+    //    }
+    //    else
+    //    {
+    //        Ok();
+    //    }
+    //}
 
 
 
@@ -306,17 +306,17 @@ public class OffersController : ControllerBase
         return rooms;
     }
 
-    [Route("ChangesWebsocket")]
-    public async void ChangesWebsocket()
-    {
-        if (HttpContext.WebSockets.IsWebSocketRequest)
-        {
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            _webSocketService.AddChangesSocket(webSocket);
-        }
-        else
-        {
-            Ok();
-        }
-    }
+    //[Route("ChangesWebsocket")]
+    //public async void ChangesWebsocket()
+    //{
+    //    if (HttpContext.WebSockets.IsWebSocketRequest)
+    //    {
+    //        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+    //        _webSocketService.AddChangesSocket(webSocket);
+    //    }
+    //    else
+    //    {
+    //        Ok();
+    //    }
+    //}
 }

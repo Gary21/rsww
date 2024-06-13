@@ -33,7 +33,11 @@ namespace PreferencesService.DataStores
             }
             else
             {
-                Preferences[preferenceType].TryAdd(preferenceName, preference);
+                Preferences[preferenceType].TryAdd(preferenceName, 
+                    new Preference() { 
+                        PurchaseCount = preference.PurchaseCount, 
+                        ReservationCount = preference.ReservationCount 
+                    });
             }
 
             return new PreferenceUpdate() { 

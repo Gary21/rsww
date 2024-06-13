@@ -89,8 +89,8 @@ namespace PreferencesService.Services
                     Preference = newPreference 
                 };
                 
-                publisherService.PublishToFanoutNoReply<List<PreferenceUpdate>>(_exchangeName, MessageType.GET, updates);//Update Preferences
-                publisherService.PublishToFanoutNoReply<PreferenceUpdate>(_exchangeName, MessageType.RESERVE, hotelId); //Inform if viewed
+                publisherService.PublishToFanoutNoReply<List<PreferenceUpdate>>(preferencesEventsExchange, MessageType.GET, updates);//Update Preferences
+                publisherService.PublishToFanoutNoReply<PreferenceUpdate>(preferencesEventsExchange, MessageType.RESERVE, hotelId); //Inform if viewed
 
             }
             else if(payload.Key =="transport")//transport event
@@ -101,7 +101,7 @@ namespace PreferencesService.Services
                 List<PreferenceUpdate> updates = new();
                 updates.Add(_store.AddPreference(DataStore.TransportType, transportEvent.TransportType, newPreference));
 
-                publisherService.PublishToFanoutNoReply<List<PreferenceUpdate>>(_exchangeName,MessageType.GET , updates);
+                publisherService.PublishToFanoutNoReply<List<PreferenceUpdate>>(preferencesEventsExchange, MessageType.GET , updates);
 
             }
 
@@ -115,19 +115,21 @@ namespace PreferencesService.Services
             {
                 var hotelEvent = MessagePackSerializer.Deserialize<HotelChangeEvent>(payload.Value);
 
-                
-                var newChange = new Changes() { ResourceType = payload.Key, Name = hotelEvent.HotelName, PriceChange = hotelEvent.Price, /*Availability*/};
+
+                var newChange = new Changes() { ResourceType = payload.Key, Id = hotelEvent.Id.ToString(), Name = hotelEvent.HotelName, PriceChange = hotelEvent.Price };
+                if (!string.IsNullOrEmpty(hotelEvent.Availability))
+                    newChange.Availability = bool.Parse(hotelEvent.Availability);
                 _store.AddChange(newChange);
-                publisherService.PublishToFanoutNoReply<Changes>(_exchangeName, MessageType.UPDATE, newChange);
+                publisherService.PublishToFanoutNoReply<Changes>(preferencesEventsExchange, MessageType.UPDATE, newChange);
 
             }
             else if (payload.Key == "transport")//transport event
             {
                 var transportEvent = MessagePackSerializer.Deserialize<TransportChangeEvent>(payload.Value);
 
-                var newChange = new Changes() { ResourceType = payload.Key, Name = transportEvent.DestinationCity, PriceChange = transportEvent.PriceChange };
+                var newChange = new Changes() { ResourceType = payload.Key, Id = transportEvent.Id.ToString(), Name = transportEvent.DestinationCity, PriceChange = transportEvent.PriceChange};
                 _store.AddChange(newChange);           
-                publisherService.PublishToFanoutNoReply<Changes>(_exchangeName, MessageType.UPDATE, newChange);
+                publisherService.PublishToFanoutNoReply<Changes>(preferencesEventsExchange, MessageType.UPDATE, newChange);
 
             }
         }

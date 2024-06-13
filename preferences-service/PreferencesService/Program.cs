@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PreferencesService.DataStores;
 using PreferencesService.QueryHandler;
 using PreferencesService.Services;
 using RabbitMQ.Client;
@@ -26,6 +27,7 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     Password = rabbitConfig.password,
     AutomaticRecoveryEnabled = true
 });
+builder.Services.AddSingleton<DataStore>();
 
 builder.Services.AddSingleton<PublisherServiceBase, PreferencesPublisherService>();
 builder.Services.AddHostedService<PreferencesSubscriberService>();

@@ -14,6 +14,6 @@ namespace api_gateway.DTOs
         [Key(6)] public string DateStart { get;set;}
         [Key(7)] public string DateEnd { get;set;}
         [Key(8)] public string Price { get; set; }
-
+        [Key(9)] public int PeopleNumber { get; set; }
     }
 }

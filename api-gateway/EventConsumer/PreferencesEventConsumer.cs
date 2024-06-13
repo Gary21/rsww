@@ -1,5 +1,4 @@
 ﻿using api_gateway.Controllers;
-using api_gateway.E;
 using api_gateway.Events;
 using MessagePack;
 using RabbitMQ.Client;
@@ -77,14 +76,17 @@ namespace api_gateway.EventConsumer
             }
             
         }
+        private void InformOfferChange(BasicDeliverEventArgs ea)
+        {
 
+        }
         private void InformOfferBought(BasicDeliverEventArgs ea)
         {
             var body = ea.Body;
             var hotelPreference = MessagePackSerializer.Deserialize<PreferenceUpdate>(body);
             var hotelId = hotelPreference.PreferenceName;
 
-
+            
             if (hotelPreference.Preference.PurchaseCount > 0)
             {
                 //hotel room bought
