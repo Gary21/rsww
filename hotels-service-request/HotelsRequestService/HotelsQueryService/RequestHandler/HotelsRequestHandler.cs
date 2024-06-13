@@ -12,6 +12,9 @@ using ConsumerConfig = RabbitUtilities.Configuration.ConsumerConfig;
 using System.Collections.Generic;
 using HotelsRequestService.Entities;
 using HotelsRequestService.Requests;
+using HotelsRequestService.Events;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.Security.Cryptography.Xml;
 
 
 namespace HotelsRequestService.QueryHandler
@@ -21,12 +24,13 @@ namespace HotelsRequestService.QueryHandler
         private readonly IDbContextFactory<ApiDbContext> _contextFactory;
         private readonly int CODE_FAILED_UPDATE = -1;
         private readonly int CODE_NOT_FOUND = -2;
+        private readonly PublisherServiceBase _publisherService;
 
-        public HotelsRequestHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IHostApplicationLifetime applicationLifetime) 
+        public HotelsRequestHandler(Serilog.ILogger logger, IConfiguration config, IConnectionFactory connectionFactory, IDbContextFactory<ApiDbContext> repositoryFactory, IHostApplicationLifetime applicationLifetime, PublisherServiceBase publisherService) 
             : base(logger, connectionFactory, config.GetSection("hotelsQueryConsumer").Get<ConsumerConfig>()!, applicationLifetime)
         {
             _contextFactory = repositoryFactory;
-
+            _publisherService = publisherService; 
 
             using var context = _contextFactory.CreateDbContext();
             context.Database.EnsureCreated();
@@ -54,12 +58,124 @@ namespace HotelsRequestService.QueryHandler
                 case MessageType.RELEASE:
                     Release(ea); 
                     break;
+
+                case MessageType.UPDATE:
+                    Update(ea);
+                    break;
                 default:
                     _logger.Information($"Received message with unknown type.");
                     break;
             }
         }
+        private async void Update(BasicDeliverEventArgs ea)
+        {
+            var body = ea.Body.ToArray();
+            var message = MessagePackSerializer.Deserialize<HotelUpdateRequest>(body);
+            bool success = false;
 
+            // with message
+            _logger.Information($"Received message with type UPDATE: {message.HotelId}, {message.RoomTypeId}, {message.AvailabilityChange}, {message.PriceChange}");
+
+
+            int result = 0;
+            int tries = 0;
+            while (!success)
+            {
+                var repository = _contextFactory.CreateDbContext();
+
+                var hotel = await repository.Hotels.Where(h => h.Id == message.HotelId)
+                    .Include(h => h.City)
+                    .Include(h => h.City.Country)
+                    .FirstOrDefaultAsync();
+                var hotelEvents = await repository.HotelEvents
+                    .Where(r => r.HotelId == message.HotelId)
+                    .OrderBy(t => t.SequenceNumber)
+                    .ToListAsync();
+
+                //var roomPrice = (await repository.Rooms.Where(r => r.HotelId == message.HotelId).Where(r=>r.RoomType.Id == message.RoomTypeId).FirstOrDefaultAsync()).BasePrice;
+                //bool availability = true;
+                //foreach(var hotelEvent in hotelEvents.Where(r => r.RoomTypeId == message.RoomTypeId)) {
+                //    roomPrice += hotelEvent.PriceChange;
+                //    availability = hotelEvent.AvailabilityChange ? !availability : availability;
+                //}
+
+                int lastInSequence = hotelEvents.LastOrDefault()?.SequenceNumber ?? 0;
+
+                if (hotel == null)
+                {
+                    _logger.Information($"Hotel not found.");
+                    Reply(ea, MessagePackSerializer.Serialize<bool>(false));
+                    return;
+                }
+
+                tries += 1;
+                try
+                {
+                    if (repository.HotelEvents.Any(e => e.HotelId == hotel.Id && e.SequenceNumber == lastInSequence + 1))
+                    {
+                        success = false;
+                        _logger.Warning($"Event for hotel {message.HotelId} with same sequence number {lastInSequence + 1} already exists, trying again [tryNum:{tries}]");
+                        repository.Dispose();
+                        await Task.Delay(1);
+                        continue;
+                    }
+                    repository.HotelEvents.Add(
+                        new HotelEvent()
+                        {
+                            HotelId = hotel.Id,
+                            RoomTypeId = message.RoomTypeId,
+                            SequenceNumber = lastInSequence+1,
+                            AvailabilityChange = message.AvailabilityChange,
+                            PriceChange = message.PriceChange
+                        });
+                    
+                    result = await repository.SaveChangesAsync();
+                    _logger.Information($"Successfuly Updated hotel: {hotel.Id} with Availability: {message.AvailabilityChange},RoomType:{message.RoomTypeId}, PriceChange: {message.PriceChange} ");
+                    repository.Dispose();
+                }
+                catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
+                {
+                    success = false;
+                    _logger.Warning($"Event for hotel {message.HotelId} with same sequence number {lastInSequence + 1} already exists, trying again [tryNum:{tries}]");
+                    repository.Dispose();
+                    await Task.Delay(1);
+                    continue;
+                }
+                catch (DbUpdateException e)
+                {
+                    _logger.Information($"Failed to update database: {e.Message}");
+                    if (tries < 3)
+                    {
+                        //tries++;
+                        continue;
+                    }
+                    else
+                    {
+                        _logger.Information($"Failed to update Hotel.");
+                        Reply(ea, MessagePackSerializer.Serialize<bool>(false));
+                        return;
+                    }
+                }
+                success = true;
+
+                var hotelChangeEvent = new KeyValuePair<string, byte[]>("hotel",
+                    MessagePackSerializer.Serialize(new HotelChangeEvent()
+                {
+
+                    Id = message.HotelId,
+                    RoomType = message.RoomTypeId.ToString(),
+                    HotelName = hotel.Name,
+                    DestinationCity = hotel.City.Name,
+                    DestinationCountry = hotel.City.Country.Name,
+                    Availability = message.AvailabilityChange.ToString(),
+                    Price = message.PriceChange
+                    
+                }));
+                _publisherService.PublishToFanoutNoReply("event", MessageType.UPDATE, hotelChangeEvent);
+
+                Reply(ea, MessagePackSerializer.Serialize<bool>(true));
+            }
+        }
         private async void Reserve(BasicDeliverEventArgs ea)
         {
             var body = ea.Body.ToArray();
@@ -84,8 +200,12 @@ namespace HotelsRequestService.QueryHandler
                     .Where(r => r.HotelId == message.HotelId)
                     .Where(r => r.RoomType.Id == message.RoomTypeId)
                     .Where(r => r.Occupancies.All(o => !dateSeries.Contains(o.Date.Date)))
+                    .Include(r=>r.Hotel)
+                    .Include(r => r.Hotel.City)
+                    .Include(r => r.Hotel.City.Country)
+                    .Include(r=>r.RoomType)
                     .FirstOrDefaultAsync();
-
+                
                 if (room == null)
                 {
                     _logger.Information($"Room not found.");
@@ -120,6 +240,18 @@ namespace HotelsRequestService.QueryHandler
                     }
                 }
                 success = true;
+                var roomReservationEvent = new KeyValuePair<string, byte[]>("hotel",
+                    MessagePackSerializer.Serialize(new HotelReservationEvent()
+                {
+                    Id = room.HotelId,
+                    RoomType = room.RoomType.Name,
+                    HotelName = room.Hotel.Name,
+                    DestinationCity = room.Hotel.City.Name,
+                    DestinationCountry = room.Hotel.City.Country.Name,
+                    RoomCount = 1
+                }));
+                _publisherService.PublishToFanoutNoReply("event",MessageType.RESERVE, roomReservationEvent);
+
                 Reply(ea, MessagePackSerializer.Serialize<int>(room.RoomNumber));
             }
         }

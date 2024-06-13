@@ -1,8 +1,10 @@
 using HotelsRequestService.Data;
+using HotelsRequestService.HotelPublisher;
 using HotelsRequestService.QueryHandler;
 using HotelsRequestService.RequestHandler;
 using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
+using RabbitUtilities;
 using RabbitUtilities.Configuration;
 using Serilog;
 
@@ -14,7 +16,6 @@ var rabbitConfig = config.GetSection("rabbitConfig").Get<RabbitConfig>()!;
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
-
 //builder.Services.AddDbContext<ApiDbContext>(options => options.UseNpgsql(connectionString), ServiceLifetime.Singleton);
 builder.Services.AddDbContextFactory<ApiDbContext>(options => options.UseNpgsql(connectionString));
 
@@ -28,6 +29,8 @@ builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory
     Password = "guest",
     AutomaticRecoveryEnabled = true
 });
+
+builder.Services.AddSingleton<PublisherServiceBase, HotelPublisherService>();
 builder.Services.AddHostedService<HotelsRequestHandler>();
 
 
@@ -49,7 +52,7 @@ builder.Services.AddHostedService<HotelsRequestHandler>();
 
 //builder.Services.AddSingleton<OutsideSimulation>();
 
-////builder.WebHost.UseUrls("http://*:7134");
+builder.WebHost.UseUrls("http://*:7134");
 //builder.Services.AddCors(options =>
 //{
 //    options.AddPolicy("*",

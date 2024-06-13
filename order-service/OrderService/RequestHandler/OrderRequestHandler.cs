@@ -11,6 +11,7 @@ using OrderService.Repositories;
 using OrderService.Requests;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using OrderService.Events;
 
 namespace OrderService.RequestHandler
 {
@@ -70,6 +71,26 @@ namespace OrderService.RequestHandler
             {
                 repository.Orders.Add(message.Order);
                 await repository.SaveChangesAsync();
+
+                var hotelEvent = new KeyValuePair<string, byte[]>("hotel",
+                    MessagePackSerializer.Serialize(new HotelReservationEvent() {
+                        Id = message.Order.HotelId,
+                        RoomType = message.Order.OccupationId.ToString()+"rType", //FIX
+                        HotelName = message.Order.HotelId.ToString()+"name",
+                        DestinationCity = "City17",//message.City.Name,
+                        DestinationCountry = "Country2",//hotel.City.Country.Name,
+                        RoomCount= message.Order.OccupationId.Count(), 
+                    }));
+
+                var transportEvent = new KeyValuePair<string, byte[]>("transport",
+                    MessagePackSerializer.Serialize(new TransportReservationEvent() { 
+                    //DestinationCity =
+                    TransportType = "T1",
+                    Seats = message.Order.AdultCount + message.Order.BabyCount + message.Order.TeenCount + message.Order.ChildCount,
+                    }));   
+
+                _publisher.PublishToFanoutNoReply("event",MessageType.ADD,hotelEvent);
+                _publisher.PublishToFanoutNoReply("event", MessageType.ADD, transportEvent);
                 _logger.Information($"ADD {MessagePackSerializer.ConvertToJson(body)}");
             }
             else
