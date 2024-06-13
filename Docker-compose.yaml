@@ -106,6 +106,14 @@ services:
       - db-network
       - default
 
+  preferences-service:
+    image: ricopsych/rsww-preferences-service  
+    container_name: preferences-service 
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+      - rabbitmq-main
+
   api-gateway:
     image: ricopsych/rsww-gateway
     #build: api-gateway

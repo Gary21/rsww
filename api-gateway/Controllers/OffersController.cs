@@ -7,7 +7,9 @@ using MessagePack;
 using Microsoft.AspNetCore.Mvc;
 using RabbitUtilities;
 using System.Net.WebSockets;
+using System.Text;
 using System.Text.Json;
+using System.Text.Unicode;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace api_gateway.Controllers;
@@ -107,12 +109,6 @@ public class OffersController : ControllerBase
         return hotel;
     }
 
-    [HttpGet("HotelWebsocket")]
-    public async void HotelWebsocket(int id)
-    {
-        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-        _webSocketService.AddHotelSocket(id.ToString(), webSocket);
-    }
 
 
     [HttpGet("GetAvailability")]
@@ -274,19 +270,67 @@ public class OffersController : ControllerBase
         return rooms;
     }
 
-    //[Route("PreferencesWebsocket")]
-    //public async void PreferencesWebsocket()
-    //{
-    //    if (HttpContext.WebSockets.IsWebSocketRequest)
-    //    {
-    //        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-    //        _webSocketService.AddPreferencesSocket(webSocket);
-    //    }
-    //    else
-    //    {
-    //        Ok();
-    //    }
-    //}
+
+    [HttpGet("HotelWebsocket")]
+    public async void HotelWebsocket([FromQuery] int hotelId)
+    {
+        if (HttpContext.WebSockets.IsWebSocketRequest)
+        {
+            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            if (webSocket != null && webSocket.State == WebSocketState.Open)
+            {
+                var gid = _webSocketService.AddHotelSocket(hotelId.ToString(), webSocket);
+
+                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                {
+                    await Task.Delay(10);
+                }
+                _webSocketService.RemoveHotelSocket(hotelId.ToString(),gid);
+            }
+        }
+        else
+        {
+            Ok();
+        }
+
+    }
+
+    [HttpGet("PreferencesWebsocket")]
+    public async void PreferencesWebsocket()
+    {
+        if (HttpContext.WebSockets.IsWebSocketRequest)
+        {
+            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            if (webSocket != null && webSocket.State == WebSocketState.Open)
+            {
+                var preferences = await GetPreferences();
+                foreach(var pref in preferences)
+                {
+                    foreach (var value in pref.Value) {
+                        var updt = new PreferenceUpdate() { 
+                            PreferenceType = pref.Key, PreferenceName = value.Key, 
+                            Preference= new Preference() { 
+                                PurchaseCount = value.Value.PurchaseCount, 
+                                ReservationCount = value.Value.ReservationCount } 
+                        };
+                        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(MessagePackSerializer.SerializeToJson(updt)), WebSocketMessageType.Text, true, _token);
+                    }
+                }
+                var id = _webSocketService.AddPreferencesSocket(webSocket);
+                
+                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                {
+                    await Task.Delay(10);
+                }
+                _webSocketService.RemovePreferencesSocket(id);
+            }
+        }
+        else
+        {
+            Ok();
+        }
+        
+    }
 
 
 
@@ -306,17 +350,33 @@ public class OffersController : ControllerBase
         return rooms;
     }
 
-    //[Route("ChangesWebsocket")]
-    //public async void ChangesWebsocket()
-    //{
-    //    if (HttpContext.WebSockets.IsWebSocketRequest)
-    //    {
-    //        WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-    //        _webSocketService.AddChangesSocket(webSocket);
-    //    }
-    //    else
-    //    {
-    //        Ok();
-    //    }
-    //}
+    [HttpGet("ChangesWebsocket")]
+    public async void ChangesWebsocket()
+    {
+        if (HttpContext.WebSockets.IsWebSocketRequest)
+        {
+            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            if (webSocket != null && webSocket.State == WebSocketState.Open)
+            {
+                var changes = await GetLastChanges();
+                foreach (var change in changes)
+                {                    
+                    await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(MessagePackSerializer.SerializeToJson(change)), WebSocketMessageType.Text, true, _token);   
+                }
+                var id = _webSocketService.AddChangesSocket(webSocket);
+
+                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                {
+
+                    await Task.Delay(10);
+                }
+                _webSocketService.RemoveChangesSocket(id);
+            }
+        }
+        else
+        {
+            Ok();
+        }
+
+    }
 }

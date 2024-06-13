@@ -61,7 +61,7 @@ namespace api_gateway.EventConsumer
             var change = MessagePackSerializer.Deserialize<Changes>(body);
             var json = MessagePackSerializer.SerializeToJson(change);
             foreach(var socket in _webSocketService.ChangesSockets) {
-                socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json),WebSocketMessageType.Text,true, cancellationToken); //end of message = true?
+                socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
             }
         }
 
@@ -72,12 +72,27 @@ namespace api_gateway.EventConsumer
             var json = MessagePackSerializer.SerializeToJson(preferences);
             foreach (var socket in _webSocketService.PreferencesSockets)
             {
-                socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
             }
             
         }
-        private void InformOfferChange(BasicDeliverEventArgs ea)
+        private void InformOfferChange(Changes change)
         {
+            if(change.ResourceType == "hotel") { 
+                var hotelId = change.Id;
+
+                if (_webSocketService.HotelsSockets.TryGetValue(hotelId, out var sockets))
+                {
+                    var json = MessagePackSerializer.SerializeToJson(change);
+                    foreach (var socketPair in sockets)
+                    {
+                        var socket = socketPair.Value;
+
+                        socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+
+                    }
+                }
+            }
 
         }
         private void InformOfferBought(BasicDeliverEventArgs ea)
@@ -86,36 +101,23 @@ namespace api_gateway.EventConsumer
             var hotelPreference = MessagePackSerializer.Deserialize<PreferenceUpdate>(body);
             var hotelId = hotelPreference.PreferenceName;
 
-            
-            if (hotelPreference.Preference.PurchaseCount > 0)
-            {
-                //hotel room bought
-            }
-            else if (hotelPreference.Preference.ReservationCount > 0)
-            {
-                //hotel reserved
-            }
-            var json = MessagePackSerializer.SerializeToJson(hotelPreference);
-
-            List<Guid> socketsToClose = new();
             if (_webSocketService.HotelsSockets.TryGetValue(hotelId, out var sockets))
             {
+                if (hotelPreference.Preference.PurchaseCount > 0)
+                {
+                    //hotel room bought
+                }
+                else if (hotelPreference.Preference.ReservationCount > 0)
+                {
+                    //hotel reserved
+                }
+                var json = MessagePackSerializer.SerializeToJson(hotelPreference);
                 foreach (var socketPair in sockets)
                 {
                     var socket = socketPair.Value;
-                    if (socket.State == WebSocketState.Open || socket.State == WebSocketState.Connecting)
-                    {
-                        socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
-                    }
-                    else
-                    {
-                        socketsToClose.Add(socketPair.Key);
-                    }
-                }
-
-                foreach (var socketGuid in socketsToClose)
-                {
-                    _webSocketService.HotelsSockets[hotelId].Remove(socketGuid, out var _);
+                    
+                    socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                    
                 }
             }
 
