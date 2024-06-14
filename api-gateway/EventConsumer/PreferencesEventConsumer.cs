@@ -92,7 +92,7 @@ namespace api_gateway.EventConsumer
                 catch
                 {
                     _webSocketService.PreferencesSockets.Remove(socket.Key, out _);
-                    continue;
+                    //continue;
                 }
             }
 
@@ -105,19 +105,26 @@ namespace api_gateway.EventConsumer
 
                 if (_webSocketService.HotelsSockets.TryGetValue(hotelId, out var sockets))
                 {
-                    var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(change);
-                    foreach (var socketPair in sockets)
+                    string json;
+                    if (change.Availability)
+                    {
+                        json = "UNAVAILABLE";
+                    }
+                    else
+                    {
+                        json = change.PriceChange.ToString();
+                    }
+                    //var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(change);
+                    foreach (var socket in sockets)
                     {
                         try
                         {
-
-                            var socket = socketPair.Value;
-                            await socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                            await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
                         }
                         catch
                         {
-                            sockets.Remove(socketPair.Key, out _);
-                            continue;
+                            sockets.Remove(socket.Key, out _);
+                           // continue;
                         }
                     }
                 }
@@ -132,15 +139,18 @@ namespace api_gateway.EventConsumer
 
             if (_webSocketService.HotelsSockets.TryGetValue(hotelId, out var sockets))
             {
+                string json = "";
                 if (hotelPreference.Preference.PurchaseCount > 0)
                 {
+                    json = "PURCHASE";
                     //hotel room bought
                 }
                 else if (hotelPreference.Preference.ReservationCount > 0)
                 {
+                    json = "RESERVE";
                     //hotel reserved
                 }
-                var json = JsonSerializer.Serialize/*MessagePackSerializer.SerializeToJson*/(hotelPreference);
+                //var json = JsonSerializer.Serialize/*MessagePackSerializer.SerializeToJson*/(hotelPreference);
                 foreach (var socketPair in sockets)
                 {
                     try
@@ -151,7 +161,7 @@ namespace api_gateway.EventConsumer
                     catch
                     {
                         sockets.Remove(socketPair.Key, out _);
-                        continue;
+                       // continue;
                     }
                 }
             }
