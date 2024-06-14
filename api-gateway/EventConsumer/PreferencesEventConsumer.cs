@@ -79,12 +79,15 @@ namespace api_gateway.EventConsumer
         {
             var body = ea.Body;
             var preferences = MessagePackSerializer.Deserialize<List<PreferenceUpdate>>(body);
-            var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(preferences);
             foreach (var socket in _webSocketService.PreferencesSockets)
             {
                 try
                 {
-                    await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                    foreach (var pref in preferences)
+                    {
+                        var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(pref);
+                        await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                    }
                 }
                 catch
                 {
