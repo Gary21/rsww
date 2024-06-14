@@ -21,8 +21,8 @@ Destination country:
         v-for="(key) in Object.keys(preferences['DestinationCountry'])"
     >
       <td>{{ key }}</td>
-      <td>{{ preferences['DestinationCountry'][key]['ReservationCount'] }}</td>
-      <td>{{ preferences['DestinationCountry'][key]['PurchaseCount'] }}</td>
+      <td>{{ preferences['DestinationCountry'][key]['reservationCount'] }}</td>
+      <td>{{ preferences['DestinationCountry'][key]['purchaseCount'] }}</td>
     </tr>
   </tbody>
 </table>
@@ -48,8 +48,8 @@ Hotel name:
         v-for="(key) in Object.keys(preferences['HotelName'])"
     >
       <td>{{ key }}</td>
-      <td>{{ preferences['HotelName'][key]['ReservationCount'] }}</td>
-      <td>{{ preferences['HotelName'][key]['PurchaseCount'] }}</td>
+      <td>{{ preferences['HotelName'][key]['reservationCount'] }}</td>
+      <td>{{ preferences['HotelName'][key]['purchaseCount'] }}</td>
     </tr>
   </tbody>
 </table>
@@ -75,8 +75,8 @@ Destination city:
         v-for="(key) in Object.keys(preferences['DestinationCity'])"
     >
       <td>{{ key }}</td>
-      <td>{{ preferences['DestinationCity'][key]['ReservationCount'] }}</td>
-      <td>{{ preferences['DestinationCity'][key]['PurchaseCount'] }}</td>
+      <td>{{ preferences['DestinationCity'][key]['reservationCount'] }}</td>
+      <td>{{ preferences['DestinationCity'][key]['purchaseCount'] }}</td>
     </tr>
   </tbody>
 </table>
@@ -102,8 +102,8 @@ Room type:
         v-for="(key) in Object.keys(preferences['RoomType'])"
     >
       <td>{{ key }}</td>
-      <td>{{ preferences['RoomType'][key]['ReservationCount'] }}</td>
-      <td>{{ preferences['RoomType'][key]['PurchaseCount'] }}</td>
+      <td>{{ preferences['RoomType'][key]['reservationCount'] }}</td>
+      <td>{{ preferences['RoomType'][key]['purchaseCount'] }}</td>
     </tr>
   </tbody>
 </table>
@@ -129,8 +129,8 @@ Transport type:
         v-for="(key) in Object.keys(preferences['TransportType'])"
     >
       <td>{{ key }}</td>
-      <td>{{ preferences['TransportType'][key]['ReservationCount'] }}</td>
-      <td>{{ preferences['TransportType'][key]['PurchaseCount'] }}</td>
+      <td>{{ preferences['TransportType'][key]['reservationCount'] }}</td>
+      <td>{{ preferences['TransportType'][key]['purchaseCount'] }}</td>
     </tr>
   </tbody>
 </table>
@@ -142,45 +142,45 @@ export default {
 data: () => ({
     preferences: {
   "DestinationCountry": {
-    "Hiszpania": {
-      "ReservationCount": 2,
-      "PurchaseCount": 2
+    "Polska": {
+      "reservationCount": 2,
+      "purchaseCount": 2
     }
   },
   "HotelName": {
     "Hilton2": {
-      "ReservationCount": 2,
-      "PurchaseCount": 2
+      "reservationCount": 2,
+      "purchaseCount": 2
     },
     "Hilton3": {
-      "ReservationCount": 2,
-      "PurchaseCount": 2
+      "reservationCount": 2,
+      "purchaseCount": 2
     },
     "Hilton4": {
-      "ReservationCount": 2,
-      "PurchaseCount": 2
+      "reservationCount": 2,
+      "purchaseCount": 2
     },
     "Hilton5": {
-      "ReservationCount": 2,
-      "PurchaseCount": 2
+      "reservationCount": 2,
+      "purchaseCount": 2
     },
   },
   "DestinationCity": {
     "Gdańsk2": {
-      "ReservationCount": 2,
-      "PurchaseCount": 2
+      "reservationCount": 2,
+      "purchaseCount": 2
     }
   },
   "RoomType": {
     "Suite": {
-      "ReservationCount": 2,
-      "PurchaseCount": 2
+      "reservationCount": 2,
+      "purchaseCount": 2
     }
   },
   "TransportType": {
     "Bus4": {
-      "ReservationCount": 20,
-      "PurchaseCount": 20
+      "reservationCount": 20,
+      "purchaseCount": 20
     }
   }
 },
@@ -188,29 +188,19 @@ websocket: null,
 }),
 methods: {
     async init_websocket() {
-        var socket_url = 'ws://localhost:49940/Offers/PreferencesWebsocket'
+        var socket_url = 'http://localhost:8080/Offers/PreferencesWebsocket'
         this.websocket = new WebSocket(socket_url)
         this.websocket.onmessage = this.onSocketMessage;
     },
     onSocketMessage(evt){
       //we parse the json that we receive
       var received = JSON.parse(evt.data);
-      var new_pref = {
-        "ReservationCount": received.Preference.ReservationCount,
-        "PurchaseCount": received.Preference.PurchaseCount
-      };
-      this.preferences[received['PreferenceType']][received['PreferenceName']] = {};
-      this.preferences[received['PreferenceType']][received['PreferenceName']] = new_pref;
-
-      
-      //this.preferences = received;
+      console.log(received);
+      this.preferences = received;
     },
 },
 mounted() {
     this.init_websocket();
-},
-unmounted() {
-    this.websocket.close();
 }
 };
 </script>
