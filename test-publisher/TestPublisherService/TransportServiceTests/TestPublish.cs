@@ -30,16 +30,16 @@ namespace TransportRequestService.TransportServiceTests
                 //await OrderTestsAsync(stoppingToken);
                 //await TransportTestsAsync(stoppingToken);
                 //await PaymentTest(stoppingToken);
-                //await HotelTests(stoppingToken);
+                await HotelTests(stoppingToken);
                 await HotelChangeTests(stoppingToken);
 
 
-                await PreferencesQueries(stoppingToken);
+                //await PreferencesQueries(stoppingToken);
 
                 //await PreferencesAddEvents(stoppingToken); 
                 //await ChangesAddEvents(stoppingToken,i);
                 i++;
-                await Task.Delay(1000);
+                await Task.Delay(10000);
             }
             return;  
         }

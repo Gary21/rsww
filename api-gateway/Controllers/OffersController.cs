@@ -279,7 +279,7 @@ public class OffersController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             if (webSocket != null && webSocket.State == WebSocketState.Open)
             {
                 var gid = _webSocketService.AddHotelSocket(hotelId.ToString(), webSocket);
@@ -288,12 +288,14 @@ public class OffersController : ControllerBase
                 //{
                 //    while (!HttpContext.RequestAborted.IsCancellationRequested)
                 //    {
-                //        await Task.Delay(10);
                 //    }
                 //}
                 //catch { }
                 while (webSocket.State == WebSocketState.Open)
                 {
+
+                    webSocket.ReceiveAsync(new ArraySegment<byte>(new byte[16]), _token);
+                    //await Task.Delay(10);
                 }
                 _webSocketService.RemoveHotelSocket(hotelId.ToString(),gid);
             }
@@ -310,9 +312,11 @@ public class OffersController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            
             if (webSocket != null && webSocket.State == WebSocketState.Open)
             {
+                
                 var preferences = await GetPreferences();
                 foreach(var pref in preferences)
                 {
@@ -336,6 +340,9 @@ public class OffersController : ControllerBase
                 var id = _webSocketService.AddPreferencesSocket(webSocket);
                 while (webSocket.State == WebSocketState.Open)
                 {
+
+                    webSocket.ReceiveAsync(new ArraySegment<byte>(new byte[16]), _token);
+                    //await Task.Delay(10);
                 }
                 //try { 
                 //    while (!HttpContext.RequestAborted.IsCancellationRequested)
@@ -377,31 +384,29 @@ public class OffersController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            
             if (webSocket != null && webSocket.State == WebSocketState.Open)
             {
 
-                var changes = await GetLastChanges();
-                foreach (var change in changes)
-                {
-                    try
-                    {
-                        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(change)), WebSocketMessageType.Text, true, _token);
-                    }
-                    catch
-                    {
-                        break;
-                    }
-                }
+                //var changes = await GetLastChanges();
+                //foreach (var change in changes)
+                //{
+                //    try
+                //    {
+                //        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(change)), WebSocketMessageType.Text, true, _token);
+                //    }
+                //    catch
+                //    {
+                //        break;
+                //    }
+                //}
                 var id = _webSocketService.AddChangesSocket(webSocket);
                 while (webSocket.State == WebSocketState.Open)
                 {
-                    
-                    //try
-                    //{
-                    //    await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _token);
-                    //}
-                    //catch { }
+
+                    webSocket.ReceiveAsync(new ArraySegment<byte>(new byte[16]), _token);
+
                 }
                 //while (webSocket.State == WebSocketState.Open)
                 //{
