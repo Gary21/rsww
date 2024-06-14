@@ -38,6 +38,18 @@ const routes = [
     name: 'Login',
     component: () => import('@/pages/login.vue'),
     props: true,
+  },
+  {
+    path: '/changes',
+    name: 'Changes',
+    component: () => import('@/pages/changes.vue'),
+    props: true,
+  },
+  {
+    path: '/preferences',
+    name: 'Preferences',
+    component: () => import('@/pages/preferences.vue'),
+    props: true,
   }
 ]
 

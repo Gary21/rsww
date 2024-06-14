@@ -49,10 +49,10 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-var webSocketOptions = new WebSocketOptions
-{
-    KeepAliveInterval = TimeSpan.FromMinutes(2)
-};
+//var webSocketOptions = new WebSocketOptions
+//{
+//    KeepAliveInterval = TimeSpan.FromMinutes(2)
+//};
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -62,7 +62,7 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
-app.UseWebSockets(webSocketOptions);
+app.UseWebSockets(/*webSocketOptions*/);
 app.UseAuthorization();
 
 app.UseCors("*");

@@ -6,6 +6,9 @@ using api_gateway.Queries;
 using MessagePack;
 using Microsoft.AspNetCore.Mvc;
 using RabbitUtilities;
+using System;
+using System.Linq.Expressions;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -281,9 +284,16 @@ public class OffersController : ControllerBase
             {
                 var gid = _webSocketService.AddHotelSocket(hotelId.ToString(), webSocket);
 
-                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                //try
+                //{
+                //    while (!HttpContext.RequestAborted.IsCancellationRequested)
+                //    {
+                //        await Task.Delay(10);
+                //    }
+                //}
+                //catch { }
+                while (webSocket.State == WebSocketState.Open)
                 {
-                    await Task.Delay(10);
                 }
                 _webSocketService.RemoveHotelSocket(hotelId.ToString(),gid);
             }
@@ -313,15 +323,27 @@ public class OffersController : ControllerBase
                                 PurchaseCount = value.Value.PurchaseCount, 
                                 ReservationCount = value.Value.ReservationCount } 
                         };
-                        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(MessagePackSerializer.SerializeToJson(updt)), WebSocketMessageType.Text, true, _token);
+                        try
+                        {
+                            await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(updt)), WebSocketMessageType.Text, true, _token);
+                        }
+                        catch
+                        {
+                            break;
+                        }
                     }
                 }
                 var id = _webSocketService.AddPreferencesSocket(webSocket);
-                
-                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                while (webSocket.State == WebSocketState.Open)
                 {
-                    await Task.Delay(10);
                 }
+                //try { 
+                //    while (!HttpContext.RequestAborted.IsCancellationRequested)
+                //    {
+                //        await Task.Delay(10);
+                //    } 
+                //}
+                //catch { }
                 _webSocketService.RemovePreferencesSocket(id);
             }
         }
@@ -358,18 +380,43 @@ public class OffersController : ControllerBase
             WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             if (webSocket != null && webSocket.State == WebSocketState.Open)
             {
+
                 var changes = await GetLastChanges();
                 foreach (var change in changes)
-                {                    
-                    await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(MessagePackSerializer.SerializeToJson(change)), WebSocketMessageType.Text, true, _token);   
+                {
+                    try
+                    {
+                        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(change)), WebSocketMessageType.Text, true, _token);
+                    }
+                    catch
+                    {
+                        break;
+                    }
                 }
                 var id = _webSocketService.AddChangesSocket(webSocket);
-
-                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                while (webSocket.State == WebSocketState.Open)
                 {
-
-                    await Task.Delay(10);
+                    
+                    //try
+                    //{
+                    //    await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _token);
+                    //}
+                    //catch { }
                 }
+                //while (webSocket.State == WebSocketState.Open)
+                //{
+                //    WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(), CancellationToken.None).ConfigureAwait(false);
+                //}
+
+                //try
+                //{
+                //    while ( true/*!HttpContext.RequestAborted.IsCancellationRequested*/)
+                //    {
+
+                //        await Task.Delay(100);
+                //    }
+                //}
+                //catch { }
                 _webSocketService.RemoveChangesSocket(id);
             }
         }
