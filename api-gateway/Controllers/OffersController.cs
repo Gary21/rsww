@@ -313,7 +313,14 @@ public class OffersController : ControllerBase
                                 PurchaseCount = value.Value.PurchaseCount, 
                                 ReservationCount = value.Value.ReservationCount } 
                         };
-                        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(MessagePackSerializer.SerializeToJson(updt)), WebSocketMessageType.Text, true, _token);
+                        try
+                        {
+                            await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(updt)), WebSocketMessageType.Text, true, _token);
+                        }
+                        catch
+                        {
+                            break;
+                        }
                     }
                 }
                 var id = _webSocketService.AddPreferencesSocket(webSocket);
@@ -360,8 +367,15 @@ public class OffersController : ControllerBase
             {
                 var changes = await GetLastChanges();
                 foreach (var change in changes)
-                {                    
-                    await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(MessagePackSerializer.SerializeToJson(change)), WebSocketMessageType.Text, true, _token);   
+                {
+                    try
+                    {
+                        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(change)), WebSocketMessageType.Text, true, _token);
+                    }
+                    catch
+                    {
+                        break;
+                    }
                 }
                 var id = _webSocketService.AddChangesSocket(webSocket);
 

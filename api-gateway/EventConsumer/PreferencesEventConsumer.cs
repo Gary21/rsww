@@ -6,8 +6,10 @@ using RabbitMQ.Client.Events;
 using RabbitUtilities;
 using RabbitUtilities.Configuration;
 using System.Collections.Concurrent;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 
 namespace api_gateway.EventConsumer
 {
@@ -23,7 +25,7 @@ namespace api_gateway.EventConsumer
             cancellationToken = appLifetime.ApplicationStopping;
         }
 
-        protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
+        protected async override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
         {
             var headers = ea.BasicProperties.Headers;
 
@@ -38,13 +40,13 @@ namespace api_gateway.EventConsumer
             switch (type)
             {
                 case MessageType.GET:
-                    UpdatePreferences(ea);  //updated preferences
+                    await UpdatePreferences(ea);  //updated preferences
                     break;
                 case MessageType.RESERVE:   //offer reserved or bought
-                    InformOfferBought(ea);
+                    await InformOfferBought(ea);
                     break;
                 case MessageType.UPDATE:
-                    UpdateTourChanges(ea);  //new changes in offer
+                    await UpdateTourChanges(ea);  //new changes in offer
                     break;
 
                 default:
@@ -55,47 +57,69 @@ namespace api_gateway.EventConsumer
 
 
 
-        private void UpdateTourChanges(BasicDeliverEventArgs ea)
+        private async Task UpdateTourChanges(BasicDeliverEventArgs ea)
         {
             var body = ea.Body;
             var change = MessagePackSerializer.Deserialize<Changes>(body);
-            var json = MessagePackSerializer.SerializeToJson(change);
-            foreach(var socket in _webSocketService.ChangesSockets) {
-                socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+            await InformOfferChange(change);
+            var json = JsonSerializer.Serialize(change);
+            foreach (var socket in _webSocketService.ChangesSockets) {
+                try
+                {
+                    await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                }
+                catch
+                {
+                    _webSocketService.ChangesSockets.Remove(socket.Key, out _);
+                    break;
+                }
             }
         }
 
-        private void UpdatePreferences(BasicDeliverEventArgs ea)
+        private async Task UpdatePreferences(BasicDeliverEventArgs ea)
         {
             var body = ea.Body;
             var preferences = MessagePackSerializer.Deserialize<List<PreferenceUpdate>>(body);
-            var json = MessagePackSerializer.SerializeToJson(preferences);
+            var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(preferences);
             foreach (var socket in _webSocketService.PreferencesSockets)
             {
-                socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                try { 
+                await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                }
+                catch
+                {
+                    _webSocketService.PreferencesSockets.Remove(socket.Key, out _);
+                    continue;
+                }
             }
             
         }
-        private void InformOfferChange(Changes change)
+        private async Task InformOfferChange(Changes change)
         {
             if(change.ResourceType == "hotel") { 
                 var hotelId = change.Id;
 
                 if (_webSocketService.HotelsSockets.TryGetValue(hotelId, out var sockets))
                 {
-                    var json = MessagePackSerializer.SerializeToJson(change);
+                    var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(change);
                     foreach (var socketPair in sockets)
                     {
-                        var socket = socketPair.Value;
-
-                        socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
-
+                        try { 
+                        
+                            var socket = socketPair.Value;
+                            await socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                        }
+                        catch
+                        {
+                            sockets.Remove(socketPair.Key, out _);
+                            continue;
+                        }
                     }
                 }
             }
 
         }
-        private void InformOfferBought(BasicDeliverEventArgs ea)
+        private async Task InformOfferBought(BasicDeliverEventArgs ea)
         {
             var body = ea.Body;
             var hotelPreference = MessagePackSerializer.Deserialize<PreferenceUpdate>(body);
@@ -111,13 +135,18 @@ namespace api_gateway.EventConsumer
                 {
                     //hotel reserved
                 }
-                var json = MessagePackSerializer.SerializeToJson(hotelPreference);
+                var json = JsonSerializer.Serialize/*MessagePackSerializer.SerializeToJson*/(hotelPreference);
                 foreach (var socketPair in sockets)
                 {
-                    var socket = socketPair.Value;
-                    
-                    socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
-                    
+                    try { 
+                        var socket = socketPair.Value;
+                        await socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                    }
+                    catch
+                    {
+                        sockets.Remove(socketPair.Key,out _);
+                        continue;
+                    }
                 }
             }
 
