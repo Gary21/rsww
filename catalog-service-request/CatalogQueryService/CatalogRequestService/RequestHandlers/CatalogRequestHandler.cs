@@ -2,15 +2,13 @@
 using CatalogRequestService.Queries;
 using CatalogRequestService.QueryPublishers;
 using CatalogRequestService.RequestPublishers;
-using CatalogRequestService.Requests;
 using MessagePack;
-using NuGet.Common;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitUtilities;
 using System.Text;
-using System.Text.Json;
 using ConsumerConfig = RabbitUtilities.Configuration.ConsumerConfig;
+using JS = System.Text.Json.JsonSerializer;
 
 namespace CatalogRequestService.RequestHandlers
 {
@@ -40,6 +38,7 @@ namespace CatalogRequestService.RequestHandlers
                 return;
             DateTime.TryParse(ASCIIEncoding.ASCII.GetString((byte[])dateObj), out var date);
 
+            _logger.Information($"=>| Consuming Message");
 
             switch (type)
             {
@@ -52,152 +51,74 @@ namespace CatalogRequestService.RequestHandlers
                     break;
                 default:
                     _logger.Information($"Received message with unknown type.");
-                    GetCall(ea);
                     break;
             }
         }
 
 
-        public async void GetCall(BasicDeliverEventArgs ea)
-        {
-            //    var message = MessagePackSerializer.Deserialize<KeyValuePair<string, byte[]>>(ea.Body.ToArray());
-            //    var callCode = message.Key;
-            //    switch (callCode)
-            //    {
-
-            //        case "MakeReservation":
-            //            var reservationRequestGateway = MessagePackSerializer.Deserialize<ReservationQueryGateway>(message.Value);
-            //            var reservationRequest = ReservationQueryGatewayToMeAdapter.Adapt(reservationRequestGateway);
-            //            var tripReserveRequest = ReservationQueryGatewayToMeAdapter.Adapt(reservationRequestGateway);
-
-
-            //            reservationRequest.ClientId = 1; // TODO: Get client id from token
-            //            reservationRequest.TransportId = 1;
-
-            //            var reservationId = await _catalogRequestPublisher.CreateReservation(reservationRequest.ClientId);
-
-            //            var roomReservationRequest = new RoomReserveRequest
-            //            {
-            //                HotelId = reservationRequest.HotelId,
-            //                RoomTypeId = reservationRequest.RoomTypeId,
-            //                CheckInDate = reservationRequest.CheckInDate,
-            //                CheckOutDate = reservationRequest.CheckOutDate,
-            //                ReservationId = reservationId
-            //            };
-
-            //            var transportReservationRequest = new TransportReserveRequest
-            //            {
-            //                TransportId = reservationRequest.TransportId,
-            //                NumberOfPassengers = reservationRequest.PeopleNumber
-            //            };
-
-            //            var result = MakeReservation(tripReserveRequest, reservationId);
-            //            Reply(ea, MessagePackSerializer.Serialize(result));
-            //            break;
-
-
-            //        case "BuyReservation":
-            //            var reservationToBuyId = MessagePackSerializer.Deserialize<int>(message.Value);
-            //            var resultTwo = await _catalogRequestPublisher.SecurePayment(reservationToBuyId);
-            //            Reply(ea, MessagePackSerializer.Serialize(resultTwo));
-            //            break;
-
-
-            //        default:
-            //            _logger.Information($"Received message with unknown type.");
-            //            break;
-            //    }
-        }
-
-
-        //private async Task<int> MakeReservation(TripReserveRequest message, int reservationId)
-        //{
-        //    var hotelReserveRequest = new RoomReserveRequest
-        //    {
-        //        HotelId = message.HotelId,
-        //        RoomTypeId = message.RoomTypeId,
-        //        CheckInDate = message.CheckInDate,
-        //        CheckOutDate = message.CheckOutDate,
-        //        ReservationId = reservationId
-        //    };
-
-        //    var transportReserveRequest = new TransportReserveRequest
-        //    {
-        //        TransportId = message.TransportId,
-        //        NumberOfPassengers = message.PeopleNumber
-        //    };
-
-        //    var transportResult = await _catalogRequestPublisher.ReserveTransport(transportReserveRequest);
-        //    if (transportResult < 0)
-        //    {
-        //        _catalogRequestPublisher.CancelTransport(reservationId);
-        //    }
-
-        //    var hotelResult = await _catalogRequestPublisher.ReserveRoom(hotelReserveRequest);
-        //    if (hotelResult < 0)
-        //    {
-        //        _catalogRequestPublisher.CancelHotel(reservationId);
-        //    }
-
-        //    var secureResult = await _catalogRequestPublisher.SecureReservation(reservationId);
-
-        //    return secureResult;
-        //}
-
-
         private async void MakeReservation(BasicDeliverEventArgs ea)
         {
-            //var message = MessagePackSerializer.Deserialize<ReservationQueryGateway>(ea.Body.ToArray());
+            var message = MessagePackSerializer.Deserialize<KeyValuePair<string, byte[]>>(ea.Body.ToArray());
+            var tripDTO = MessagePackSerializer.Deserialize<TripDTO>(message.Value);
+            _logger.Information($"=>| RESERVE :: MakeReservation - tripDTO: {JS.Serialize(tripDTO)}");
 
-            //_logger.Information($"=>| MakeReservation :: reservationQueryGateway {JsonSerializer.Serialize(message)}");
+            var hotelReserveRequest = new RoomReserveRequest
+            {
+                HotelId = tripDTO.HotelId,
+                RoomTypeId = tripDTO.RoomTypeId
+            };
+            if (tripDTO.DateStart == null || tripDTO.DateEnd == null)
+            {
+                hotelReserveRequest.CheckInDate = DateTime.Today;
+                hotelReserveRequest.CheckOutDate = DateTime.Today.AddDays(7);
+            }
+            else
+            {
+                hotelReserveRequest.CheckInDate = DateTime.Parse(tripDTO.DateStart);
+                hotelReserveRequest.CheckOutDate = DateTime.Parse(tripDTO.DateEnd);
+            }
 
-            //var room
+            var transportReserveRequest = new TransportReserveRequest
+            {
+                TransportId = tripDTO.TransportThereId,
+                NumberOfPassengers = tripDTO.PeopleNumber
+            };
 
-            //var success = false;
-            //var reservationId = await _catalogRequestPublisher.CreateReservation(message.ClientId);
-
-            //var hotelReserveRequest = new RoomReserveRequest
-            //{
-            //    HotelId = message.HotelId,
-            //    RoomTypeId = message.RoomTypeId,
-            //    CheckInDate = message.CheckInDate,
-            //    CheckOutDate = message.CheckOutDate,
-            //    ReservationId = reservationId
-            //};
-
-            //var transportReserveRequest = new TransportReserveRequest
-            //{
-            //    TransportId = message.TransportId,
-            //    NumberOfPassengers = message.PeopleNumber
-            //};
-
-
-            //var transportResult = await _catalogRequestPublisher.ReserveTransport(transportReserveRequest);
+            _logger.Information($">|< MakeReservation() :: reserving transport - {JS.Serialize(transportReserveRequest)}");
+            var transportResult = await _catalogRequestPublisher.ReserveTransport(transportReserveRequest);
             //if (transportResult < 0)
             //{
-            //    _catalogRequestPublisher.CancelTransport(reservationId);
+            //    //_catalogRequestPublisher.CancelTransport(reservationId);
             //}
 
-            //var hotelResult = await _catalogRequestPublisher.ReserveRoom(hotelReserveRequest);
-            //if (hotelResult < 0)
+            transportReserveRequest = new TransportReserveRequest
+            {
+                TransportId = tripDTO.TransportBackId,
+                NumberOfPassengers = tripDTO.PeopleNumber
+            };
+            _logger.Information($">|< MakeReservation() :: reserving transport - {JS.Serialize(transportReserveRequest)}");
+            transportResult = await _catalogRequestPublisher.ReserveTransport(transportReserveRequest);
+            //if (transportResult < 0)
             //{
-            //    _catalogRequestPublisher.CancelHotel(reservationId);
+            //    //_catalogRequestPublisher.CancelTransport(reservationId);
             //}
 
-            //var secureResult = await _catalogRequestPublisher.SecureReservation(reservationId);
+            _logger.Information($">|< MakeReservation() :: reserving hotel - {JS.Serialize(hotelReserveRequest)}");
+            var hotelResult = await _catalogRequestPublisher.ReserveRoom(hotelReserveRequest);
+            if (hotelResult < 0)
+            {
+                //_catalogRequestPublisher.CancelHotel(reservationId);
+            }
 
+            var secureResult = await _catalogRequestPublisher.SecureReservation(tripDTO);
 
             //Reply(ea, MessagePackSerializer.Serialize(secureResult));
+            _logger.Information($"<=| RESERVE :: MakeReservation");
             Reply(ea, MessagePackSerializer.Serialize(11));
-
-
         }
 
         private async void SecureReservation(BasicDeliverEventArgs ea)
         {
-
-
-
             var mesId = _transactionRequestPublisher.PublishRequestWithReply("transactions-exchange", "incoming.all", MessageType.GET, 1);
             //var randomTrue = new Random().Next(0, 2) == 1;
             var response = await _transactionRequestPublisher.GetReply(mesId, _cancellationToken);

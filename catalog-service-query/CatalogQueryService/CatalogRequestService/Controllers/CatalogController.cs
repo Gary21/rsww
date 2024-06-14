@@ -39,41 +39,41 @@ namespace CatalogQueryService.Controllers
         }
 
 
-        [HttpGet("testCatalogWhole")]
-        public async Task<IEnumerable<TripDTO>> GetTripsTest(
-            [FromQuery] List<int>? hotelIds = null,
-            [FromQuery] List<int>? cityIds = null,
-            [FromQuery] List<int>? countryIds = null,
-            [FromQuery] List<string>? roomTypes = null,
-            [FromQuery] int? peopleNumber = null,
-            [FromQuery] DateTime? checkInDate = null,
-            [FromQuery] DateTime? checkOutDate = null,
-            [FromQuery] int? minPrice = null,
-            [FromQuery] int? maxPrice = null,
-            [FromQuery] List<int>? departureCityIds = null,
-            [FromQuery] List<string>? transportTypes = null
-            )
-        {
-            TripGetQuery query = new TripGetQuery();
-            query.filters = new TripQueryFilters();
+        //[HttpGet("testCatalogWhole")]
+        //public async Task<IEnumerable<TripDTO>> GetTripsTest(
+        //    [FromQuery] List<int>? hotelIds = null,
+        //    [FromQuery] List<int>? cityIds = null,
+        //    [FromQuery] List<int>? countryIds = null,
+        //    [FromQuery] List<string>? roomTypes = null,
+        //    [FromQuery] int? peopleNumber = null,
+        //    [FromQuery] DateTime? checkInDate = null,
+        //    [FromQuery] DateTime? checkOutDate = null,
+        //    [FromQuery] int? minPrice = null,
+        //    [FromQuery] int? maxPrice = null,
+        //    [FromQuery] List<int>? departureCityIds = null,
+        //    [FromQuery] List<string>? transportTypes = null
+        //    )
+        //{
+        //    TripGetQuery query = new TripGetQuery();
+        //    query.filters = new TripQueryFilters();
 
-            if (hotelIds != null) { query.filters.HotelIds = hotelIds; }
-            if (cityIds != null) { query.filters.CityIds = cityIds; }
-            if (countryIds != null) { query.filters.CountryIds = countryIds; }
-            if (roomTypes != null) { query.filters.RoomTypes = roomTypes; }
-            if (peopleNumber != null) { query.filters.PeopleNumber = peopleNumber.Value; }
-            if (checkInDate != null) { query.filters.CheckInDate = checkInDate; }
-            if (checkOutDate != null) { query.filters.CheckOutDate = checkOutDate; }
-            if (minPrice != null) { query.filters.MinPrice = minPrice; }
-            if (maxPrice != null) { query.filters.MaxPrice = maxPrice; }
-            if (departureCityIds != null) { query.filters.DepartureCityIds = departureCityIds; }
-            if (transportTypes != null) { query.filters.TransportTypes = transportTypes; }
+        //    if (hotelIds != null) { query.filters.HotelIds = hotelIds; }
+        //    if (cityIds != null) { query.filters.CityIds = cityIds; }
+        //    if (countryIds != null) { query.filters.CountryIds = countryIds; }
+        //    if (roomTypes != null) { query.filters.RoomTypes = roomTypes; }
+        //    if (peopleNumber != null) { query.filters.PeopleNumber = peopleNumber.Value; }
+        //    if (checkInDate != null) { query.filters.CheckInDate = checkInDate; }
+        //    if (checkOutDate != null) { query.filters.CheckOutDate = checkOutDate; }
+        //    if (minPrice != null) { query.filters.MinPrice = minPrice; }
+        //    if (maxPrice != null) { query.filters.MaxPrice = maxPrice; }
+        //    if (departureCityIds != null) { query.filters.DepartureCityIds = departureCityIds; }
+        //    if (transportTypes != null) { query.filters.TransportTypes = transportTypes; }
 
 
-            var trips = await _catalogQueryHandler.GetTripsTest(query);
+        //    var trips = await _catalogQueryHandler.GetTripsTest(query);
 
-            return trips;
-        }
+        //    return trips;
+        //}
 
         // GET: api/<HotelsController>
         [HttpGet("hotels")]

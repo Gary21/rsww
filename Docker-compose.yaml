@@ -1,4 +1,5 @@
 version: '3'
+
 services:
 
   admin-postgres_db:
@@ -27,7 +28,7 @@ services:
       - "15673:15672"
 
   transaction-service:
-    image: ricopsych/transaction-service
+    image: ricopsych/rsww-transaction-service
     environment:
       - spring.rabbitmq.host=rabbitmq-transaction
       - spring.rabbitmq.port=5672
@@ -66,14 +67,14 @@ services:
       - default
 
   catalog-query-service:
-    image: ricopsych/rsww-catalog-query-service
+    image: woobin000/rsww-catalog-query-service:1.4
     environment:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
   
   catalog-request-service:
-    image: ricopsych/rsww-catalog-request-service
+    image: woobin000/rsww-catalog-request-service:1.4
     environment:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
@@ -91,7 +92,7 @@ services:
       - default
       
   hotels-query-service:
-    image: ricopsych/rsww-hotels-query-service
+    image: woobin000/rsww-hotel-query-service:1.4
     environment:
       - ConnectionStrings__DefaultConnection=Server=admin-postgres_db;Port=5432;Database=RSWW_184387_Hotels;Username=postgres;Password=student;Pooling=true;
       - rabbitConfig__adress=rabbitmq-main
@@ -110,7 +111,7 @@ services:
       - rabbitmq-main
 
   api-gateway:
-    image: ricopsych/rsww-gateway
+    image: woobin000/rsww-gateway:1.5
     #build: api-gateway
     container_name: api-gateway
     environment:
@@ -126,10 +127,10 @@ services:
     container_name: frontend
     ports:
       - 8032:8080
-    #depends_on:
-    #  - api-gateway
+    depends_on:
+      - api-gateway
 
 networks:
   db-network:
     name: admin-postgres_default
-#    external: true
+    external: true
