@@ -75,17 +75,19 @@ namespace OrderService.RequestHandler
                 var hotelEvent = new KeyValuePair<string, byte[]>("hotel",
                     MessagePackSerializer.Serialize(new HotelReservationEvent() {
                         Id = message.Order.HotelId,
-                        RoomType = message.Order.OccupationId.ToString()+"rType", //FIX
-                        HotelName = message.Order.HotelId.ToString()+"name",
-                        DestinationCity = "City17",//message.City.Name,
-                        DestinationCountry = "Country2",//hotel.City.Country.Name,
+                        RoomType = message.RoomType, 
+                        HotelName = message.HotelName,
+                        DestinationCity = message.City,
+                        DestinationCountry = message.Country,
                         RoomCount= message.Order.OccupationId.Count(), 
                     }));
 
+
+
                 var transportEvent = new KeyValuePair<string, byte[]>("transport",
                     MessagePackSerializer.Serialize(new TransportReservationEvent() { 
-                    //DestinationCity =
-                    TransportType = "T1",
+                    DestinationCity = message.City,
+                    TransportType = message.TransportType,
                     Seats = message.Order.AdultCount + message.Order.BabyCount + message.Order.TeenCount + message.Order.ChildCount,
                     }));   
 
