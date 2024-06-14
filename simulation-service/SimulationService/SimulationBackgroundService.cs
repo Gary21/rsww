@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SimulationService
 {
@@ -19,6 +20,7 @@ namespace SimulationService
 
         private readonly PublisherServiceBase _publisherService;
         private readonly ILogger _logger;
+        private IEnumerable<string> destinations;
 
         public SimulationBackgroundService(PublisherServiceBase publisherService, ILogger logger)
         {
@@ -28,6 +30,13 @@ namespace SimulationService
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var data = MessagePackSerializer.Serialize("");
+            var payload = new KeyValuePair<string, byte[]>("GetDestinations", data);
+            var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+            var bytes = await _publisherService.GetReply(messageId, stoppingToken);
+            destinations = MessagePackSerializer.Deserialize<IEnumerable<string>>(bytes);
+
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 await Task.Delay(2000);
@@ -38,6 +47,8 @@ namespace SimulationService
                     await UpdateHotelPrices(stoppingToken);
 
                 await UpdateTransportPrices(stoppingToken);
+
+                await ReserveTours(stoppingToken);
             }
         }
 
@@ -74,10 +85,49 @@ namespace SimulationService
         // INFO TRANSPORTY
         // REZERWACJA HOTELU + TRANSPORT DLA KONKRETNEGO HOTELU
         // EW. KUPNO
-        private void ReserveTours()
+        private async Task ReserveTours(CancellationToken stoppingToken)
         {
+            TripDTO query = new TripDTO() { DestinationCity = destinations.ElementAt(Random.Shared.Next(0,destinations.Count())), PeopleNumber = Random.Shared.Next(1,4)};
+            var data = MessagePackSerializer.Serialize(query);
+            var payload = new KeyValuePair<string, byte[]>("GetTrips", data);
+            //var hotelQueryPayload = MessagePackSerializer.Serialize(query);
+            var messageId = _publisherService.PublishRequestWithReply("catalog", "query", MessageType.GET, payload);
+            var bytes = await _publisherService.GetReply(messageId, stoppingToken);
+            var hotels = MessagePackSerializer.Deserialize<IEnumerable<TripDTO>>(bytes);
+
+            var rand = new Random().Next(0,hotels.Count());
+            var chosentrip = hotels.ElementAt(rand);
+
+            var payload2 = new KeyValuePair<string, byte[]>("MakeReservation", MessagePackSerializer.Serialize(chosentrip));
+            var messageId2 = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.RESERVE, payload2);
+            var bytes2 = await _publisherService.GetReply(messageId2, stoppingToken);
+            var reservation = MessagePackSerializer.Deserialize<int>(bytes2);
+
+
+            var data3 = MessagePackSerializer.Serialize(reservation);
+            var payload3 = new KeyValuePair<string, byte[]>("BuyReservation", data3);
+            var messageId3 = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.ADD, payload3);
+            var bytes3 = await _publisherService.GetReply(messageId3, stoppingToken);
+            var purchase = MessagePackSerializer.Deserialize<bool>(bytes3);
 
         }
 
+    }
+
+
+
+    [MessagePackObject]
+    public class TripDTO
+    {
+        [Key(0)] public int HotelId { get; set; }
+        [Key(1)] public int RoomTypeId { get; set; }
+        [Key(2)] public int TransportThereId { get; set; }
+        [Key(3)] public int TransportBackId { get; set; }
+        [Key(4)] public string DestinationCity { get; set; }
+        [Key(5)] public string OriginCity { get; set; }
+        [Key(6)] public string DateStart { get; set; }
+        [Key(7)] public string DateEnd { get; set; }
+        [Key(8)] public string Price { get; set; }
+        [Key(9)] public int PeopleNumber { get; set; }
     }
 }
