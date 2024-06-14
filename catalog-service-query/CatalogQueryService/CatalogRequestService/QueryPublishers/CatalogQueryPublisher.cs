@@ -4,7 +4,7 @@ using MessagePack;
 using RabbitMQ.Client;
 using RabbitUtilities;
 using RabbitUtilities.Configuration;
-using System.Text.Json;
+using JS = System.Text.Json.JsonSerializer;
 using ILogger = Serilog.ILogger;
 
 
@@ -48,6 +48,8 @@ namespace CatalogQueryService.QueryPublishers
 
             var cities = MessagePackSerializer.Deserialize<ICollection<CityDTO>>(citiesBytes);
 
+            _logger.Information($"|<= UPDATE :: GetCities - cities count {cities.Count}");
+
             return cities;
         }
 
@@ -62,6 +64,8 @@ namespace CatalogQueryService.QueryPublishers
 
             var roomTypes = MessagePackSerializer.Deserialize<ICollection<RoomTypeDTO>>(roomTypesBytes);
 
+            _logger.Information($"|<= UPDATE :: GetRoomTypes - roomTypes count {roomTypes.Count}");
+
             return roomTypes;
         }
 
@@ -72,10 +76,9 @@ namespace CatalogQueryService.QueryPublishers
 
             var roomTypesBytes = await GetReply(messageCorellationId, new CancellationToken(false));
 
-            var roomTypes = MessagePackSerializer.Deserialize<ICollection<RoomTypeDTO>>(roomTypesBytes);
+            var roomTypes = MessagePackSerializer.Deserialize<List<RoomTypeDTO>>(roomTypesBytes);
 
-            var roomTypesJson = JsonSerializer.Serialize(roomTypes);
-            _logger.Information($"|<= GET :: GetRoomTypesForHotelId - roomTypes count {roomTypes.Count},\n roomTypes: {roomTypesJson}");
+            _logger.Information($"|<= GET :: GetRoomTypesForHotelId - roomTypes count {roomTypes.Count},\n roomTypes: {JS.Serialize(roomTypes)}");
 
             return roomTypes;
         }
@@ -89,25 +92,28 @@ namespace CatalogQueryService.QueryPublishers
 
             var hotelsBytes = await GetReply(messageCorellationId, cancellationToken);
 
-            var hotels = MessagePackSerializer.Deserialize<ICollection<HotelDTO>>(hotelsBytes);
+            var hotels = MessagePackSerializer.Deserialize<List<HotelDTO>>(hotelsBytes);
             var hotelNames = hotels.Select(h => h.Name).ToList();
-            _logger.Information($"|<= GET :: GetHotels - hotels count {hotels.Count},\n hotels: {string.Join(", ", hotelNames)}");
+            _logger.Information($"|<= GET :: GetHotels - hotels count {hotels.Count}");
 
             return hotels;
         }
 
         public async Task<ICollection<TransportDTO>> GetTransports(TransportGetQuery query)
         {
-            //_logger.Information("|=> GET :: GetTransports");
+            _logger.Information($"|=> GET :: GetTransports, {JS.Serialize(query)}");
             Guid messageCorellationId = PublishRequestWithReply("resources/transport", _routingKey, MessageType.GET, query);
 
             CancellationToken cancellationToken = new CancellationToken(false);
 
             var transportsBytes = await GetReply(messageCorellationId, cancellationToken);
 
-            var transports = MessagePackSerializer.Deserialize<ICollection<TransportDTO>>(transportsBytes);
+            var transports = MessagePackSerializer.Deserialize<ICollection<TransportServiceDTO>>(transportsBytes);
+            var transportsDTOs = transports.Select(t => TransportDTO.FromServiceDTO(t)).ToList();
 
-            return transports;
+            _logger.Information($"|<= GET :: GetTransports - transports count {transportsDTOs.Count}");
+
+            return transportsDTOs;
         }
 
     }

@@ -29,9 +29,9 @@ namespace CatalogRequestService.QueryPublishers
 
             var result = await GetReply(messageCorellationId, cancellationToken);
 
-            var success = MessagePackSerializer.Deserialize<int>(result);
+            //var success = MessagePackSerializer.Deserialize<int>(result);
 
-            return success;
+            return 1;
         }
 
         public async Task<int> ReserveTransport(TransportReserveRequest query)
@@ -42,9 +42,9 @@ namespace CatalogRequestService.QueryPublishers
 
             var result = await GetReply(messageCorellationId, cancellationToken);
 
-            var success = MessagePackSerializer.Deserialize<int>(result);
+            //var success = MessagePackSerializer.Deserialize<int>(result);
 
-            return success;
+            return 1;
         }
 
         public async Task<int> CreateReservation(int clientId)

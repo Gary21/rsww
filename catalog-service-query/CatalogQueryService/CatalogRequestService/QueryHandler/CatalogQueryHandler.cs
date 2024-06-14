@@ -30,6 +30,7 @@ namespace CatalogQueryService.QueryHandler
 
         protected override void ConsumeMessage(object model, BasicDeliverEventArgs ea)
         {
+            _logger.Information($"=>| MESSAGE CONSUME");
             var headers = ea.BasicProperties.Headers;
             if (!headers.TryGetValue("Type", out object? typeObj)) { return; }
             var type = (MessageType)Enum.Parse(typeof(MessageType), ASCIIEncoding.ASCII.GetString((byte[])typeObj));
@@ -65,7 +66,7 @@ namespace CatalogQueryService.QueryHandler
 
                     var tripsQueryDTO = MPS.Deserialize<TripDTO>(message.Value);
 
-                    _logger.Information($"=>| GET :: Trips - {JS.Serialize(tripsQueryDTO)}");
+                    _logger.Information($"=>| GET :: TripsQuery - {JS.Serialize(tripsQueryDTO)}");
 
                     var validTrips = await GetTrips(tripsQueryDTO);
 
@@ -90,7 +91,8 @@ namespace CatalogQueryService.QueryHandler
                         }
                     };
 
-                    var hotel = await _catalogQueryPublisher.GetHotels(hotelGetQueryTwo);
+                    var hotels = await _catalogQueryPublisher.GetHotels(hotelGetQueryTwo);
+                    var hotel = hotels.FirstOrDefault();
 
                     _logger.Information($"<=| GET :: Hotel - {JS.Serialize(hotel)}");
 
@@ -134,6 +136,42 @@ namespace CatalogQueryService.QueryHandler
                     Reply(ea, MPS.Serialize(rooms));
                     break;
 
+                case "GetRoomType":
+                    var roomTypeId = MPS.Deserialize<int>(message.Value);
+
+                    _logger.Information($"=>| GET :: RoomType - {roomTypeId}");
+
+                    _roomTypesList = await _catalogQueryPublisher.GetRoomTypes();
+                    var roomType = _roomTypesList.FirstOrDefault(rt => rt.Id == roomTypeId);
+
+                    _logger.Information($"<=| GET :: RoomType - {JS.Serialize(roomType)}");
+
+                    Reply(ea, MPS.Serialize(roomType));
+                    break;
+
+                case "FindTransports":
+                    var transportQuery = MPS.Deserialize<TransportDTO>(message.Value);
+
+                    _logger.Information($"=>| GET :: FindTransports - {JS.Serialize(transportQuery)}");
+
+                    var transportQueryFilters = new TransportQueryFilters
+                    {
+                        CityOrigins = new List<string> { transportQuery.OriginCity },
+                        CityDestinations = new List<string> { transportQuery.DestinationCity },
+                        AvailableSeats = transportQuery.PeopleNumber,
+                        Types = new List<string> { transportQuery.Type ?? "" }
+                    };
+                    if (transportQuery.Date == null) { transportQueryFilters.DepartureDates = new List<DateTime> { DateTime.Today }; }
+                    else { transportQueryFilters.DepartureDates = new List<DateTime> { DateTime.Parse(transportQuery.Date) }; }
+
+                    var transportQueryDTO = new TransportGetQuery { filters = transportQueryFilters };
+                    var transports = await _catalogQueryPublisher.GetTransports(transportQueryDTO);
+
+                    _logger.Information($"<=| GET :: FindTransports - transports count: {transports.Count},\n transports: {JS.Serialize(transports)}");
+
+                    Reply(ea, MPS.Serialize(transports));
+                    break;
+
 
                 default:
                     _logger.Information($"Received message null or with unknown.");
@@ -149,15 +187,16 @@ namespace CatalogQueryService.QueryHandler
             _cityList = await _catalogQueryPublisher.GetCities();
             var destinationCityId = _cityList.FirstOrDefault(c => c.Name == tripsQueryDTO.DestinationCity)?.Id;
             var originCityId = _cityList.FirstOrDefault(c => c.Name == tripsQueryDTO.OriginCity)?.Id;
+            _logger.Information($">|< Get() :: DestinationCityId {destinationCityId}, OriginCityId {originCityId}");
 
             _roomTypesList = await _catalogQueryPublisher.GetRoomTypes();
             var roomTypeName = _roomTypesList.FirstOrDefault(rt => rt.Id == tripsQueryDTO.RoomTypeId)?.Name;
+            _logger.Information($">|< Get() :: RoomTypeName {roomTypeName}");
             //
 
             // Handling filters
             var hotelGetQuery = new HotelsGetQuery { filters = new HotelQueryFilters() };
             if (destinationCityId != null) { hotelGetQuery.filters.CityIds = new List<int> { destinationCityId.Value }; }
-            if (originCityId != null) { hotelGetQuery.filters.CityIds = new List<int> { originCityId.Value }; }
             if (roomTypeName != null) { hotelGetQuery.filters.RoomTypes = new List<string> { roomTypeName }; }
             if (tripsQueryDTO.DateStart != null) { hotelGetQuery.filters.CheckInDate = DateTime.Parse(tripsQueryDTO.DateStart); }
             if (tripsQueryDTO.DateEnd != null) { hotelGetQuery.filters.CheckOutDate = DateTime.Parse(tripsQueryDTO.DateEnd); }
@@ -183,17 +222,16 @@ namespace CatalogQueryService.QueryHandler
 
 
                 // check for valid transport there
-                var transThereQuery = new TransportGetQuery
+                var transThereFilters = new TransportQueryFilters
                 {
-                    filters = new TransportQueryFilters
-                    {
-                        CityOrigins = new List<string> { tripsQueryDTO.OriginCity },
-                        CityDestinations = new List<string> { tripsQueryDTO.DestinationCity },
-                        AvailableSeats = tripsQueryDTO.PeopleNumber,
-                        DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) },
-                        ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) }
-                    }
+                    CityOrigins = new List<string> { tripsQueryDTO.OriginCity ?? "" },
+                    CityDestinations = new List<string> { tripsQueryDTO.DestinationCity ?? "" },
+                    AvailableSeats = tripsQueryDTO.PeopleNumber
                 };
+                if (tripsQueryDTO.DateStart != null) { transThereFilters.DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) }; }
+                if (tripsQueryDTO.DateEnd != null) { transThereFilters.ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) }; }
+
+                var transThereQuery = new TransportGetQuery { filters = transThereFilters };
 
                 var transportsThere = await _catalogQueryPublisher.GetTransports(transThereQuery);
                 if (transportsThere.Count == 0) { continue; }
@@ -202,17 +240,16 @@ namespace CatalogQueryService.QueryHandler
 
 
                 // check for valid transport back
-                var transBackQuery = new TransportGetQuery
+                var transBackFilters = new TransportQueryFilters
                 {
-                    filters = new TransportQueryFilters
-                    {
-                        CityOrigins = new List<string> { tripsQueryDTO.DestinationCity },
-                        CityDestinations = new List<string> { tripsQueryDTO.OriginCity },
-                        AvailableSeats = tripsQueryDTO.PeopleNumber,
-                        DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) },
-                        ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) }
-                    }
+                    CityOrigins = new List<string> { tripsQueryDTO.OriginCity ?? "" },
+                    CityDestinations = new List<string> { tripsQueryDTO.DestinationCity ?? "" },
+                    AvailableSeats = tripsQueryDTO.PeopleNumber
                 };
+                if (tripsQueryDTO.DateStart != null) { transThereFilters.DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) }; }
+                if (tripsQueryDTO.DateEnd != null) { transThereFilters.ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) }; }
+
+                var transBackQuery = new TransportGetQuery { filters = transThereFilters };
 
                 var transportsBack = await _catalogQueryPublisher.GetTransports(transBackQuery);
                 if (transportsBack.Count == 0) { continue; }
@@ -220,20 +257,21 @@ namespace CatalogQueryService.QueryHandler
 
 
                 // Calculate Price
-                var tripLength = DateTime.Parse(tripsQueryDTO.DateEnd).Subtract(DateTime.Parse(tripsQueryDTO.DateStart)).Days;
-                var price =
-                    tripLength * validRoomType.PricePerNight +
-                    tripsQueryDTO.PeopleNumber * 100 +
-                    int.Parse(transportThere.PricePerTicket) * tripsQueryDTO.PeopleNumber +
-                    int.Parse(transportBack.PricePerTicket) * tripsQueryDTO.PeopleNumber;
-
+                var tripLength = 7;
+                decimal price = 0;
+                if (tripsQueryDTO.DateEnd != null && tripsQueryDTO.DateStart != null)
+                {
+                    tripLength = DateTime.Parse(tripsQueryDTO.DateEnd).Subtract(DateTime.Parse(tripsQueryDTO.DateStart)).Days;
+                }
+                price += tripLength * int.Parse(validRoomType.PricePerNight);
+                if (tripsQueryDTO.PeopleNumber > 1) { price += 100 * tripsQueryDTO.PeopleNumber; }
+                if (transportThere != null) { price += decimal.Parse(transportThere.PricePerTicket) * tripsQueryDTO.PeopleNumber; }
+                if (transportBack != null) { price += decimal.Parse(transportBack.PricePerTicket) * tripsQueryDTO.PeopleNumber; }
 
                 var tripDTO = new TripDTO
                 {
                     HotelId = hotelResponse.Id,
                     RoomTypeId = validRoomType.Id,
-                    TransportThereId = transportsThere.FirstOrDefault().Id,
-                    TransportBackId = transportsBack.FirstOrDefault().Id,
                     DestinationCity = tripsQueryDTO.DestinationCity,
                     OriginCity = tripsQueryDTO.OriginCity,
                     DateStart = tripsQueryDTO.DateStart,
@@ -241,6 +279,8 @@ namespace CatalogQueryService.QueryHandler
                     Price = price.ToString(),
                     PeopleNumber = tripsQueryDTO.PeopleNumber
                 };
+                if (transportThere != null) { tripDTO.TransportThereId = transportThere.Id; }
+                if (transportBack != null) { tripDTO.TransportBackId = transportBack.Id; }
 
                 hotelTransportMatches.Add(tripDTO);
                 var tripDTOJson = JS.Serialize(tripDTO);
