@@ -1,11 +1,6 @@
 version: '3'
 services:
-  # mongo-db:
-  #   #build: 
-  #   image: mongo
-  #   ports:
-  #     - "27017:27017"
-  #   #volumes:
+
   admin-postgres_db:
     container_name: admin-postgres_db
     image: postgres
