@@ -4,9 +4,6 @@ using MessagePack;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitUtilities;
-using RabbitUtilities.Configuration;
-using System.Collections.Concurrent;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -18,7 +15,7 @@ namespace api_gateway.EventConsumer
         private CancellationToken cancellationToken;
         private WebSocketService _webSocketService;
 
-        public PreferencesEventConsumer(Serilog.ILogger logger, IConnectionFactory connectionFactory, IConfiguration config, IHostApplicationLifetime appLifetime, WebSocketService webSocketService) 
+        public PreferencesEventConsumer(Serilog.ILogger logger, IConnectionFactory connectionFactory, IConfiguration config, IHostApplicationLifetime appLifetime, WebSocketService webSocketService)
             : base(logger, connectionFactory, config.GetSection("preferencesEvents").Get<RabbitUtilities.Configuration.SubscriberConfig>(), appLifetime)
         {
             _webSocketService = webSocketService;
@@ -63,15 +60,17 @@ namespace api_gateway.EventConsumer
             var change = MessagePackSerializer.Deserialize<Changes>(body);
             await InformOfferChange(change);
             var json = JsonSerializer.Serialize(change);
-            foreach (var socket in _webSocketService.ChangesSockets) {
+            foreach (var socket in _webSocketService.ChangesSockets)
+            {
                 try
                 {
                     await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
                 }
                 catch
                 {
+                 //   await socket.Value.CloseAsync(WebSocketCloseStatus.Empty,"",cancellationToken);
                     _webSocketService.ChangesSockets.Remove(socket.Key, out _);
-                    break;
+                    //    continue;
                 }
             }
         }
@@ -83,8 +82,9 @@ namespace api_gateway.EventConsumer
             var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(preferences);
             foreach (var socket in _webSocketService.PreferencesSockets)
             {
-                try { 
-                await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
+                try
+                {
+                    await socket.Value.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
                 }
                 catch
                 {
@@ -92,11 +92,12 @@ namespace api_gateway.EventConsumer
                     continue;
                 }
             }
-            
+
         }
         private async Task InformOfferChange(Changes change)
         {
-            if(change.ResourceType == "hotel") { 
+            if (change.ResourceType == "hotel")
+            {
                 var hotelId = change.Id;
 
                 if (_webSocketService.HotelsSockets.TryGetValue(hotelId, out var sockets))
@@ -104,8 +105,9 @@ namespace api_gateway.EventConsumer
                     var json = /*MessagePackSerializer.SerializeToJson*/JsonSerializer.Serialize(change);
                     foreach (var socketPair in sockets)
                     {
-                        try { 
-                        
+                        try
+                        {
+
                             var socket = socketPair.Value;
                             await socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
                         }
@@ -138,13 +140,14 @@ namespace api_gateway.EventConsumer
                 var json = JsonSerializer.Serialize/*MessagePackSerializer.SerializeToJson*/(hotelPreference);
                 foreach (var socketPair in sockets)
                 {
-                    try { 
+                    try
+                    {
                         var socket = socketPair.Value;
                         await socket.SendAsync(UTF8Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, cancellationToken); //end of message = true?
                     }
                     catch
                     {
-                        sockets.Remove(socketPair.Key,out _);
+                        sockets.Remove(socketPair.Key, out _);
                         continue;
                     }
                 }
