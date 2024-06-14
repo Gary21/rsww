@@ -28,8 +28,8 @@
      <td>{{ change.Id }}</td>
      <td>{{ change.ResourceType }}</td>
      <td>{{ change.Name }}</td>
-     <td>{{ change.availability }}</td>
-     <td>{{ change.priceChange }}</td>
+     <td>{{ change.Availability }}</td>
+     <td>{{ change.PriceChange }}</td>
    </tr>
 </tbody>
 </table>
@@ -39,23 +39,40 @@
 export default {
 data: () => ({
     changes: [],
-websocket: null,
+    connection_ready: false,
+    connection_error: false,
+    websocket: null,
 }),
 methods: {
     async init_websocket() {
-        var socket_url = 'http://localhost:49940/Offers/ChangesWebsocket'
+        var socket_url = 'ws://localhost:8080/Offers/ChangesWebsocket'
         this.websocket = new WebSocket(socket_url)
+        this.websocket.onopen    = this.onSocketOpen;
         this.websocket.onmessage = this.onSocketMessage;
+        this.websocket.onerror   = this.onSockerError;
     },
     onSocketMessage(evt){
       //we parse the json that we receive
       var received = JSON.parse(evt.data);
       console.log(received);
-      this.changes = received;
+      if(this.changes.length > 9)
+      {
+      this.changes.splice(0, 1);
+      }
+      this.changes.push(received);
+    },
+    onSocketOpen(evt){
+      this.connection_ready = true;
+    },
+    onSockerError(evt){
+      this.connection_error = true;
     },
 },
 mounted() {
     this.init_websocket();
+},
+unmounted() {
+    this.websocket.close();
 }
 };
 </script>
