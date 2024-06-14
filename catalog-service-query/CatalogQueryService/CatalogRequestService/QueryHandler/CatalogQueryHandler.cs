@@ -161,8 +161,9 @@ namespace CatalogQueryService.QueryHandler
                         AvailableSeats = transportQuery.PeopleNumber,
                         Types = new List<string> { transportQuery.Type ?? "" }
                     };
-                    if (transportQuery.Date == null) { transportQueryFilters.DepartureDates = new List<DateTime> { DateTime.Today }; }
-                    else { transportQueryFilters.DepartureDates = new List<DateTime> { DateTime.Parse(transportQuery.Date) }; }
+
+                    try { transportQueryFilters.DepartureDates = new List<DateTime> { DateTime.Parse(transportQuery.Date) }; }
+                    catch (Exception) { transportQueryFilters.DepartureDates = new List<DateTime> { DateTime.Today.Date }; }
 
                     var transportQueryDTO = new TransportGetQuery { filters = transportQueryFilters };
                     var transports = await _catalogQueryPublisher.GetTransports(transportQueryDTO);
@@ -216,9 +217,12 @@ namespace CatalogQueryService.QueryHandler
             var hotelGetQuery = new HotelsGetQuery { filters = new HotelQueryFilters() };
             if (destinationCityId != null) { hotelGetQuery.filters.CityIds = new List<int> { destinationCityId.Value }; }
             if (roomTypeName != null) { hotelGetQuery.filters.RoomTypes = new List<string> { roomTypeName }; }
-            if (tripsQueryDTO.DateStart != null) { hotelGetQuery.filters.CheckInDate = DateTime.Parse(tripsQueryDTO.DateStart); }
-            if (tripsQueryDTO.DateEnd != null) { hotelGetQuery.filters.CheckOutDate = DateTime.Parse(tripsQueryDTO.DateEnd); }
             if (tripsQueryDTO.PeopleNumber > 0) { hotelGetQuery.filters.RoomCapacities = new List<int> { tripsQueryDTO.PeopleNumber }; }
+            try { hotelGetQuery.filters.CheckInDate = DateTime.Parse(tripsQueryDTO.DateStart); }
+            catch (Exception) { }
+            try { hotelGetQuery.filters.CheckOutDate = DateTime.Parse(tripsQueryDTO.DateEnd); }
+            catch (Exception) { }
+
             var serializedQuery = MPS.Serialize(hotelGetQuery);
             //
 
@@ -246,8 +250,9 @@ namespace CatalogQueryService.QueryHandler
                     CityDestinations = new List<string> { tripsQueryDTO.DestinationCity ?? "" },
                     AvailableSeats = tripsQueryDTO.PeopleNumber
                 };
-                if (tripsQueryDTO.DateStart != null) { transThereFilters.DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) }; }
-                if (tripsQueryDTO.DateEnd != null) { transThereFilters.ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) }; }
+                try { transThereFilters.DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) }; }
+                catch (Exception) { }
+
 
                 var transThereQuery = new TransportGetQuery { filters = transThereFilters };
 
@@ -264,8 +269,9 @@ namespace CatalogQueryService.QueryHandler
                     CityDestinations = new List<string> { tripsQueryDTO.DestinationCity ?? "" },
                     AvailableSeats = tripsQueryDTO.PeopleNumber
                 };
-                if (tripsQueryDTO.DateStart != null) { transThereFilters.DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateStart) }; }
-                if (tripsQueryDTO.DateEnd != null) { transThereFilters.ArrivalDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) }; }
+                try { transBackFilters.DepartureDates = new List<DateTime> { DateTime.Parse(tripsQueryDTO.DateEnd) }; }
+                catch (Exception) { }
+
 
                 var transBackQuery = new TransportGetQuery { filters = transThereFilters };
 
@@ -277,10 +283,10 @@ namespace CatalogQueryService.QueryHandler
                 // Calculate Price
                 var tripLength = 7;
                 decimal price = 0;
-                if (tripsQueryDTO.DateEnd != null && tripsQueryDTO.DateStart != null)
-                {
-                    tripLength = DateTime.Parse(tripsQueryDTO.DateEnd).Subtract(DateTime.Parse(tripsQueryDTO.DateStart)).Days;
-                }
+
+                try { tripLength = DateTime.Parse(tripsQueryDTO.DateEnd).Subtract(DateTime.Parse(tripsQueryDTO.DateStart)).Days; }
+                catch (Exception) { tripLength = 7; }
+
                 price += tripLength * int.Parse(validRoomType.PricePerNight);
                 if (tripsQueryDTO.PeopleNumber > 1) { price += 100 * tripsQueryDTO.PeopleNumber; }
                 if (transportThere != null) { price += decimal.Parse(transportThere.PricePerTicket) * tripsQueryDTO.PeopleNumber; }

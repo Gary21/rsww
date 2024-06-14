@@ -119,7 +119,7 @@ services:
       - rabbitmq-main
 
   frontend:
-    image: ricopsych/rsww-frontend:1.1
+    image: woobin000/rsww-frontend:1.5
     #build: frontend
     container_name: frontend
     ports:
