@@ -126,12 +126,13 @@ services:
       - rabbitmq-main
 
   frontend:
-    build: frontend
+    image: ricopsych/rsww-frontend
+#    build: frontend
     container_name: frontend
     ports:
       - 8032:8080
-    depends_on:
-      - api-gateway
+    #depends_on:
+    #  - api-gateway
 
 networks:
   db-network:
