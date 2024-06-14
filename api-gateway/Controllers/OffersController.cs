@@ -389,18 +389,18 @@ public class OffersController : ControllerBase
             if (webSocket != null && webSocket.State == WebSocketState.Open)
             {
 
-                //var changes = await GetLastChanges();
-                //foreach (var change in changes)
-                //{
-                //    try
-                //    {
-                //        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(change)), WebSocketMessageType.Text, true, _token);
-                //    }
-                //    catch
-                //    {
-                //        break;
-                //    }
-                //}
+                var changes = await GetLastChanges();
+                foreach (var change in changes)
+                {
+                    try
+                    {
+                        await webSocket.SendAsync(UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize(change)), WebSocketMessageType.Text, true, _token);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
                 var id = _webSocketService.AddChangesSocket(webSocket);
                 while (webSocket.State == WebSocketState.Open)
                 {

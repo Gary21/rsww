@@ -87,7 +87,8 @@ namespace SimulationService
         // EW. KUPNO
         private async Task ReserveTours(CancellationToken stoppingToken)
         {
-            TripDTO query = new TripDTO() { DestinationCity = destinations.ElementAt(Random.Shared.Next(0,destinations.Count())), PeopleNumber = Random.Shared.Next(1,4)};
+            TripDTO query = new TripDTO() { OriginCity = "Warszawa", DestinationCity = "Korfu"/*destinations.ElementAt(Random.Shared.Next(0,destinations.Count()))*/,
+                PeopleNumber = Random.Shared.Next(1,4), DateStart ="undefined" };
             var data = MessagePackSerializer.Serialize(query);
             var payload = new KeyValuePair<string, byte[]>("GetTrips", data);
             //var hotelQueryPayload = MessagePackSerializer.Serialize(query);
@@ -95,21 +96,23 @@ namespace SimulationService
             var bytes = await _publisherService.GetReply(messageId, stoppingToken);
             var hotels = MessagePackSerializer.Deserialize<IEnumerable<TripDTO>>(bytes);
 
-            var rand = new Random().Next(0,hotels.Count());
-            var chosentrip = hotels.ElementAt(rand);
+            if (hotels.Any())
+            {
+                var rand = new Random().Next(0, hotels.Count());
+                var chosentrip = hotels.ElementAt(rand);
 
-            var payload2 = new KeyValuePair<string, byte[]>("MakeReservation", MessagePackSerializer.Serialize(chosentrip));
-            var messageId2 = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.RESERVE, payload2);
-            var bytes2 = await _publisherService.GetReply(messageId2, stoppingToken);
-            var reservation = MessagePackSerializer.Deserialize<int>(bytes2);
+                var payload2 = new KeyValuePair<string, byte[]>("MakeReservation", MessagePackSerializer.Serialize(chosentrip));
+                var messageId2 = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.RESERVE, payload2);
+                var bytes2 = await _publisherService.GetReply(messageId2, stoppingToken);
+                var reservation = MessagePackSerializer.Deserialize<int>(bytes2);
 
 
-            var data3 = MessagePackSerializer.Serialize(reservation);
-            var payload3 = new KeyValuePair<string, byte[]>("BuyReservation", data3);
-            var messageId3 = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.ADD, payload3);
-            var bytes3 = await _publisherService.GetReply(messageId3, stoppingToken);
-            var purchase = MessagePackSerializer.Deserialize<bool>(bytes3);
-
+                var data3 = MessagePackSerializer.Serialize(reservation);
+                var payload3 = new KeyValuePair<string, byte[]>("BuyReservation", data3);
+                var messageId3 = _publisherService.PublishRequestWithReply("catalog", "request", MessageType.ADD, payload3);
+                var bytes3 = await _publisherService.GetReply(messageId3, stoppingToken);
+                var purchase = MessagePackSerializer.Deserialize<bool>(bytes3);
+            }
         }
 
     }

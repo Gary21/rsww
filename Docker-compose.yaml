@@ -109,6 +109,15 @@ services:
       - rabbitConfig__adress=rabbitmq-main
     depends_on:
       - rabbitmq-main
+  
+  simulation-service:
+    image: ricopsych/rsww-simulation
+    container_name: simulation-service 
+    environment:
+      - rabbitConfig__adress=rabbitmq-main
+    depends_on:
+      - rabbitmq-main
+  
 
   api-gateway:
     image: woobin000/rsww-gateway:1.5
