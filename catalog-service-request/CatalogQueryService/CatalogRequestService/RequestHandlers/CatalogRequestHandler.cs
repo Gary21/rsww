@@ -110,7 +110,7 @@ namespace CatalogRequestService.RequestHandlers
                 //_catalogRequestPublisher.CancelHotel(reservationId);
             }
 
-            //var secureResult = await _catalogRequestPublisher.SecureReservation(reservationId);
+            var secureResult = await _catalogRequestPublisher.SecureReservation(tripDTO);
 
             //Reply(ea, MessagePackSerializer.Serialize(secureResult));
             _logger.Information($"<=| RESERVE :: MakeReservation");

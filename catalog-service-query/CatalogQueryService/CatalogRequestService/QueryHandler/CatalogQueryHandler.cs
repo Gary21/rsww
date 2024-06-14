@@ -172,6 +172,24 @@ namespace CatalogQueryService.QueryHandler
                     Reply(ea, MPS.Serialize(transports));
                     break;
 
+                case "GetTransport":
+                    var transportId = MPS.Deserialize<int>(message.Value);
+
+                    _logger.Information($"=>| GET :: Transport - {transportId}");
+
+                    var transportQueryFiltersTwo = new TransportQueryFilters
+                    {
+                        Ids = new List<int> { transportId }
+                    };
+                    var transportQueryDTOTwo = new TransportGetQuery { filters = transportQueryFiltersTwo };
+                    var transportsTwo = await _catalogQueryPublisher.GetTransports(transportQueryDTOTwo);
+                    var transport = transportsTwo.FirstOrDefault();
+
+                    _logger.Information($"<=| GET :: Transport - {JS.Serialize(transport)}");
+
+                    Reply(ea, MPS.Serialize(transport));
+                    break;
+
 
                 default:
                     _logger.Information($"Received message null or with unknown.");
