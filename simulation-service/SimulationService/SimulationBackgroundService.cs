@@ -87,7 +87,7 @@ namespace SimulationService
         // EW. KUPNO
         private async Task ReserveTours(CancellationToken stoppingToken)
         {
-            TripDTO query = new TripDTO() { OriginCity = "Warszawa", DestinationCity = "Korfu"/*destinations.ElementAt(Random.Shared.Next(0,destinations.Count()))*/,
+            TripDTO query = new TripDTO() { OriginCity = new string[] { "Warszawa", "Gdańsk" }[Random.Shared.Next(0,2)], DestinationCity = destinations.ElementAt(Random.Shared.Next(0,destinations.Count())),
                 PeopleNumber = Random.Shared.Next(1,4), DateStart ="undefined" };
             var data = MessagePackSerializer.Serialize(query);
             var payload = new KeyValuePair<string, byte[]>("GetTrips", data);
